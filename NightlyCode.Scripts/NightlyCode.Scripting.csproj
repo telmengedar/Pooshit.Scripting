@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+    <AssemblyName>NightlyCode.Scripting</AssemblyName>
+    <RootNamespace>NightlyCode.Scripting</RootNamespace>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>0.7.2</Version>
+    <Description>Provides an environment to execute simple scripts</Description>
+    <Copyright>Toni Gottschall</Copyright>
+    <PackageLicenseUrl>http://unlicense.org/</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/telmengedar/NightlyCode.Scripting</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/telmengedar/NightlyCode.Scripting</RepositoryUrl>
+    <PackageTags>script, parser</PackageTags>
+    <Company>NightlyCode</Company>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+</Project>

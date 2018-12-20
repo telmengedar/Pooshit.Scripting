@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.168
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NightlyCode.Scripts", "NightlyCode.Scripts\NightlyCode.Scripts.csproj", "{B51C0529-D874-44B0-B36A-BF5F5752D64F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NightlyCode.Scripting", "NightlyCode.Scripts\NightlyCode.Scripting.csproj", "{B51C0529-D874-44B0-B36A-BF5F5752D64F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scripting.Tests", "Scripting.Tests\Scripting.Tests.csproj", "{BE7B7A08-2222-410A-BEED-97BBC2FF5138}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{B51C0529-D874-44B0-B36A-BF5F5752D64F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B51C0529-D874-44B0-B36A-BF5F5752D64F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B51C0529-D874-44B0-B36A-BF5F5752D64F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE7B7A08-2222-410A-BEED-97BBC2FF5138}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE7B7A08-2222-410A-BEED-97BBC2FF5138}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE7B7A08-2222-410A-BEED-97BBC2FF5138}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE7B7A08-2222-410A-BEED-97BBC2FF5138}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
