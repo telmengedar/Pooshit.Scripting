@@ -50,6 +50,9 @@ namespace NightlyCode.Scripting.Tokens {
                 try {
                     return method.Invoke(host, callparameters);
                 }
+                catch (TargetInvocationException e) {
+                    executionlog.AppendLine($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)}) - {e.InnerException?.Message??e.Message}");
+                }
                 catch(Exception e) {
                     executionlog.AppendLine($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)}) - {e.Message}");
                 }
@@ -70,6 +73,10 @@ namespace NightlyCode.Scripting.Tokens {
 
                     try {
                         return method.Invoke(null, callparameters);
+                    }
+                    catch (TargetInvocationException e)
+                    {
+                        executionlog.AppendLine($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)}) - {e.InnerException?.Message ?? e.Message}");
                     }
                     catch (Exception e) {
                         executionlog.AppendLine($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)}) - {e.Message}");
@@ -99,6 +106,10 @@ namespace NightlyCode.Scripting.Tokens {
                     try
                     {
                         return method.Invoke(null, callparameters);
+                    }
+                    catch (TargetInvocationException e)
+                    {
+                        executionlog.AppendLine($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)}) - {e.InnerException?.Message ?? e.Message}");
                     }
                     catch (Exception e)
                     {

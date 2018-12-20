@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NightlyCode.Scripting {
 
     /// <summary>
     /// simple lookup for variables
     /// </summary>
-    public class VariablePool : IScriptVariableHost {
+    public class VariablePool : IScriptVariableHost, IDisposable {
         readonly Dictionary<string, object> values = new Dictionary<string, object>();
 
         /// <summary>
@@ -33,6 +34,12 @@ namespace NightlyCode.Scripting {
         /// <inheritdoc />
         public void SetVariable(string name, object value) {
             values[name] = value;
+        }
+
+        /// <inheritdoc />
+        void IDisposable.Dispose() {
+            foreach (IDisposable disposablevalue in values.Values.OfType<IDisposable>())
+                disposablevalue.Dispose();
         }
     }
 }

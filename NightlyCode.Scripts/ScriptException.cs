@@ -11,9 +11,10 @@ namespace NightlyCode.Scripting {
         /// creates a new <see cref="ScriptException"/>
         /// </summary>
         /// <param name="message">error message</param>
+        /// <param name="details">details for error</param>
         /// <param name="innerException">error which lead to this error</param>
         public ScriptException(string message, string details = null, Exception innerException = null)
-            : base(message, innerException) {
+            : base($"{message}\r\n{details}", innerException) {
             Details = details;
         }
 
