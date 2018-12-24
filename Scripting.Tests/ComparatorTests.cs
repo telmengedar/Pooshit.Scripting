@@ -1,5 +1,7 @@
-﻿using NightlyCode.Scripting;
+﻿using System.Threading;
+using NightlyCode.Scripting;
 using NUnit.Framework;
+using Scripting.Tests.Data;
 
 namespace Scripting.Tests {
 
@@ -41,6 +43,25 @@ namespace Scripting.Tests {
         public void Greater()
         {
             Assert.AreEqual(true, new ScriptParser(new ScriptHostPool()).Parse("8>4").Execute());
+        }
+
+        [Test, Parallelizable]
+        public void MethodGreater() {
+            ScriptParser parser = new ScriptParser(new ScriptHostPool() {
+                ["test"] = new TestHost()
+            });
+            Assert.AreEqual(true, parser.Parse("test.integer(7)>2").Execute());
+        }
+
+        [Test, Parallelizable]
+        public void PropertyGreater()
+        {
+            ScriptParser parser = new ScriptParser(new ScriptHostPool()
+            {
+                ["test"] = new TestHost()
+            });
+            parser.Parse("test.property=8").Execute();
+            Assert.AreEqual(true, parser.Parse("test.property>5").Execute());
         }
 
         [TestCase("3>=3")]

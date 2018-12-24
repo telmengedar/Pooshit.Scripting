@@ -8,7 +8,13 @@ namespace Scripting.Tests.Data {
             get => values[key];
             set => values[key] = value;
         }
-        
+
+        public int Property { get; set; }
+
+        public int Integer(int data) {
+            return data;
+        }
+
         public string TestMethod(string parameter, string[] parameters)
         {
             return $"{parameter}_{string.Join(",", parameters)}";

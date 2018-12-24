@@ -169,25 +169,23 @@ namespace NightlyCode.Scripting {
             for (; index < data.Length; ++index)
             {
                 char character = data[index];
-                switch (character)
-                {
-                    case '(':
-                        ++index;
-                        return new ScriptMethod(hostpool, host, membername.ToString(), ParseParameters(data, ref index, variablehost));
-                    case '=':
-                    case ',':
-                    case '.':
-                    case ')':
-                        if (membername.Length == 0)
-                            throw new ScriptException("Member name expected");
-                        return new ScriptMember(host, membername.ToString());
-                    default:
-                        membername.Append(character);
-                        break;
+                if (char.IsLetterOrDigit(character) || character == '_') {
+                    membername.Append(character);
+                    continue;
+                }
+
+                break;
+            }
+
+            if (index < data.Length) {
+                switch (data[index]) {
+                case '(':
+                    ++index;
+                    return new ScriptMethod(hostpool, host, membername.ToString(), ParseParameters(data, ref index, variablehost));
                 }
             }
 
-            if(membername.Length > 0)
+            if (membername.Length > 0)
                 return new ScriptMember(host, membername.ToString());
             throw new ScriptException("Member name expected");
         }
