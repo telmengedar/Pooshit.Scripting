@@ -14,5 +14,8 @@ namespace Scripting.Tests.Data {
             return $"{parameter}_{string.Join(",", parameters)}";
         }
 
+        public void AddTestHost(string key, TestHost host) {
+            values[key] = host;
+        }
     }
 }

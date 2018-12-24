@@ -41,29 +41,13 @@ namespace NightlyCode.Scripting.Tokens {
 
             foreach (PropertyInfo method in indexer)
             {
-                ParameterInfo[] targetparameters = method.GetIndexParameters();
-                object[] callparameters;
                 try
                 {
-                    callparameters = MethodOperations.CreateParameters(targetparameters, parameters).ToArray();
+                    return MethodOperations.CallMethod(host, method.GetMethod, parameters,false,method.GetIndexParameters());
                 }
                 catch (Exception e)
                 {
-                    executionlog.AppendLine($"Unable to convert parameters for {host.GetType().Name}.{method.Name}({string.Join(",", targetparameters.Select(p => p.ParameterType.Name + " " + p.Name))}) - {e.Message}");
-                    continue;
-                }
-
-                try
-                {
-                    return method.GetMethod.Invoke(host, callparameters);
-                }
-                catch (TargetInvocationException e)
-                {
-                    executionlog.AppendLine($"Unable to call {host.GetType().Name}[{string.Join(",", callparameters)}] - {e.InnerException?.Message ?? e.Message}");
-                }
-                catch (Exception e)
-                {
-                    executionlog.AppendLine($"Unable to call {host.GetType().Name}[{string.Join(",", callparameters)}] - {e.Message}");
+                    executionlog.AppendLine(e.Message);
                 }
             }
 
@@ -90,28 +74,13 @@ namespace NightlyCode.Scripting.Tokens {
 
             foreach (PropertyInfo method in indexer)
             {
-                ParameterInfo[] targetparameters = method.GetIndexParameters();
-                object[] callparameters;
                 try
                 {
-                    callparameters = MethodOperations.CreateParameters(targetparameters, parameters).ToArray();
+                    return MethodOperations.CallMethod(host, method.SetMethod, parameters, false, method.GetIndexParameters(), token);
                 }
                 catch (Exception e)
                 {
-                    executionlog.AppendLine($"Unable to convert parameters for {host.GetType().Name}.{method.Name}({string.Join(",", targetparameters.Select(p => p.ParameterType.Name + " " + p.Name))}) - {e.Message}");
-                    continue;
-                }
-
-                try {
-                    return method.SetMethod.Invoke(host, callparameters.Concat(new[] {token.Execute()}).ToArray());
-                }
-                catch (TargetInvocationException e)
-                {
-                    executionlog.AppendLine($"Unable to call {host.GetType().Name}[{string.Join(",", callparameters)}] - {e.InnerException?.Message ?? e.Message}");
-                }
-                catch (Exception e)
-                {
-                    executionlog.AppendLine($"Unable to call {host.GetType().Name}[{string.Join(",", callparameters)}] - {e.Message}");
+                    executionlog.AppendLine(e.Message);
                 }
             }
 

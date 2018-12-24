@@ -1,7 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
+using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Operations;
+using NightlyCode.Scripting.Operations.Logic;
+using NightlyCode.Scripting.Operations.Values;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting {
@@ -21,12 +26,19 @@ namespace NightlyCode.Scripting {
         }
 
         IScriptToken GetHostOrString(string name) {
+            switch (name) {
+            case "true":
+                return new ScriptValue(true);
+            case "false":
+                return new ScriptValue(false);
+            }
+
             if (hostpool.ContainsHost(name))
                 return new ScriptHost(hostpool, name);
             return new ScriptValue(name);
         }
 
-        IScriptToken ParseToken(string data, ref int index, IScriptVariableHost variablehost) {
+        IScriptToken ParseToken(string data, ref int index) {
             StringBuilder tokenname = new StringBuilder();
 
             for(; index < data.Length; ++index) {
@@ -88,29 +100,15 @@ namespace NightlyCode.Scripting {
         IScriptToken ParseNumber(string data, ref int index)
         {
             StringBuilder literal = new StringBuilder();
-            bool done = false;
-            for (; index < data.Length; ++index)
-            {
-                char character = data[index];
-                switch (character)
-                {
-                    case ',':
-                    case ')':
-                    case ']':
-                        done = true;
-                        break;
-                    default:
-                        literal.Append(character);
-                        break;
-                }
-
-                if(done)
-                    break;
+            for (; index < data.Length; ++index) {
+                if (char.IsDigit(data[index]) || data[index] == '.')
+                    literal.Append(data[index]);
+                else break;
             }
 
             // this can't be a number
             if (literal.Length == 0)
-                return new ScriptValue("");
+                return new ScriptValue(null);
 
             int dotcount = 0;
             for (int i = 0; i < literal.Length; ++i) {
@@ -245,39 +243,185 @@ namespace NightlyCode.Scripting {
             throw new ScriptException("Parameter list not terminated");
         }
 
-        IScriptToken Parse(string data, ref int index, IScriptVariableHost variablehost) {
-            IScriptToken lasttoken = null;
+
+        IOperator ParseOperator(string data, ref int index) {
+            StringBuilder token = new StringBuilder();
+
+            bool done = false;
+            while (index < data.Length && !done) {
+                switch (data[index]) {
+                case '=':
+                case '!':
+                case '~':
+                case '<':
+                case '>':
+                case '/':
+                case '+':
+                case '*':
+                case '-':
+                case '%':
+                case '&':
+                case '|':
+                case '^':
+                    token.Append(data[index]);
+                    ++index;
+                    break;
+                default:
+                    done = true;
+                    break;
+                }
+            }
+
+            Operator @operator = token.ToString().ParseOperator();
+            switch (@operator) {
+                case Operator.Equal:
+                case Operator.NotEqual:
+                case Operator.Less:
+                case Operator.LessOrEqual:
+                case Operator.Greater:
+                case Operator.GreaterOrEqual:
+                case Operator.Matches:
+                case Operator.NotMatches:
+                    return new ScriptComparision(@operator);
+                case Operator.Addition:
+                    return new Addition();
+                case Operator.Subtraction:
+                    return new Subtraction();
+                case Operator.Division:
+                    return new Division();
+                case Operator.Multiplication:
+                    return new Multiplication();
+                case Operator.Modulo:
+                    return new Modulo();
+                case Operator.LogicAnd:
+                case Operator.LogicOr:
+                case Operator.LogicXor:
+                    return new LogicComparision(@operator);
+                case Operator.BitwiseAnd:
+                    return new BitwiseAnd();
+                case Operator.BitwiseOr:
+                    return new BitwiseOr();
+                case Operator.BitwiseXor:
+                    return new BitwiseXor();
+                case Operator.Assignment:
+                    return new ScriptAssignment();
+                case Operator.ShiftLeft:
+                    return new ShiftLeft();
+                case Operator.ShiftRight:
+                    return new ShiftRight();
+                case Operator.Not:
+                    return new Not();
+                case Operator.Negate:
+                    return new Negate();
+                default:
+                    throw new ScriptException($"Unsupported operator {token}");
+            }
+        }
+
+        IScriptToken ParseBlock(string data, ref int index, IScriptVariableHost variables) {
+            IScriptToken block = Parse(data, ref index, variables);
             while (index < data.Length) {
+                if (char.IsWhiteSpace(data[index]))
+                {
+                    ++index;
+                    continue;
+                }
+
+                break;
+            }
+
+            if (data[index] != ')')
+                throw new ScriptException("Block not terminated");
+
+            ++index;
+            return new Block(block);
+        }
+
+        IScriptToken Parse(string data, ref int index, IScriptVariableHost variablehost) {
+            List<IScriptToken> tokenlist=new List<IScriptToken>();
+            List<OperatorIndex> indexlist=new List<OperatorIndex>();
+
+            bool done = false;
+            while (index < data.Length && !done) {
+                if (char.IsWhiteSpace(data[index])) {
+                    ++index;
+                    continue;
+                }
+
                 switch (data[index]) {
                     case '=':
-                        ++index;
-                        lasttoken=new ScriptAssignment(lasttoken, Parse(data, ref index, variablehost));
+                    case '!':
+                    case '~':
+                    case '<':
+                    case '>':
+                    case '/':
+                    case '+':
+                    case '*':
+                    case '-':
+                    case '%':
+                    case '&':
+                    case '|':
+                    case '^':
+                        IOperator @operator = ParseOperator(data, ref index);
+                        indexlist.Add(new OperatorIndex(tokenlist.Count, @operator));
+                        tokenlist.Add(@operator);
                         break;
                     case '.':
                         ++index;
-                        lasttoken = ParseMember(lasttoken, data, ref index, variablehost);
+                        tokenlist[tokenlist.Count-1]=ParseMember(tokenlist[tokenlist.Count - 1], data, ref index, variablehost);
                         break;
                     case '$':
+                        if (variablehost == null)
+                            throw new ScriptException("No variablehost specified");
                         ++index;
-                        lasttoken=new ScriptVariable(variablehost, ParseName(data, ref index));
+                        tokenlist.Add(new ScriptVariable(variablehost, ParseName(data, ref index)));
+                        break;
+                    case '(':
+                        ++index;
+                        tokenlist.Add(ParseBlock(data, ref index, variablehost));
                         break;
                     case '[':
                         ++index;
-                        if (lasttoken == null)
-                            lasttoken = new ScriptArray(ParseArray(data, ref index, variablehost));
-                        else lasttoken = new ScriptIndexer(lasttoken, ParseParameters(data, ref index, variablehost));
+                        if (tokenlist.Count==0||tokenlist[tokenlist.Count-1] is IOperator)
+                            tokenlist.Add(new ScriptArray(ParseArray(data, ref index, variablehost)));
+                        else tokenlist[tokenlist.Count-1] = new ScriptIndexer(tokenlist[tokenlist.Count - 1], ParseParameters(data, ref index, variablehost));
                         break;
                     case ')':
                     case ',':
                     case ']':
-                        return lasttoken;
+                        done = true;
+                        break;
                     default:
-                        lasttoken = ParseToken(data, ref index, variablehost);
+                        tokenlist.Add(ParseToken(data, ref index));
                         break;
                 }
             }
 
-            return lasttoken;
+            indexlist.Sort((lhs, rhs) => lhs.Token.Operator.CompareTo(rhs.Token.Operator));
+
+            for (int i = 0; i < indexlist.Count; ++i) {
+                OperatorIndex operatorindex = indexlist[i];
+                if (operatorindex.Token is IUnaryToken unary) {
+                    unary.Operand = tokenlist[operatorindex.Index + 1];
+                    tokenlist.RemoveAt(operatorindex.Index + 1);
+                    --operatorindex.Index;
+                    for (int k = i; k < indexlist.Count; ++k)
+                        if (indexlist[k].Index > operatorindex.Index)
+                            --indexlist[k].Index;
+                }
+                else if (operatorindex.Token is IBinaryToken binary) {
+                    binary.Lhs = tokenlist[operatorindex.Index - 1];
+                    binary.Rhs = tokenlist[operatorindex.Index + 1];
+                    tokenlist.RemoveAt(operatorindex.Index + 1);
+                    tokenlist.RemoveAt(operatorindex.Index - 1);
+                    --operatorindex.Index;
+                    for (int k = i; k < indexlist.Count; ++k)
+                        if(indexlist[k].Index>operatorindex.Index)
+                            indexlist[k].Index = indexlist[k].Index - 2;
+                }
+            }
+
+            return tokenlist.Single();
         }
 
         /// <summary>

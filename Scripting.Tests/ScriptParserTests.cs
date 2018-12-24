@@ -166,5 +166,32 @@ namespace Scripting.Tests {
             parser.Parse("$array[2]=7", variables).Execute();
             Assert.IsTrue(new[] {0L, 1L, 7L, 3L, 4L, 5L}.Cast<object>().SequenceEqual((IEnumerable<object>)parser.Parse("$array", variables).Execute()));
         }
+
+        [Test]
+        public void MethodCallWithParameter() {
+            ScriptHostPool hostpool = new ScriptHostPool
+            {
+                ["test"] = new TestHost()
+            };
+            VariablePool variables = new VariablePool();
+            ScriptParser parser = new ScriptParser(hostpool);
+            parser.Parse("$parameter1=test1", variables).Execute();
+            parser.Parse("$parameter2=test2", variables).Execute();
+            Assert.AreEqual("test1_test2",parser.Parse("test.testmethod($parameter1,[$parameter2])", variables).Execute());
+        }
+
+        [Test]
+        public void ObjectParameterCallWithParameter()
+        {
+            ScriptHostPool hostpool = new ScriptHostPool
+            {
+                ["test"] = new TestHost()
+            };
+            VariablePool variables = new VariablePool();
+            ScriptParser parser = new ScriptParser(hostpool);
+            parser.Parse("$parameter=test", variables).Execute();
+            parser.Parse("test.addtesthost(host,$parameter)", variables).Execute();
+            Assert.AreEqual(hostpool["test"], parser.Parse("test[host]", variables).Execute());
+        }
     }
 }

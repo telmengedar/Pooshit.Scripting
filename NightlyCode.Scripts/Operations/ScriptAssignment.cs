@@ -1,7 +1,16 @@
-﻿namespace NightlyCode.Scripting.Operations {
-    public class ScriptAssignment : IScriptToken {
-        readonly IScriptToken lhs;
-        readonly IScriptToken rhs;
+﻿using NightlyCode.Scripting.Data;
+
+namespace NightlyCode.Scripting.Operations {
+
+    /// <summary>
+    /// assignment in a script
+    /// </summary>
+    public class ScriptAssignment : IBinaryToken, IOperator {
+
+        /// <summary>
+        /// creates a new <see cref="ScriptAssignment"/>
+        /// </summary>
+        internal ScriptAssignment() { }
 
         /// <summary>
         /// creates a new <see cref="ScriptAssignment"/>
@@ -9,21 +18,26 @@
         /// <param name="lhs">target of assignment</param>
         /// <param name="rhs">value to assign</param>
         public ScriptAssignment(IScriptToken lhs, IScriptToken rhs) {
-            this.lhs = lhs;
-            this.rhs = rhs;
+            Lhs = lhs;
+            Rhs = rhs;
         }
 
         public override string ToString() {
-            return $"{lhs} = {rhs}";
+            return $"{Lhs} = {Rhs}";
         }
 
         public object Execute() {
-            return lhs.Assign(rhs);
+            return Lhs.Assign(Rhs);
         }
 
         /// <inheritdoc />
         public object Assign(IScriptToken token) {
-            return rhs.Assign(token);
+            return Rhs.Assign(token);
         }
+
+        public IScriptToken Lhs { get; set; }
+
+        public IScriptToken Rhs { get; set; }
+        public Operator Operator => Operator.Assignment;
     }
 }
