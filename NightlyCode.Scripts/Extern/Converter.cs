@@ -14,7 +14,7 @@ namespace NightlyCode.Core.Conversion {
     /// <summary>
     /// converter used to convert data types
     /// </summary>
-    public static class Converter {
+    static class Converter {
         static readonly Dictionary<ConversionKey, Func<object, object>> specificconverters = new Dictionary<ConversionKey, Func<object, object>>();
 
         /// <summary>

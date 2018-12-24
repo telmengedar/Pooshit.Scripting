@@ -5,7 +5,7 @@
     <AssemblyName>NightlyCode.Scripting</AssemblyName>
     <RootNamespace>NightlyCode.Scripting</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.8.2</Version>
+    <Version>0.8.3</Version>
     <Description>Provides an environment to execute simple scripts</Description>
     <Copyright>Toni Gottschall</Copyright>
     <PackageLicenseUrl>http://unlicense.org/</PackageLicenseUrl>

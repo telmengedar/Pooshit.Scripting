@@ -5,7 +5,7 @@ namespace NightlyCode.Core.Conversion {
     /// <summary>
     /// key used for specific conversion
     /// </summary>
-    public class ConversionKey {
+    class ConversionKey {
         readonly Type sourcetype;
         readonly Type targettype;
 
