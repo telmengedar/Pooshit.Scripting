@@ -7,19 +7,33 @@ namespace NightlyCode.Scripting {
     /// <summary>
     /// simple lookup for variables
     /// </summary>
-    public class VariablePool : IScriptVariableHost, IDisposable {
+    public class VariableContext : IVariableContext, IDisposable {
         readonly Dictionary<string, object> values = new Dictionary<string, object>();
+        IVariableContext parentcontext;
 
         /// <summary>
-        /// creates a new <see cref="VariablePool"/>
+        /// creates a new <see cref="VariableContext"/>
         /// </summary>
-        public VariablePool() { }
+        public VariableContext(IVariableContext parentcontext=null) {
+            this.parentcontext = parentcontext;
+        }
 
         /// <summary>
-        /// creates a new <see cref="VariablePool"/>
+        /// indexer for hosts
+        /// </summary>
+        /// <param name="name">name of host to get</param>
+        /// <returns>host instance</returns>
+        public object this[string name]
+        {
+            get => GetVariable(name);
+            set => SetVariable(name, value);
+        }
+
+        /// <summary>
+        /// creates a new <see cref="VariableContext"/>
         /// </summary>
         /// <param name="initialvalues">variables to be contained initially in pool</param>
-        public VariablePool(params Tuple<string, object>[] initialvalues) {
+        public VariableContext(params Tuple<string, object>[] initialvalues) {
             foreach(Tuple<string, object> value in initialvalues)
                 SetVariable(value.Item1, value.Item2);
         }
@@ -34,6 +48,11 @@ namespace NightlyCode.Scripting {
         /// <inheritdoc />
         public void SetVariable(string name, object value) {
             values[name] = value;
+        }
+
+        /// <inheritdoc />
+        public bool ContainsVariable(string name) {
+            return values.ContainsKey(name);
         }
 
         /// <inheritdoc />

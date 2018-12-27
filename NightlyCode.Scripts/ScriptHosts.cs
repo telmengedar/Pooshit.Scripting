@@ -3,22 +3,12 @@ using System.Collections.Generic;
 using System.Reflection;
 
 namespace NightlyCode.Scripting {
-    /// <summary>
-    /// plain implementation of <see cref="IScriptHostPool"/> providing hosts and extension methods
-    /// </summary>
-    public class ScriptHostPool : IScriptHostPool {
-        readonly Dictionary<string, object> hosts = new Dictionary<string, object>();
-        readonly Dictionary<Type, HashSet<MethodInfo>> extensions = new Dictionary<Type, HashSet<MethodInfo>>();
 
-        /// <summary>
-        /// indexer for hosts
-        /// </summary>
-        /// <param name="name">name of host to get</param>
-        /// <returns>host instance</returns>
-        public object this[string name] {
-            get => GetHost(name);
-            set => AddHost(name, value);
-        }
+    /// <summary>
+    /// plain implementation of <see cref="IScriptHosts"/> providing hosts and extension methods
+    /// </summary>
+    public class ScriptHosts : VariableContext, IScriptHosts {
+        readonly Dictionary<Type, HashSet<MethodInfo>> extensions = new Dictionary<Type, HashSet<MethodInfo>>();
 
         /// <summary>
         /// indexer for extension methods
@@ -26,15 +16,6 @@ namespace NightlyCode.Scripting {
         /// <param name="host">host type for which to get extension methods</param>
         /// <returns>available extension methods</returns>
         public IEnumerable<MethodInfo> this[Type host] => GetExtensions(host);
-
-        /// <summary>
-        /// adds a host to the script host pool
-        /// </summary>
-        /// <param name="name">name under which to serve the specified <paramref name="host"/></param>
-        /// <param name="host">host to add</param>
-        public void AddHost(string name, object host) {
-            hosts[name] = host;
-        }
 
         /// <summary>
         /// adds an extension method to the script pool
@@ -66,16 +47,6 @@ namespace NightlyCode.Scripting {
                     continue;
                 AddExtensionMethod(parameters[0].ParameterType, method);
             }
-        }
-
-        /// <inheritdoc />
-        public object GetHost(string name) {
-            return hosts[name];
-        }
-
-        /// <inheritdoc />
-        public bool ContainsHost(string name) {
-            return hosts.ContainsKey(name);
         }
 
         /// <inheritdoc />

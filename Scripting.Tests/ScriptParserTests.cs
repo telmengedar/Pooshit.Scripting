@@ -18,23 +18,23 @@ namespace Scripting.Tests {
         [TestCase("$test", typeof(ScriptVariable))]
         [TestCase("test.method($test,2)", typeof(ScriptMethod))]
         [TestCase("test.method(\"\",clean)", typeof(ScriptMethod))]
-        [TestCase("test.speak(It is quite simple,\"CereVoice Stuart - English (Scotland)\")", typeof(ScriptMethod))]
+        [TestCase("test.speak(\"It is quite simple\",\"CereVoice Stuart - English (Scotland)\")", typeof(ScriptMethod))]
         [TestCase("test.method(1,2,3,[4,4])", typeof(ScriptMethod))]
         [TestCase("test.property=255.34", typeof(ScriptAssignment))]
         [TestCase("\"TestValue\"", typeof(ScriptValue))]
         [TestCase("122.3", typeof(ScriptValue))]
         public void TestValidStatements(string statement, Type expectedroot) {
-            ScriptHostPool hostpool = new ScriptHostPool {
+            ScriptHosts hostpool = new ScriptHosts {
                 ["test"] = new TestHost()
             };
             ScriptParser parser = new ScriptParser(hostpool);
-            IScriptToken token = parser.Parse(statement, new VariablePool(new Tuple<string, object>("test", "test")));
+            IScriptToken token = parser.Parse(statement, new VariableContext(new Tuple<string, object>("test", "test")));
             Assert.AreEqual(expectedroot, token.GetType());
         }
 
         [Test]
         public void TestMethodCallWithArray() {
-            ScriptHostPool hostpool = new ScriptHostPool
+            ScriptHosts hostpool = new ScriptHosts
             {
                 ["test"] = new TestHost()
             };
@@ -45,19 +45,19 @@ namespace Scripting.Tests {
 
         [Test]
         public void TestMethodCallWithSpaces() {
-            ScriptHostPool hostpool = new ScriptHostPool
+            ScriptHosts hostpool = new ScriptHosts
             {
                 ["test"] = new TestHost()
             };
             ScriptParser parser = new ScriptParser(hostpool);
-            IScriptToken token = parser.Parse("test.testmethod( fuck ,[ you , for,real ])");
+            IScriptToken token = parser.Parse("test.testmethod( fuck ,[ you , \"for\",real ])");
             string result = token.Execute() as string;
             Assert.AreEqual("fuck_you,for,real", result);
         }
 
         [Test]
         public void TestTabInParameter() {
-            ScriptHostPool hostpool = new ScriptHostPool
+            ScriptHosts hostpool = new ScriptHosts
             {
                 ["test"] = new TestHost()
             };
@@ -69,16 +69,16 @@ namespace Scripting.Tests {
 
         [Test]
         public void AssignVariable() {
-            VariablePool variables =new VariablePool();
-            ScriptParser parser = new ScriptParser(new ScriptHostPool());
+            VariableContext variables =new VariableContext();
+            ScriptParser parser = new ScriptParser(new ScriptHosts());
             Assert.AreEqual(7, parser.Parse("$number=7", variables).Execute());
             Assert.AreEqual(7, parser.Parse("$number", variables).Execute());
         }
 
         [Test]
         public void CallVariableMember() {
-            VariablePool variables = new VariablePool();
-            ScriptParser parser = new ScriptParser(new ScriptHostPool());
+            VariableContext variables = new VariableContext();
+            ScriptParser parser = new ScriptParser(new ScriptHosts());
             Assert.AreEqual(7, parser.Parse("$number=7", variables).Execute());
             Assert.AreEqual("7", parser.Parse("$number.tostring()", variables).Execute());
         }
@@ -86,8 +86,8 @@ namespace Scripting.Tests {
         [Test]
         public void ReadVariableMember()
         {
-            VariablePool variables = new VariablePool();
-            ScriptParser parser = new ScriptParser(new ScriptHostPool());
+            VariableContext variables = new VariableContext();
+            ScriptParser parser = new ScriptParser(new ScriptHosts());
             Assert.AreEqual("longstring", parser.Parse("$number=\"longstring\"", variables).Execute());
             Assert.AreEqual(10, parser.Parse("$number.length", variables).Execute());
         }
@@ -95,17 +95,17 @@ namespace Scripting.Tests {
         [Test]
         public void ReadMemberChain()
         {
-            VariablePool variables = new VariablePool();
-            ScriptParser parser = new ScriptParser(new ScriptHostPool());
+            VariableContext variables = new VariableContext();
+            ScriptParser parser = new ScriptParser(new ScriptHosts());
             Assert.AreEqual("longstring", parser.Parse("$number=\"longstring\"", variables).Execute());
             Assert.AreEqual("10", parser.Parse("$number.length.tostring()", variables).Execute());
         }
 
         [Test]
         public void ExtensionMethods() {
-            ScriptHostPool scripthost = new ScriptHostPool();
+            ScriptHosts scripthost = new ScriptHosts();
             scripthost.AddExtensions<TestExtensions>();
-            VariablePool variables = new VariablePool();
+            VariableContext variables = new VariableContext();
             ScriptParser parser = new ScriptParser(scripthost);
             Assert.AreEqual("longstring", parser.Parse("\"long\".append(string)", variables).Execute());
         }
@@ -113,9 +113,9 @@ namespace Scripting.Tests {
         [Test]
         public void ExtensionsForBaseTypes()
         {
-            ScriptHostPool scripthost = new ScriptHostPool();
+            ScriptHosts scripthost = new ScriptHosts();
             scripthost.AddExtensions<TestExtensions>();
-            VariablePool variables = new VariablePool();
+            VariableContext variables = new VariableContext();
             ScriptParser parser = new ScriptParser(scripthost);
             Assert.DoesNotThrow(() => parser.Parse("\"long\".hashy()", variables).Execute());
         }
@@ -123,7 +123,7 @@ namespace Scripting.Tests {
         [Test]
         public void MethodParametersWithMethodCalls()
         {
-            ScriptHostPool hostpool = new ScriptHostPool
+            ScriptHosts hostpool = new ScriptHosts
             {
                 ["test"] = new TestHost()
             };
@@ -135,7 +135,7 @@ namespace Scripting.Tests {
         [Test]
         public void CallIndexer()
         {
-            ScriptHostPool hostpool = new ScriptHostPool
+            ScriptHosts hostpool = new ScriptHosts
             {
                 ["test"] = new TestHost()
             };
@@ -147,21 +147,21 @@ namespace Scripting.Tests {
         [Test]
         public void CallIndexerOnString()
         {
-            ScriptParser parser = new ScriptParser(new ScriptHostPool());
+            ScriptParser parser = new ScriptParser(new ScriptHosts());
             Assert.AreEqual('s', parser.Parse("testedstuff[6]").Execute());
         }
 
         [Test]
         public void CallIndexerOnArray()
         {
-            ScriptParser parser = new ScriptParser(new ScriptHostPool());
+            ScriptParser parser = new ScriptParser(new ScriptHosts());
             Assert.AreEqual(9, parser.Parse("[9,7,3,3,2,9,0][5]").Execute());
         }
 
         [Test]
         public void SetArrayValue() {
-            VariablePool variables=new VariablePool();
-            ScriptParser parser=new ScriptParser(new ScriptHostPool());
+            VariableContext variables=new VariableContext();
+            ScriptParser parser=new ScriptParser(new ScriptHosts());
             parser.Parse("$array=[0,1,2,3,4,5]", variables).Execute();
             parser.Parse("$array[2]=7", variables).Execute();
             Assert.IsTrue(new[] {0L, 1L, 7L, 3L, 4L, 5L}.Cast<object>().SequenceEqual((IEnumerable<object>)parser.Parse("$array", variables).Execute()));
@@ -169,11 +169,11 @@ namespace Scripting.Tests {
 
         [Test]
         public void MethodCallWithParameter() {
-            ScriptHostPool hostpool = new ScriptHostPool
+            ScriptHosts hostpool = new ScriptHosts
             {
                 ["test"] = new TestHost()
             };
-            VariablePool variables = new VariablePool();
+            VariableContext variables = new VariableContext();
             ScriptParser parser = new ScriptParser(hostpool);
             parser.Parse("$parameter1=test1", variables).Execute();
             parser.Parse("$parameter2=test2", variables).Execute();
@@ -183,11 +183,11 @@ namespace Scripting.Tests {
         [Test]
         public void ObjectParameterCallWithParameter()
         {
-            ScriptHostPool hostpool = new ScriptHostPool
+            ScriptHosts hostpool = new ScriptHosts
             {
                 ["test"] = new TestHost()
             };
-            VariablePool variables = new VariablePool();
+            VariableContext variables = new VariableContext();
             ScriptParser parser = new ScriptParser(hostpool);
             parser.Parse("$parameter=test", variables).Execute();
             parser.Parse("test.addtesthost(host,$parameter)", variables).Execute();

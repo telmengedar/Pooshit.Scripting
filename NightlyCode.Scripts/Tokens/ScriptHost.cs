@@ -4,7 +4,7 @@
     /// token providing a known host instance
     /// </summary>
     public class ScriptHost : IScriptToken {
-        readonly IScriptHostPool hostpool;
+        readonly IScriptHosts hostpool;
         readonly string hostname;
 
         /// <summary>
@@ -12,14 +12,14 @@
         /// </summary>
         /// <param name="hostpool">pool containing available hosts</param>
         /// <param name="hostname">name of host</param>
-        public ScriptHost(IScriptHostPool hostpool, string hostname) {
+        public ScriptHost(IScriptHosts hostpool, string hostname) {
             this.hostpool = hostpool;
             this.hostname = hostname;
         }
 
         /// <inheritdoc />
         public object Execute() {
-            return hostpool.GetHost(hostname);
+            return hostpool.GetVariable(hostname);
         }
 
         public object Assign(IScriptToken token) {

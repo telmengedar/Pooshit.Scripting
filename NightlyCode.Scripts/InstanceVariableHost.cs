@@ -6,7 +6,7 @@ namespace NightlyCode.Scripting {
     /// <summary>
     /// host which serves variables of an instance
     /// </summary>
-    public class InstanceVariableHost : IScriptVariableHost {
+    public class InstanceVariableHost : IVariableContext {
         readonly object instance;
 
         /// <summary>
@@ -25,6 +25,10 @@ namespace NightlyCode.Scripting {
         /// <inheritdoc />
         public void SetVariable(string name, object value) {
             new ScriptMember(new ScriptValue(instance), name).Assign(new ScriptValue(value));
+        }
+
+        public bool ContainsVariable(string name) {
+            throw new System.NotImplementedException();
         }
     }
 }

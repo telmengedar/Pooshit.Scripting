@@ -3,7 +3,7 @@
     /// <summary>
     /// host for script variables
     /// </summary>
-    public interface IScriptVariableHost {
+    public interface IVariableContext {
 
         /// <summary>
         /// get value of a variable
@@ -18,5 +18,12 @@
         /// <param name="name">variable name</param>
         /// <param name="value">value to set</param>
         void SetVariable(string name, object value);
+
+        /// <summary>
+        /// determines whether the context contains a variable with the specified name
+        /// </summary>
+        /// <param name="name">name of variable to check for</param>
+        /// <returns>true if variable is in this context, false otherwise</returns>
+        bool ContainsVariable(string name);
     }
 }

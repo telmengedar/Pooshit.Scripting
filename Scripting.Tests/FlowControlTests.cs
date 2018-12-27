@@ -1,0 +1,124 @@
+﻿
+using NightlyCode.Scripting;
+using NUnit.Framework;
+
+namespace Scripting.Tests {
+
+    [TestFixture, Parallelizable]
+    public class FlowControlTests {
+
+        [Test, Parallelizable]
+        public void TestIf() {
+            IScriptToken script = new ScriptParser(new ScriptHosts()).Parse(
+                "if(10>3)" +
+                "  $result=5;" +
+                "$result",
+                new VariableContext());
+            Assert.AreEqual(5, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void TestElse() {
+            IScriptToken script = new ScriptParser(new ScriptHosts()).Parse(
+                "if(3>10)" +
+                "  $result=5;" +
+                "else $result=3;" +
+                "$result",
+                new VariableContext());
+            Assert.AreEqual(3, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void TestFor() {
+            IScriptToken script = new ScriptParser(new ScriptHosts()).Parse(
+                "$result=0;"+
+                "for($i=0,$i<10,$i=$i+1)" +
+                "  $result=$result+$i*10;" +
+                "$result",
+                new VariableContext()
+            );
+            Assert.AreEqual(450, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void TestForeach() {
+            IScriptToken script = new ScriptParser(new ScriptHosts()).Parse(
+                "$result=0;" +
+                "foreach($i,[1,2,3,4,5,6,7,8,9])" +
+                "  $result=$result+$i;" +
+                "$result",
+                new VariableContext()
+            );
+            Assert.AreEqual(45, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void TestWhile() {
+            IScriptToken script = new ScriptParser().Parse(
+                "$result=2;" +
+                "while($result<20)" +
+                "  $result=$result*$result;" +
+                "$result",
+                new VariableContext()
+            );
+            Assert.AreEqual(256, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void TestSwitch() {
+            IScriptToken script = new ScriptParser().Parse(
+                "$condition=7;" +
+                "switch($condition)" +
+                "case(2)" +
+                "  $result=0;" +
+                "case(7)" +
+                "  $result=9;" +
+                "case(11)" +
+                "  $result=2;" +
+                "$result",
+                new VariableContext()
+            );
+
+            Assert.AreEqual(9, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void SwitchWithDefault()
+        {
+            IScriptToken script = new ScriptParser().Parse(
+                "$condition=3;" +
+                "switch($condition)" +
+                "case(2)" +
+                "  $result=0;" +
+                "case(7)" +
+                "  $result=9;" +
+                "case(11)" +
+                "  $result=2;" +
+                "default"+
+                "  $result=200;"+
+                "$result",
+                new VariableContext()
+            );
+
+            Assert.AreEqual(200, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void SwitchMultipleCaseCondition()
+        {
+            IScriptToken script = new ScriptParser().Parse(
+                "$condition=11;" +
+                "switch($condition)" +
+                "case(2,7,11)" +
+                "  $result=32;" +
+                "default" +
+                "  $result=200;" +
+                "$result",
+                new VariableContext()
+            );
+
+            Assert.AreEqual(32, script.Execute());
+        }
+
+    }
+}

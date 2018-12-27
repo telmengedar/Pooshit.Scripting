@@ -25,5 +25,16 @@ namespace NightlyCode.Scripting.Extensions {
         public static Type GetValueType(this int index) {
             return typelist[index];
         }
+
+        public static bool ToBoolean(this object value) {
+            if (value == null)
+                return false;
+
+            if (value is bool b)
+                return b;
+            if (value is IComparable comparable)
+                return comparable.CompareTo(0) != 0;
+            return false;
+        }
     }
 }

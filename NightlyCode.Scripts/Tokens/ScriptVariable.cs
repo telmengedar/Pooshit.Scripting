@@ -4,14 +4,14 @@
     /// access to variable in script
     /// </summary>
     public class ScriptVariable : IScriptToken {
-        readonly IScriptVariableHost variablehost;
+        readonly IVariableContext variablehost;
 
         /// <summary>
         /// creates a new <see cref="ScriptVariable"/>
         /// </summary>
         /// <param name="variablehost">host containing variable information</param>
         /// <param name="name">name of variable</param>
-        public ScriptVariable(IScriptVariableHost variablehost, string name) {
+        public ScriptVariable(IVariableContext variablehost, string name) {
             this.variablehost = variablehost;
             Name = name;
         }

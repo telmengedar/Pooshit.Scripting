@@ -13,7 +13,7 @@ namespace Scripting.Tests {
         [TestCase("\"string\"==\"string\"")]
         [Parallelizable]
         public void Equals(string data) {
-            Assert.AreEqual(true, new ScriptParser(new ScriptHostPool()).Parse(data).Execute());
+            Assert.AreEqual(true, new ScriptParser(new ScriptHosts()).Parse(data).Execute());
         }
 
         [TestCase("3!=7")]
@@ -22,13 +22,13 @@ namespace Scripting.Tests {
         [Parallelizable]
         public void NotEquals(string data)
         {
-            Assert.AreEqual(true, new ScriptParser(new ScriptHostPool()).Parse(data).Execute());
+            Assert.AreEqual(true, new ScriptParser(new ScriptHosts()).Parse(data).Execute());
         }
 
         [Test, Parallelizable]
         public void Less()
         {
-            Assert.AreEqual(true, new ScriptParser(new ScriptHostPool()).Parse("3<8").Execute());
+            Assert.AreEqual(true, new ScriptParser(new ScriptHosts()).Parse("3<8").Execute());
         }
 
         [TestCase("3<=3")]
@@ -36,18 +36,18 @@ namespace Scripting.Tests {
         [Parallelizable]
         public void LessEquals(string data)
         {
-            Assert.AreEqual(true, new ScriptParser(new ScriptHostPool()).Parse(data).Execute());
+            Assert.AreEqual(true, new ScriptParser(new ScriptHosts()).Parse(data).Execute());
         }
 
         [Test, Parallelizable]
         public void Greater()
         {
-            Assert.AreEqual(true, new ScriptParser(new ScriptHostPool()).Parse("8>4").Execute());
+            Assert.AreEqual(true, new ScriptParser(new ScriptHosts()).Parse("8>4").Execute());
         }
 
         [Test, Parallelizable]
         public void MethodGreater() {
-            ScriptParser parser = new ScriptParser(new ScriptHostPool() {
+            ScriptParser parser = new ScriptParser(new ScriptHosts() {
                 ["test"] = new TestHost()
             });
             Assert.AreEqual(true, parser.Parse("test.integer(7)>2").Execute());
@@ -56,7 +56,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void PropertyGreater()
         {
-            ScriptParser parser = new ScriptParser(new ScriptHostPool()
+            ScriptParser parser = new ScriptParser(new ScriptHosts()
             {
                 ["test"] = new TestHost()
             });
@@ -69,7 +69,7 @@ namespace Scripting.Tests {
         [Parallelizable]
         public void GreaterEqualsEquals(string data)
         {
-            Assert.AreEqual(true, new ScriptParser(new ScriptHostPool()).Parse(data).Execute());
+            Assert.AreEqual(true, new ScriptParser(new ScriptHosts()).Parse(data).Execute());
         }
 
     }
