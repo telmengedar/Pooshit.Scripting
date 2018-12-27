@@ -33,7 +33,7 @@ namespace NightlyCode.Scripting.Extensions {
             if (value is bool b)
                 return b;
             if (value is IComparable comparable)
-                return comparable.CompareTo(0) != 0;
+                return comparable.CompareTo(Activator.CreateInstance(value.GetType())) != 0;
             return false;
         }
     }

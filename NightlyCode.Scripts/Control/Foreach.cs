@@ -19,7 +19,9 @@ namespace NightlyCode.Scripting.Control {
             if (collectionvalue is IEnumerable enumeration) {
                 foreach (object value in enumeration.Cast<object>()) {
                     variable.Assign(new ScriptValue(value));
-                    Body?.Execute();
+                    object bodyvalue=Body?.Execute();
+                    if (bodyvalue is Return)
+                        return bodyvalue;
                 }
             }
             else throw new ScriptException("Foreach value is not a collection");

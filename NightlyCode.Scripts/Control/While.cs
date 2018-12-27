@@ -12,7 +12,9 @@ namespace NightlyCode.Scripting.Control {
 
         public object Execute() {
             while (condition.Execute().ToBoolean()) {
-                Body.Execute();
+                object value=Body.Execute();
+                if (value is Return)
+                    return value;
             }
 
             return null;

@@ -27,7 +27,9 @@ namespace NightlyCode.Scripting.Control {
             initializer?.Execute();
 
             while (condition.Execute().ToBoolean()) {
-                Body?.Execute();
+                object value=Body?.Execute();
+                if (value is Return)
+                    return value;
                 step?.Execute();
             }
 
