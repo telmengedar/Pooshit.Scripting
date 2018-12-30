@@ -8,29 +8,29 @@ namespace Scripting.Tests {
 
         [Test]
         public void BitwiseAnd() {
-            Assert.AreEqual(27&13, new ScriptParser(new ScriptHosts()).Parse("27&13").Execute());
+            Assert.AreEqual(27&13, new ScriptParser(new ExtensionProvider()).Parse("27&13").Execute());
         }
 
         [Test]
         public void BitwiseOr() {
-            Assert.AreEqual(27 | 13, new ScriptParser(new ScriptHosts()).Parse("27|13").Execute());
+            Assert.AreEqual(27 | 13, new ScriptParser(new ExtensionProvider()).Parse("27|13").Execute());
         }
 
         [Test]
         public void BitwiseXor() {
-            Assert.AreEqual(27 ^ 13, new ScriptParser(new ScriptHosts()).Parse("27^13").Execute());
+            Assert.AreEqual(27 ^ 13, new ScriptParser(new ExtensionProvider()).Parse("27^13").Execute());
         }
 
         [Test]
         public void BitwiseShiftLeft()
         {
-            Assert.AreEqual(27 << 2, new ScriptParser(new ScriptHosts()).Parse("27<<2").Execute());
+            Assert.AreEqual(27 << 2, new ScriptParser(new ExtensionProvider()).Parse("27<<2").Execute());
         }
 
         [Test]
         public void BitwiseShiftRight()
         {
-            Assert.AreEqual(27 >> 1, new ScriptParser(new ScriptHosts()).Parse("27>>1").Execute());
+            Assert.AreEqual(27 >> 1, new ScriptParser(new ExtensionProvider()).Parse("27>>1").Execute());
         }
     }
 }

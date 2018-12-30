@@ -9,45 +9,41 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void TestIf() {
-            IScriptToken script = new ScriptParser(new ScriptHosts()).Parse(
+            IScriptToken script = new ScriptParser().Parse(
                 "if(10>3)" +
                 "  $result=5;" +
-                "$result",
-                new VariableContext());
+                "$result");
             Assert.AreEqual(5, script.Execute());
         }
 
         [Test, Parallelizable]
         public void TestElse() {
-            IScriptToken script = new ScriptParser(new ScriptHosts()).Parse(
+            IScriptToken script = new ScriptParser().Parse(
                 "if(3>10)" +
                 "  $result=5;" +
                 "else $result=3;" +
-                "$result",
-                new VariableContext());
+                "$result");
             Assert.AreEqual(3, script.Execute());
         }
 
         [Test, Parallelizable]
         public void TestFor() {
-            IScriptToken script = new ScriptParser(new ScriptHosts()).Parse(
+            IScriptToken script = new ScriptParser().Parse(
                 "$result=0;"+
                 "for($i=0,$i<10,$i=$i+1)" +
                 "  $result=$result+$i*10;" +
-                "$result",
-                new VariableContext()
+                "$result"
             );
             Assert.AreEqual(450, script.Execute());
         }
 
         [Test, Parallelizable]
         public void TestForeach() {
-            IScriptToken script = new ScriptParser(new ScriptHosts()).Parse(
+            IScriptToken script = new ScriptParser().Parse(
                 "$result=0;" +
                 "foreach($i,[1,2,3,4,5,6,7,8,9])" +
                 "  $result=$result+$i;" +
-                "$result",
-                new VariableContext()
+                "$result"
             );
             Assert.AreEqual(45, script.Execute());
         }
@@ -58,8 +54,7 @@ namespace Scripting.Tests {
                 "$result=2;" +
                 "while($result<20)" +
                 "  $result=$result*$result;" +
-                "$result",
-                new VariableContext()
+                "$result"
             );
             Assert.AreEqual(256, script.Execute());
         }
@@ -75,8 +70,7 @@ namespace Scripting.Tests {
                 "  $result=9;" +
                 "case(11)" +
                 "  $result=2;" +
-                "$result",
-                new VariableContext()
+                "$result"
             );
 
             Assert.AreEqual(9, script.Execute());
@@ -96,8 +90,7 @@ namespace Scripting.Tests {
                 "  $result=2;" +
                 "default"+
                 "  $result=200;"+
-                "$result",
-                new VariableContext()
+                "$result"
             );
 
             Assert.AreEqual(200, script.Execute());
@@ -113,8 +106,7 @@ namespace Scripting.Tests {
                 "  $result=32;" +
                 "default" +
                 "  $result=200;" +
-                "$result",
-                new VariableContext()
+                "$result"
             );
 
             Assert.AreEqual(32, script.Execute());
@@ -128,8 +120,7 @@ namespace Scripting.Tests {
                 "  $result=7;" +
                 "  $result=$result+8;" +
                 "}" +
-                "$result;",
-                new VariableContext()
+                "$result;"
             );
             Assert.AreEqual(15, script.Execute());
         }
@@ -143,8 +134,7 @@ namespace Scripting.Tests {
                 "  $result=7;" +
                 "  $result=$result+8;" +
                 "}" +
-                "$result;",
-                new VariableContext()
+                "$result;"
             );
             Assert.AreEqual(0, script.Execute());
         }
@@ -199,15 +189,14 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void ReturnInInnerBlock()
         {
-            IScriptToken script = new ScriptParser(new ScriptHosts()).Parse(
+            IScriptToken script = new ScriptParser(new ExtensionProvider()).Parse(
                 "$result=0;" +
                 "foreach($i,[1,2,3,4,5,6,7,8,9]) {" +
                 "  if($result>=10)"+
                 "    return $result;"+
                 "  $result=$result+$i;" +
                 "}"+
-                "$result",
-                new VariableContext()
+                "$result"
             );
             Assert.AreEqual(10, script.Execute());
         }

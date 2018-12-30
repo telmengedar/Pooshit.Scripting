@@ -8,19 +8,19 @@ namespace Scripting.Tests {
 
         [Test]
         public void TestAnd() {
-            Assert.AreEqual(true, new ScriptParser(new ScriptHosts()).Parse("3<4&&8>2").Execute());
+            Assert.AreEqual(true, new ScriptParser(new ExtensionProvider()).Parse("3<4&&8>2").Execute());
         }
 
         [Test]
         public void TestOr()
         {
-            Assert.AreEqual(true, new ScriptParser(new ScriptHosts()).Parse("3<4&&8>2").Execute());
+            Assert.AreEqual(true, new ScriptParser(new ExtensionProvider()).Parse("3<4&&8>2").Execute());
         }
 
         [Test]
         public void TestXor()
         {
-            Assert.AreEqual(false, new ScriptParser(new ScriptHosts()).Parse("3<4^^8>2").Execute());
+            Assert.AreEqual(false, new ScriptParser(new ExtensionProvider()).Parse("3<4^^8>2").Execute());
         }
 
     }

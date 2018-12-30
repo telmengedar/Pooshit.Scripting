@@ -10,7 +10,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// calls a method in a script
     /// </summary>
     public class ScriptMethod : IScriptToken {
-        readonly IScriptHosts hostpool;
+        readonly IExtensionProvider hostpool;
         readonly IScriptToken hosttoken;
         readonly string methodname;
         readonly IScriptToken[] parameters;
@@ -22,7 +22,7 @@ namespace NightlyCode.Scripting.Tokens {
         /// <param name="hosttoken">host of method to be called</param>
         /// <param name="methodname">name of method to call</param>
         /// <param name="parameters">parameters for method call</param>
-        public ScriptMethod(IScriptHosts hostpool, IScriptToken hosttoken, string methodname, IScriptToken[] parameters) {
+        public ScriptMethod(IExtensionProvider hostpool, IScriptToken hosttoken, string methodname, IScriptToken[] parameters) {
             this.hostpool = hostpool;
             this.hosttoken = hosttoken;
             this.methodname = methodname.ToLower();

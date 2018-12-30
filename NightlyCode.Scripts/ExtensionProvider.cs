@@ -5,9 +5,9 @@ using System.Reflection;
 namespace NightlyCode.Scripting {
 
     /// <summary>
-    /// plain implementation of <see cref="IScriptHosts"/> providing hosts and extension methods
+    /// plain implementation of <see cref="IExtensionProvider"/> providing hosts and extension methods
     /// </summary>
-    public class ScriptHosts : VariableContext, IScriptHosts {
+    public class ExtensionProvider : IExtensionProvider {
         readonly Dictionary<Type, HashSet<MethodInfo>> extensions = new Dictionary<Type, HashSet<MethodInfo>>();
 
         /// <summary>

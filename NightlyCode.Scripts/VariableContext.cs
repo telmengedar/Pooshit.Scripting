@@ -1,21 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using NightlyCode.Scripting.Data;
 
 namespace NightlyCode.Scripting {
 
     /// <summary>
     /// simple lookup for variables
     /// </summary>
-    public class VariableContext : IVariableContext, IDisposable {
+    class VariableContext : IVariableContext, IDisposable {
         readonly Dictionary<string, object> values = new Dictionary<string, object>();
-        IVariableContext parentcontext;
+        readonly IVariableContext parentcontext;
 
         /// <summary>
         /// creates a new <see cref="VariableContext"/>
         /// </summary>
-        public VariableContext(IVariableContext parentcontext=null) {
+        /// <param name="parentcontext">parent variable context</param>
+        internal VariableContext(IVariableContext parentcontext=null) {
             this.parentcontext = parentcontext;
+        }
+
+        /// <summary>
+        /// creates a new <see cref="VariableContext"/>
+        /// </summary>
+        /// <param name="parentcontext">parent variable context</param>
+        /// <param name="initialvalues">variables to be contained initially in pool</param>
+        internal VariableContext(IVariableContext parentcontext = null, params Variable[] initialvalues)
+        : this(parentcontext)
+        {
+            foreach (Variable variable in initialvalues)
+                SetVariable(variable.Name, variable.Value);
         }
 
         /// <summary>
@@ -30,29 +44,39 @@ namespace NightlyCode.Scripting {
         }
 
         /// <summary>
-        /// creates a new <see cref="VariableContext"/>
+        /// determines whether the variable context is read only
         /// </summary>
-        /// <param name="initialvalues">variables to be contained initially in pool</param>
-        public VariableContext(params Tuple<string, object>[] initialvalues) {
-            foreach(Tuple<string, object> value in initialvalues)
-                SetVariable(value.Item1, value.Item2);
+        internal bool IsReadOnly { get; set; }
+
+        /// <inheritdoc />
+        public void Clear() {
+            values.Clear();
         }
 
         /// <inheritdoc />
         public object GetVariable(string name) {
+            if(!ContainsVariable(name))
+                throw new ScriptException($"Variable {name} not found");
+
             if (values.TryGetValue(name, out object value))
                 return value;
-            throw new ScriptException($"Variable {name} not found");
+            return parentcontext?.GetVariable(name);
         }
 
         /// <inheritdoc />
         public void SetVariable(string name, object value) {
-            values[name] = value;
+            if (parentcontext?.ContainsVariable(name)??false)
+                parentcontext.SetVariable(name, value);
+            else {
+                if (IsReadOnly)
+                    throw new ScriptException("Variables in this scope are read-only");
+                values[name] = value;
+            }
         }
 
         /// <inheritdoc />
         public bool ContainsVariable(string name) {
-            return values.ContainsKey(name);
+            return values.ContainsKey(name) || (parentcontext?.ContainsVariable(name) ?? false);
         }
 
         /// <inheritdoc />

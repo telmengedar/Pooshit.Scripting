@@ -1,5 +1,5 @@
-﻿using System.Threading;
-using NightlyCode.Scripting;
+﻿using NightlyCode.Scripting;
+using NightlyCode.Scripting.Data;
 using NUnit.Framework;
 using Scripting.Tests.Data;
 
@@ -13,7 +13,7 @@ namespace Scripting.Tests {
         [TestCase("\"string\"==\"string\"")]
         [Parallelizable]
         public void Equals(string data) {
-            Assert.AreEqual(true, new ScriptParser(new ScriptHosts()).Parse(data).Execute());
+            Assert.AreEqual(true, new ScriptParser(new ExtensionProvider()).Parse(data).Execute());
         }
 
         [TestCase("3!=7")]
@@ -22,13 +22,13 @@ namespace Scripting.Tests {
         [Parallelizable]
         public void NotEquals(string data)
         {
-            Assert.AreEqual(true, new ScriptParser(new ScriptHosts()).Parse(data).Execute());
+            Assert.AreEqual(true, new ScriptParser(new ExtensionProvider()).Parse(data).Execute());
         }
 
         [Test, Parallelizable]
         public void Less()
         {
-            Assert.AreEqual(true, new ScriptParser(new ScriptHosts()).Parse("3<8").Execute());
+            Assert.AreEqual(true, new ScriptParser(new ExtensionProvider()).Parse("3<8").Execute());
         }
 
         [TestCase("3<=3")]
@@ -36,32 +36,29 @@ namespace Scripting.Tests {
         [Parallelizable]
         public void LessEquals(string data)
         {
-            Assert.AreEqual(true, new ScriptParser(new ScriptHosts()).Parse(data).Execute());
+            Assert.AreEqual(true, new ScriptParser(new ExtensionProvider()).Parse(data).Execute());
         }
 
         [Test, Parallelizable]
         public void Greater()
         {
-            Assert.AreEqual(true, new ScriptParser(new ScriptHosts()).Parse("8>4").Execute());
+            Assert.AreEqual(true, new ScriptParser(new ExtensionProvider()).Parse("8>4").Execute());
         }
 
         [Test, Parallelizable]
         public void MethodGreater() {
-            ScriptParser parser = new ScriptParser(new ScriptHosts() {
-                ["test"] = new TestHost()
-            });
+            ScriptParser parser = new ScriptParser(new Variable("test", new TestHost()));
             Assert.AreEqual(true, parser.Parse("test.integer(7)>2").Execute());
         }
 
         [Test, Parallelizable]
-        public void PropertyGreater()
-        {
-            ScriptParser parser = new ScriptParser(new ScriptHosts()
-            {
-                ["test"] = new TestHost()
-            });
-            parser.Parse("test.property=8").Execute();
-            Assert.AreEqual(true, parser.Parse("test.property>5").Execute());
+        public void PropertyGreater() {
+            ScriptParser parser = new ScriptParser(new Variable("test", new TestHost()));
+            IScriptToken script=parser.Parse(
+                "test.property=8\n"+
+                "test.property>5"
+            );
+            Assert.AreEqual(true, script.Execute());
         }
 
         [TestCase("3>=3")]
@@ -69,7 +66,7 @@ namespace Scripting.Tests {
         [Parallelizable]
         public void GreaterEqualsEquals(string data)
         {
-            Assert.AreEqual(true, new ScriptParser(new ScriptHosts()).Parse(data).Execute());
+            Assert.AreEqual(true, new ScriptParser(new ExtensionProvider()).Parse(data).Execute());
         }
 
     }

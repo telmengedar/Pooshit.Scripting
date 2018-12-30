@@ -1,9 +1,16 @@
-﻿namespace NightlyCode.Scripting {
+﻿using System;
+
+namespace NightlyCode.Scripting {
 
     /// <summary>
     /// host for script variables
     /// </summary>
-    public interface IVariableContext {
+    public interface IVariableContext : IDisposable {
+
+        /// <summary>
+        /// clears all variable entries
+        /// </summary>
+        void Clear();
 
         /// <summary>
         /// get value of a variable

@@ -7,7 +7,7 @@ namespace NightlyCode.Scripting {
     /// <summary>
     /// interface for a pool of script hosts
     /// </summary>
-    public interface IScriptHosts : IVariableContext {
+    public interface IExtensionProvider {
 
         /// <summary>
         /// get extension methods available for type
@@ -21,5 +21,11 @@ namespace NightlyCode.Scripting {
         /// </summary>
         /// <param name="extensiontype">type of which to add extension methods</param>
         void AddExtensions(Type extensiontype);
+
+        /// <summary>
+        /// adds methods of an extension type
+        /// </summary>
+        /// <typeparam name="T">type of which to add extension methods</typeparam>
+        void AddExtensions<T>();
     }
 }

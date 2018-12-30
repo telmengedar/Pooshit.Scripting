@@ -8,12 +8,12 @@ namespace Scripting.Tests {
 
         [Test]
         public void True() {
-            Assert.AreEqual(true, new ScriptParser(new ScriptHosts()).Parse("true").Execute());
+            Assert.AreEqual(true, new ScriptParser(new ExtensionProvider()).Parse("true").Execute());
         }
 
         [Test]
         public void False() {
-            Assert.AreEqual(false, new ScriptParser(new ScriptHosts()).Parse("false").Execute());
+            Assert.AreEqual(false, new ScriptParser(new ExtensionProvider()).Parse("false").Execute());
         }
     }
 }
