@@ -9,6 +9,9 @@
     public enum Operator {
         Not,
         Negate,
+        Complement,
+        Postcrement,
+        Precrement,
         Division,
         Multiplication,
         Modulo,
@@ -30,6 +33,16 @@
         LogicAnd,
         LogicOr,
         LogicXor,
-        Assignment
+        Assignment,
+        AddAssign,
+        SubAssign,
+        DivAssign,
+        MulAssign,
+        ModAssign,
+        ShlAssign,
+        ShrAssign,
+        AndAssign,
+        OrAssign,
+        XorAssign
     }
 }

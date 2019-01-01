@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reflection.Emit;
 using System.Text;
 using NightlyCode.Scripting.Control;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Operations;
 using NightlyCode.Scripting.Operations.Logic;
+using NightlyCode.Scripting.Operations.OpAssign;
+using NightlyCode.Scripting.Operations.Unary;
 using NightlyCode.Scripting.Operations.Values;
 using NightlyCode.Scripting.Tokens;
 
@@ -170,7 +171,7 @@ namespace NightlyCode.Scripting {
             switch (dotcount)
             {
                 case 0:
-                    return new ScriptValue(long.Parse(literal.ToString()));
+                    return new ScriptValue(int.Parse(literal.ToString()));
                 case 1:
                     return new ScriptValue(double.Parse(literal.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture));
                 default:
@@ -290,7 +291,7 @@ namespace NightlyCode.Scripting {
         }
 
 
-        IOperator ParseOperator(string data, ref int index) {
+        IOperator ParseOperator(int parsestart,string data, ref int index) {
             StringBuilder token = new StringBuilder();
 
             bool done = false;
@@ -318,7 +319,20 @@ namespace NightlyCode.Scripting {
                 }
             }
 
-            Operator @operator = token.ToString().ParseOperator();
+            string operatorstring = token.ToString();
+            switch (operatorstring)
+            {
+                case "++":
+                case "--":
+                    if (index-parsestart >= 3 && !char.IsWhiteSpace(data[index - 3]))
+                        return new Postcrement(operatorstring == "++" ? 1 : -1);
+                    else if (index < data.Length && !char.IsWhiteSpace(data[index]))
+                        return new Precrement(operatorstring == "++" ? 1 : -1);
+                    else
+                        throw new ScriptException("Increment without connected operand detected");
+            }
+
+            Operator @operator = operatorstring.ParseOperator();
             switch (@operator) {
                 case Operator.Equal:
                 case Operator.NotEqual:
@@ -349,16 +363,36 @@ namespace NightlyCode.Scripting {
                     return new BitwiseOr();
                 case Operator.BitwiseXor:
                     return new BitwiseXor();
-                case Operator.Assignment:
-                    return new ScriptAssignment();
                 case Operator.ShiftLeft:
                     return new ShiftLeft();
                 case Operator.ShiftRight:
                     return new ShiftRight();
                 case Operator.Not:
                     return new Not();
-                case Operator.Negate:
-                    return new Negate();
+                case Operator.Complement:
+                    return new Complement();
+                case Operator.Assignment:
+                    return new ScriptAssignment();
+                case Operator.AddAssign:
+                    return new AddAssign();
+                case Operator.SubAssign:
+                    return new SubAssign();
+                case Operator.MulAssign:
+                    return new MulAssign();
+                case Operator.DivAssign:
+                    return new DivAssign();
+                case Operator.ModAssign:
+                    return new ModAssign();
+                case Operator.ShlAssign:
+                    return new ShlAssign();
+                case Operator.ShrAssign:
+                    return new ShrAssign();
+                case Operator.AndAssign:
+                    return new AndAssign();
+                case Operator.OrAssign:
+                    return new OrAssign();
+                case Operator.XorAssign:
+                    return new XorAssign();
                 default:
                     throw new ScriptException($"Unsupported operator {token}");
             }
@@ -380,7 +414,7 @@ namespace NightlyCode.Scripting {
                 throw new ScriptException("Block not terminated");
 
             ++index;
-            return new Block(block);
+            return new ArithmeticBlock(block);
         }
 
         IScriptToken Parse(string data, ref int index, IVariableContext variables, bool startofstatement=false) {
@@ -389,9 +423,11 @@ namespace NightlyCode.Scripting {
 
             bool concat = true;
             bool done = false;
-            while (index < data.Length && !done) {
-                SkipWhitespaces(data, ref index);
+            int parsestart = index;
 
+            SkipWhitespaces(data, ref index);
+            while (index < data.Length && !done) {
+                
                 switch (data[index]) {
                     case '=':
                     case '!':
@@ -406,10 +442,21 @@ namespace NightlyCode.Scripting {
                     case '&':
                     case '|':
                     case '^':
-                        IOperator @operator = ParseOperator(data, ref index);
+                        IOperator @operator = ParseOperator(parsestart, data, ref index);
+                        if (@operator.Operator == Operator.Precrement && !concat)
+                        {
+                            index -= 2;
+                            done = true;
+                            break;
+                        }
+
+                        if (@operator.Operator == Operator.Subtraction && (tokenlist.Count == 0 || tokenlist[tokenlist.Count - 1] is IOperator))
+                            @operator = new Negate();
+
                         indexlist.Add(new OperatorIndex(tokenlist.Count, @operator));
                         tokenlist.Add(@operator);
-                        concat = true;
+                        if (@operator.Operator != Operator.Postcrement && @operator.Operator != Operator.Precrement && @operator.Operator != Operator.Negate)
+                            concat = true;
                         break;
                     case '.':
                         ++index;
@@ -464,6 +511,7 @@ namespace NightlyCode.Scripting {
                         concat = false;
                         break;
                 }
+                SkipWhitespaces(data, ref index);
             }
 
             if (tokenlist.Count > 1)
@@ -476,9 +524,21 @@ namespace NightlyCode.Scripting {
                     OperatorIndex operatorindex = indexlist[i];
                     if (operatorindex.Token is IUnaryToken unary)
                     {
-                        unary.Operand = tokenlist[operatorindex.Index + 1];
-                        tokenlist.RemoveAt(operatorindex.Index + 1);
-                        --operatorindex.Index;
+                        if (unary.IsPostToken)
+                        {
+                            if (operatorindex.Index == 0)
+                                throw new ScriptException("Posttoken at beginning of tokenlist detected");
+
+                            unary.Operand = tokenlist[operatorindex.Index - 1];
+                            tokenlist.RemoveAt(operatorindex.Index-1);
+                        }
+                        else
+                        {
+                            unary.Operand = tokenlist[operatorindex.Index + 1];
+                            tokenlist.RemoveAt(operatorindex.Index + 1);
+                            --operatorindex.Index;
+                        }
+
                         for (int k = i; k < indexlist.Count; ++k)
                             if (indexlist[k].Index > operatorindex.Index)
                                 --indexlist[k].Index;

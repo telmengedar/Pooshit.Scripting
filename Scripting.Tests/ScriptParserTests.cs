@@ -148,7 +148,7 @@ namespace Scripting.Tests {
                 "$array[2]=7\n" +
                 "$array"
             );
-            Assert.IsTrue(new[] {0L, 1L, 7L, 3L, 4L, 5L}.Cast<object>().SequenceEqual((IEnumerable<object>) script.Execute()));
+            Assert.IsTrue(new[] {0, 1, 7, 3, 4, 5}.Cast<object>().SequenceEqual((IEnumerable<object>) script.Execute()));
         }
 
         [Test]

@@ -5,7 +5,8 @@ namespace NightlyCode.Scripting.Operations {
     /// <summary>
     /// assignment in a script
     /// </summary>
-    public class ScriptAssignment : IBinaryToken, IOperator {
+    public class ScriptAssignment : IBinaryToken, IOperator, IAssignableToken {
+        IAssignableToken lhs;
 
         /// <summary>
         /// creates a new <see cref="ScriptAssignment"/>
@@ -26,18 +27,31 @@ namespace NightlyCode.Scripting.Operations {
             return $"{Lhs} = {Rhs}";
         }
 
+        /// <inheritdoc />
         public object Execute() {
-            return Lhs.Assign(Rhs);
+            return lhs.Assign(Rhs);
         }
 
         /// <inheritdoc />
         public object Assign(IScriptToken token) {
-            return Rhs.Assign(token);
+            if (Rhs is IAssignableToken assignable)
+                return assignable.Assign(token);
+            throw new ScriptException("Can't assign value to non assignable token");
         }
 
-        public IScriptToken Lhs { get; set; }
+        /// <inheritdoc />
+        public IScriptToken Lhs {
+            get => lhs;
+            set {
+                lhs=value as IAssignableToken;
+                if (lhs == null)
+                    throw new ScriptException("Left hand side of assignment has to be an assignable token");
+            }
+        }
 
+        /// <inheritdoc />
         public IScriptToken Rhs { get; set; }
+
         public Operator Operator => Operator.Assignment;
     }
 }

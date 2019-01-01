@@ -1,17 +1,13 @@
 ﻿namespace NightlyCode.Scripting.Tokens {
-    public class Block : IScriptToken {
+    public class ArithmeticBlock : IScriptToken {
         readonly IScriptToken inner;
 
-        public Block(IScriptToken inner) {
+        public ArithmeticBlock(IScriptToken inner) {
             this.inner = inner;
         }
 
         public object Execute() {
             return inner.Execute();
-        }
-
-        public object Assign(IScriptToken token) {
-            return inner.Assign(token);
         }
 
         public override string ToString() {

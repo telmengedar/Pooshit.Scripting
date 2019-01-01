@@ -1,16 +1,21 @@
 ﻿using System.Collections;
 using System.Linq;
+using NightlyCode.Scripting.Operations;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
     public class Foreach : IControlToken {
-        readonly IScriptToken variable;
+        readonly IAssignableToken variable;
         readonly IScriptToken collection;
 
         public Foreach(IScriptToken[] parameters) {
             if (parameters.Length != 2)
                 throw new ScriptException("Foreach needs a variable and a collection as parameters");
-            variable = parameters[0];
+
+            variable = parameters[0] as IAssignableToken;
+            if(variable==null)
+                throw new ScriptException("Foreach loop variable has to be a token to which a value can get assigned");
+            
             collection = parameters[1];
         }
 
@@ -27,10 +32,6 @@ namespace NightlyCode.Scripting.Control {
             else throw new ScriptException("Foreach value is not a collection");
 
             return null;
-        }
-
-        public object Assign(IScriptToken token) {
-            throw new System.NotImplementedException();
         }
 
         public IScriptToken Body { get; set; }

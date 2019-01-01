@@ -2,13 +2,14 @@
 using System.Linq;
 using System.Reflection;
 using NightlyCode.Core.Conversion;
+using NightlyCode.Scripting.Operations;
 
 namespace NightlyCode.Scripting.Tokens {
 
     /// <summary>
     /// reads a value from a host member
     /// </summary>
-    public class ScriptMember : IScriptToken {
+    public class ScriptMember : IAssignableToken {
         readonly IScriptToken hosttoken;
         readonly string membername;
 

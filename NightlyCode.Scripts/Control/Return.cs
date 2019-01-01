@@ -12,10 +12,6 @@
             return this;
         }
 
-        public object Assign(IScriptToken token) {
-            throw new System.NotImplementedException();
-        }
-
         public override string ToString() {
             return $"return {value}";
         }

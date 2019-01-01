@@ -32,5 +32,14 @@ namespace Scripting.Tests {
         {
             Assert.AreEqual(27 >> 1, new ScriptParser(new ExtensionProvider()).Parse("27>>1").Execute());
         }
+
+        [Test]
+        public void NoShiftPrioritites()
+        {
+            ScriptParser parser=new ScriptParser();
+            IScriptToken shiftleftfirst = parser.Parse("-1<<1>>1");
+            IScriptToken shiftrightfirst = parser.Parse("-1>>1<<1");
+            Assert.AreNotEqual(shiftleftfirst.Execute(), shiftrightfirst.Execute());
+        }
     }
 }

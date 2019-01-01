@@ -20,10 +20,6 @@ namespace NightlyCode.Scripting.Control {
             return null;
         }
 
-        public object Assign(IScriptToken token) {
-            throw new System.NotImplementedException();
-        }
-
         public IScriptToken Body { get; set; }
     }
 }

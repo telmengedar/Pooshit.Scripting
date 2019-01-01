@@ -43,10 +43,6 @@ namespace NightlyCode.Scripting.Control {
             return @case.Execute();
         }
 
-        public object Assign(IScriptToken token) {
-            throw new System.NotImplementedException();
-        }
-
         public override string ToString() {
             if (Default != null)
                 return $"switch({condition}) {string.Join(" ", cases)} default {Default.Body}";

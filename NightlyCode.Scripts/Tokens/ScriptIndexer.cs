@@ -11,7 +11,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// indexer call on an object
     /// </summary>
-    public class ScriptIndexer : IScriptToken {
+    public class ScriptIndexer : IScriptToken, IAssignableToken {
         readonly IScriptToken hosttoken;
         readonly IScriptToken[] parameters;
 

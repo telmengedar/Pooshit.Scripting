@@ -51,10 +51,6 @@ namespace NightlyCode.Scripting.Operations {
             }
         }
 
-        public object Assign(IScriptToken token) {
-            throw new System.NotImplementedException();
-        }
-
         
         public IScriptToken Lhs { get; set; }
         public IScriptToken Rhs { get; set; }

@@ -30,7 +30,7 @@ namespace Scripting.Tests {
         public void TestFor() {
             IScriptToken script = new ScriptParser().Parse(
                 "$result=0;"+
-                "for($i=0,$i<10,$i=$i+1)" +
+                "for($i=0,$i<10,++$i)" +
                 "  $result=$result+$i*10;" +
                 "$result"
             );

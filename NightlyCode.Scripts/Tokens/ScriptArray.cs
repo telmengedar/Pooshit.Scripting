@@ -22,11 +22,6 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        public object Assign(IScriptToken token) {
-            throw new ScriptException("Assignment to an array is not supported");
-        }
-
-        /// <inheritdoc />
         public override string ToString() {
             return $"[{string.Join(", ", values.Select(v => v.ToString()))}]";
         }

@@ -20,11 +20,6 @@
         }
 
         /// <inheritdoc />
-        public object Assign(IScriptToken token) {
-            throw new ScriptException("Assignment to a value is not supported");
-        }
-
-        /// <inheritdoc />
         public override string ToString() {
             return value?.ToString() ?? "null";
         }

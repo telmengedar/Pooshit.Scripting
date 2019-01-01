@@ -17,17 +17,21 @@ namespace NightlyCode.Scripting.Extensions {
         {
             switch (@operator)
             {
-                case Operator.Not:
-                case Operator.Negate:
+                case Operator.Postcrement:
+                case Operator.Precrement:
                     return 0;
+                case Operator.Not:
+                case Operator.Complement:
+                case Operator.Negate:
+                    return 1;
                 case Operator.Division:
                 case Operator.Multiplication:
-                    return 1;
-                case Operator.Modulo:
                     return 2;
+                case Operator.Modulo:
+                    return 3;
                 case Operator.Addition:
                 case Operator.Subtraction:
-                    return 3;
+                    return 4;
                 case Operator.Less:
                 case Operator.LessOrEqual:
                 case Operator.Greater:
@@ -36,24 +40,34 @@ namespace NightlyCode.Scripting.Extensions {
                 case Operator.NotEqual:
                 case Operator.Matches:
                 case Operator.NotMatches:
-                    return 4;
-                case Operator.BitwiseAnd:
                     return 5;
-                case Operator.BitwiseOr:
+                case Operator.BitwiseAnd:
                     return 6;
-                case Operator.BitwiseXor:
+                case Operator.BitwiseOr:
                     return 7;
+                case Operator.BitwiseXor:
+                    return 8;
                 case Operator.ShiftLeft:
                 case Operator.ShiftRight:
-                    return 8;
-                case Operator.LogicAnd:
                     return 9;
-                case Operator.LogicOr:
+                case Operator.LogicAnd:
                     return 10;
-                case Operator.LogicXor:
+                case Operator.LogicOr:
                     return 11;
-                case Operator.Assignment:
+                case Operator.LogicXor:
                     return 12;
+                case Operator.Assignment:
+                case Operator.AddAssign:
+                case Operator.SubAssign:
+                case Operator.DivAssign:
+                case Operator.MulAssign:
+                case Operator.ModAssign:
+                case Operator.ShlAssign:
+                case Operator.ShrAssign:
+                case Operator.AndAssign:
+                case Operator.OrAssign:
+                case Operator.XorAssign:
+                    return 13;
                 default:
                     throw new ScriptException("Unsupported operator");
             }
@@ -62,7 +76,7 @@ namespace NightlyCode.Scripting.Extensions {
         public static Operator ParseOperator(this string data) {
             switch (data) {
             case "~":
-                return Operator.Negate;
+                return Operator.Complement;
             case "!":
                 return Operator.Not;
             case "=":
@@ -110,6 +124,26 @@ namespace NightlyCode.Scripting.Extensions {
                 return Operator.LogicOr;
             case "^^":
                 return Operator.LogicXor;
+            case "+=":
+                return Operator.AddAssign;
+            case "-=":
+                return Operator.SubAssign;
+            case "/=":
+                return Operator.DivAssign;
+            case "*=":
+                return Operator.MulAssign;
+            case "%=":
+                return Operator.ModAssign;
+            case "<<=":
+                return Operator.ShlAssign;
+            case ">>=":
+                return Operator.ShrAssign;
+            case "&=":
+                return Operator.AndAssign;
+            case "|=":
+                return Operator.OrAssign;
+            case "^=":
+                return Operator.XorAssign;
             default:
                 throw new ScriptException($"Unsupported operator type '{data}'");
             }
@@ -119,7 +153,7 @@ namespace NightlyCode.Scripting.Extensions {
             switch (@operator) {
             case Operator.Not:
                 return "!";
-            case Operator.Negate:
+            case Operator.Complement:
                 return "~";
             case Operator.Modulo:
                 return "%";

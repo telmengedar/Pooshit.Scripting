@@ -24,10 +24,6 @@ namespace NightlyCode.Scripting.Control {
             return Else?.Execute();
         }
 
-        public object Assign(IScriptToken token) {
-            throw new System.NotImplementedException();
-        }
-
         /// <summary>
         /// body to execute if condition is met
         /// </summary>

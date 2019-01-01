@@ -5,7 +5,7 @@
     <AssemblyName>NightlyCode.Scripting</AssemblyName>
     <RootNamespace>NightlyCode.Scripting</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.8.9</Version>
+    <Version>0.8.11</Version>
     <Description>Provides an environment to execute simple scripts</Description>
     <Copyright>Toni Gottschall</Copyright>
     <PackageLicenseUrl>http://unlicense.org/</PackageLicenseUrl>
@@ -28,4 +28,8 @@
   <Target Name="PostPackNugetDeploy" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">
     <Copy SourceFiles="$(OutputPath)$(PackageId).$(PackageVersion).nupkg" DestinationFolder="$(DevDir)\NuGet\" />
   </Target>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
+  </ItemGroup>
 </Project>

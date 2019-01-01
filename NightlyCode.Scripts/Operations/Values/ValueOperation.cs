@@ -72,10 +72,6 @@ namespace NightlyCode.Scripting.Operations.Values {
             }
         }
 
-        public object Assign(IScriptToken token) {
-            throw new System.NotImplementedException();
-        }
-
         public Operator Operator => @operator;
 
         /// <inheritdoc />

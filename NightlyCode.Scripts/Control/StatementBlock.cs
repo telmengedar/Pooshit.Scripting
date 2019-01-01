@@ -38,8 +38,5 @@
             return result;
         }
 
-        public object Assign(IScriptToken token) {
-            throw new System.NotImplementedException();
-        }
     }
 }
