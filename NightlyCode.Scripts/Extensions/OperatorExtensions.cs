@@ -1,6 +1,5 @@
-﻿using System;
-using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Operations;
+﻿using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Operations.Values;
 
 namespace NightlyCode.Scripting.Extensions {
 
@@ -8,6 +7,57 @@ namespace NightlyCode.Scripting.Extensions {
     /// extensions for comparator tokens
     /// </summary>
     public static class OperatorExtensions {
+
+        /// <summary>
+        /// get number used to sort operator by priority
+        /// </summary>
+        /// <param name="operator">operator to sort</param>
+        /// <returns>number used in sorting algorithm</returns>
+        public static int GetOrderNumber(this Operator @operator)
+        {
+            switch (@operator)
+            {
+                case Operator.Not:
+                case Operator.Negate:
+                    return 0;
+                case Operator.Division:
+                case Operator.Multiplication:
+                    return 1;
+                case Operator.Modulo:
+                    return 2;
+                case Operator.Addition:
+                case Operator.Subtraction:
+                    return 3;
+                case Operator.Less:
+                case Operator.LessOrEqual:
+                case Operator.Greater:
+                case Operator.GreaterOrEqual:
+                case Operator.Equal:
+                case Operator.NotEqual:
+                case Operator.Matches:
+                case Operator.NotMatches:
+                    return 4;
+                case Operator.BitwiseAnd:
+                    return 5;
+                case Operator.BitwiseOr:
+                    return 6;
+                case Operator.BitwiseXor:
+                    return 7;
+                case Operator.ShiftLeft:
+                case Operator.ShiftRight:
+                    return 8;
+                case Operator.LogicAnd:
+                    return 9;
+                case Operator.LogicOr:
+                    return 10;
+                case Operator.LogicXor:
+                    return 11;
+                case Operator.Assignment:
+                    return 12;
+                default:
+                    throw new ScriptException("Unsupported operator");
+            }
+        }
 
         public static Operator ParseOperator(this string data) {
             switch (data) {

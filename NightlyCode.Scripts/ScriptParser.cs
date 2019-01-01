@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Text;
 using NightlyCode.Scripting.Control;
 using NightlyCode.Scripting.Data;
@@ -465,27 +466,34 @@ namespace NightlyCode.Scripting {
                 }
             }
 
-            indexlist.Sort((lhs, rhs) => lhs.Token.Operator.CompareTo(rhs.Token.Operator));
+            if (tokenlist.Count > 1)
+            {
+                indexlist.Sort((lhs, rhs) =>
+                    lhs.Token.Operator.GetOrderNumber().CompareTo(rhs.Token.Operator.GetOrderNumber()));
 
-            for (int i = 0; i < indexlist.Count; ++i) {
-                OperatorIndex operatorindex = indexlist[i];
-                if (operatorindex.Token is IUnaryToken unary) {
-                    unary.Operand = tokenlist[operatorindex.Index + 1];
-                    tokenlist.RemoveAt(operatorindex.Index + 1);
-                    --operatorindex.Index;
-                    for (int k = i; k < indexlist.Count; ++k)
-                        if (indexlist[k].Index > operatorindex.Index)
-                            --indexlist[k].Index;
-                }
-                else if (operatorindex.Token is IBinaryToken binary) {
-                    binary.Lhs = tokenlist[operatorindex.Index - 1];
-                    binary.Rhs = tokenlist[operatorindex.Index + 1];
-                    tokenlist.RemoveAt(operatorindex.Index + 1);
-                    tokenlist.RemoveAt(operatorindex.Index - 1);
-                    --operatorindex.Index;
-                    for (int k = i; k < indexlist.Count; ++k)
-                        if(indexlist[k].Index>operatorindex.Index)
-                            indexlist[k].Index = indexlist[k].Index - 2;
+                for (int i = 0; i < indexlist.Count; ++i)
+                {
+                    OperatorIndex operatorindex = indexlist[i];
+                    if (operatorindex.Token is IUnaryToken unary)
+                    {
+                        unary.Operand = tokenlist[operatorindex.Index + 1];
+                        tokenlist.RemoveAt(operatorindex.Index + 1);
+                        --operatorindex.Index;
+                        for (int k = i; k < indexlist.Count; ++k)
+                            if (indexlist[k].Index > operatorindex.Index)
+                                --indexlist[k].Index;
+                    }
+                    else if (operatorindex.Token is IBinaryToken binary)
+                    {
+                        binary.Lhs = tokenlist[operatorindex.Index - 1];
+                        binary.Rhs = tokenlist[operatorindex.Index + 1];
+                        tokenlist.RemoveAt(operatorindex.Index + 1);
+                        tokenlist.RemoveAt(operatorindex.Index - 1);
+                        --operatorindex.Index;
+                        for (int k = i; k < indexlist.Count; ++k)
+                            if (indexlist[k].Index > operatorindex.Index)
+                                indexlist[k].Index = indexlist[k].Index - 2;
+                    }
                 }
             }
 
