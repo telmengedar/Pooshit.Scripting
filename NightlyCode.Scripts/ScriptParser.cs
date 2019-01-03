@@ -320,20 +320,23 @@ namespace NightlyCode.Scripting {
             }
 
             string operatorstring = token.ToString();
-            switch (operatorstring)
-            {
-                case "++":
-                case "--":
-                    if (index-parsestart >= 3 && !char.IsWhiteSpace(data[index - 3]))
-                        return new Postcrement(operatorstring == "++" ? 1 : -1);
-                    else if (index < data.Length && !char.IsWhiteSpace(data[index]))
-                        return new Precrement(operatorstring == "++" ? 1 : -1);
-                    else
-                        throw new ScriptException("Increment without connected operand detected");
-            }
 
             Operator @operator = operatorstring.ParseOperator();
             switch (@operator) {
+                case Operator.Increment:
+                    if (index - parsestart >= 3 && !char.IsWhiteSpace(data[index - 3]))
+                        return new Increment(true);
+                    else if (index < data.Length && !char.IsWhiteSpace(data[index]))
+                        return new Increment(false);
+                    else
+                        throw new ScriptException("Increment without connected operand detected");
+                case Operator.Decrement:
+                    if (index - parsestart >= 3 && !char.IsWhiteSpace(data[index - 3]))
+                        return new Decrement(true);
+                    else if (index < data.Length && !char.IsWhiteSpace(data[index]))
+                        return new Decrement(false);
+                    else
+                        throw new ScriptException("Increment without connected operand detected");
                 case Operator.Equal:
                 case Operator.NotEqual:
                 case Operator.Less:
@@ -443,7 +446,7 @@ namespace NightlyCode.Scripting {
                     case '|':
                     case '^':
                         IOperator @operator = ParseOperator(parsestart, data, ref index);
-                        if (@operator.Operator == Operator.Precrement && !concat)
+                        if ((@operator.Operator == Operator.Increment || @operator.Operator == Operator.Decrement) && !((IUnaryToken)@operator).IsPostToken && !concat)
                         {
                             index -= 2;
                             done = true;
@@ -455,7 +458,7 @@ namespace NightlyCode.Scripting {
 
                         indexlist.Add(new OperatorIndex(tokenlist.Count, @operator));
                         tokenlist.Add(@operator);
-                        if (@operator.Operator != Operator.Postcrement && @operator.Operator != Operator.Precrement && @operator.Operator != Operator.Negate)
+                        if (!(@operator is IUnaryToken))
                             concat = true;
                         break;
                     case '.':

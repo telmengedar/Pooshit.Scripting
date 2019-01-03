@@ -2,43 +2,25 @@
 
 namespace NightlyCode.Scripting.Operations.Values {
 
+    /// <summary>
+    /// multiplies two values
+    /// </summary>
     public class Multiplication : ValueOperation {
 
-        public Multiplication() : base(Operator.Multiplication) { }
-
-        protected override object Operate(byte lhs, byte rhs)
+        /// <inheritdoc />
+        protected override object Operate()
         {
-            return lhs * rhs;
+            return (dynamic)Lhs.Execute() * (dynamic)Rhs.Execute();
         }
 
-        protected override object Operate(short lhs, short rhs)
+        /// <inheritdoc />
+        public override Operator Operator => Operator.Multiplication;
+
+        /// <inheritdoc />
+        public override string ToString()
         {
-            return lhs * rhs;
+            return $"{Lhs} * {Rhs}";
         }
 
-        protected override object Operate(int lhs, int rhs)
-        {
-            return lhs * rhs;
-        }
-
-        protected override object Operate(long lhs, long rhs)
-        {
-            return lhs * rhs;
-        }
-
-        protected override object Operate(float lhs, float rhs)
-        {
-            return lhs * rhs;
-        }
-
-        protected override object Operate(double lhs, double rhs)
-        {
-            return lhs * rhs;
-        }
-
-        protected override object Operate(decimal lhs, decimal rhs)
-        {
-            return lhs * rhs;
-        }
     }
 }

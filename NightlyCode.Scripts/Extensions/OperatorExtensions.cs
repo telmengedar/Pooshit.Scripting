@@ -1,5 +1,4 @@
 ﻿using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Operations.Values;
 
 namespace NightlyCode.Scripting.Extensions {
 
@@ -17,8 +16,8 @@ namespace NightlyCode.Scripting.Extensions {
         {
             switch (@operator)
             {
-                case Operator.Postcrement:
-                case Operator.Precrement:
+                case Operator.Increment:
+                case Operator.Decrement:
                     return 0;
                 case Operator.Not:
                 case Operator.Complement:
@@ -32,6 +31,15 @@ namespace NightlyCode.Scripting.Extensions {
                 case Operator.Addition:
                 case Operator.Subtraction:
                     return 4;
+                case Operator.BitwiseAnd:
+                    return 5;
+                case Operator.BitwiseOr:
+                    return 6;
+                case Operator.BitwiseXor:
+                    return 7;
+                case Operator.ShiftLeft:
+                case Operator.ShiftRight:
+                    return 8;
                 case Operator.Less:
                 case Operator.LessOrEqual:
                 case Operator.Greater:
@@ -40,15 +48,6 @@ namespace NightlyCode.Scripting.Extensions {
                 case Operator.NotEqual:
                 case Operator.Matches:
                 case Operator.NotMatches:
-                    return 5;
-                case Operator.BitwiseAnd:
-                    return 6;
-                case Operator.BitwiseOr:
-                    return 7;
-                case Operator.BitwiseXor:
-                    return 8;
-                case Operator.ShiftLeft:
-                case Operator.ShiftRight:
                     return 9;
                 case Operator.LogicAnd:
                     return 10;
@@ -73,6 +72,11 @@ namespace NightlyCode.Scripting.Extensions {
             }
         }
 
+        /// <summary>
+        /// parses an operator from string
+        /// </summary>
+        /// <param name="data">string to parse</param>
+        /// <returns>parsed operator</returns>
         public static Operator ParseOperator(this string data) {
             switch (data) {
             case "~":
@@ -144,6 +148,10 @@ namespace NightlyCode.Scripting.Extensions {
                 return Operator.OrAssign;
             case "^=":
                 return Operator.XorAssign;
+            case "++":
+                return Operator.Increment;
+            case "--":
+                return Operator.Decrement;
             default:
                 throw new ScriptException($"Unsupported operator type '{data}'");
             }

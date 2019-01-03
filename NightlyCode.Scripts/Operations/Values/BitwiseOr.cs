@@ -1,42 +1,25 @@
 ﻿using NightlyCode.Scripting.Data;
 
 namespace NightlyCode.Scripting.Operations.Values {
+
+    /// <summary>
+    /// executes a bitwise OR on two integer values
+    /// </summary>
     public class BitwiseOr : ValueOperation {
-        public BitwiseOr() : base(Operator.BitwiseOr) { }
 
-        protected override object Operate(byte lhs, byte rhs)
+        /// <inheritdoc />
+        protected override object Operate()
         {
-            return lhs | rhs;
+            return (dynamic)Lhs.Execute() | (dynamic)Rhs.Execute();
         }
 
-        protected override object Operate(short lhs, short rhs)
-        {
-            return lhs | rhs;
-        }
+        /// <inheritdoc />
+        public override Operator Operator => Operator.BitwiseOr;
 
-        protected override object Operate(int lhs, int rhs)
+        /// <inheritdoc />
+        public override string ToString()
         {
-            return lhs | rhs;
-        }
-
-        protected override object Operate(long lhs, long rhs)
-        {
-            return lhs | rhs;
-        }
-
-        protected override object Operate(float lhs, float rhs)
-        {
-            throw new ScriptException("Bitwise AND not supported on float");
-        }
-
-        protected override object Operate(double lhs, double rhs)
-        {
-            throw new ScriptException("Bitwise AND not supported on double");
-        }
-
-        protected override object Operate(decimal lhs, decimal rhs)
-        {
-            throw new ScriptException("Bitwise AND not supported on decimal");
+            return $"{Lhs} | {Rhs}";
         }
 
     }

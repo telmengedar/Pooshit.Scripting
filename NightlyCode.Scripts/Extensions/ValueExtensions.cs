@@ -18,6 +18,18 @@ namespace NightlyCode.Scripting.Extensions {
             typeof(string)
         };
 
+        public static int GetNumberOfBits(object value) {
+            if (value is int || value is uint)
+                return 32;
+            if (value is long || value is ulong)
+                return 64;
+            if (value is short || value is ushort)
+                return 16;
+            if (value is byte || value is sbyte)
+                return 8;
+            throw new ScriptException("Type not supported for operation");
+        }
+
         public static int GetTypeIndex(this Type type) {
             return typelist.IndexOf(type);
         }

@@ -13,6 +13,7 @@ namespace NightlyCode.Scripting.Operations.Unary {
             return !Operand.Execute().ToBoolean();
         }
 
+        /// <inheritdoc />
         public override Operator Operator => Operator.Not;
     }
 }

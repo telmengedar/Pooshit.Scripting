@@ -13,7 +13,7 @@ namespace NightlyCode.Scripting.Operations.Unary {
         public virtual bool IsPostToken => false;
 
         /// <inheritdoc />
-        public IScriptToken Operand { get; set; }
+        public virtual IScriptToken Operand { get; set; }
 
         /// <inheritdoc />
         public abstract Operator Operator { get; }

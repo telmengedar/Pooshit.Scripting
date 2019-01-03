@@ -1,35 +1,23 @@
 ﻿using NightlyCode.Scripting.Data;
 
 namespace NightlyCode.Scripting.Operations.Values {
+
+    /// <summary>
+    /// adds two values or concatenates two strings
+    /// </summary>
     public class Addition : ValueOperation {
-        public Addition() : base(Operator.Addition) { }
 
-        protected override object Operate(byte lhs, byte rhs) {
-            return lhs + rhs;
+        /// <inheritdoc />
+        protected override object Operate() {
+            return (dynamic) Lhs.Execute() + (dynamic) Rhs.Execute();
         }
 
-        protected override object Operate(short lhs, short rhs) {
-            return lhs + rhs;
-        }
+        /// <inheritdoc />
+        public override Operator Operator => Operator.Addition;
 
-        protected override object Operate(int lhs, int rhs) {
-            return lhs + rhs;
-        }
-
-        protected override object Operate(long lhs, long rhs) {
-            return lhs + rhs;
-        }
-
-        protected override object Operate(float lhs, float rhs) {
-            return lhs + rhs;
-        }
-
-        protected override object Operate(double lhs, double rhs) {
-            return lhs + rhs;
-        }
-
-        protected override object Operate(decimal lhs, decimal rhs) {
-            return lhs + rhs;
+        /// <inheritdoc />
+        public override string ToString() {
+            return $"{Lhs} + {Rhs}";
         }
     }
 }
