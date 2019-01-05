@@ -5,7 +5,7 @@ namespace NightlyCode.Scripting.Operations.Assign {
     /// <summary>
     /// multiplies a value from the result of a token and assigns it to the same token
     /// </summary>
-    public class MulAssign : OperatorAssign
+    class MulAssign : OperatorAssign
     {
         /// <inheritdoc />
         protected override object Compute() {

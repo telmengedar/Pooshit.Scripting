@@ -1,12 +1,13 @@
 ﻿using System;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
 
     /// <summary>
     /// throws an exception from currently executed code
     /// </summary>
-    public class Throw : IScriptToken {
+    class Throw : IScriptToken {
         readonly IScriptToken message;
         IScriptToken context;
 

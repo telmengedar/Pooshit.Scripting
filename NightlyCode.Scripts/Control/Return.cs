@@ -1,9 +1,11 @@
-﻿namespace NightlyCode.Scripting.Control {
+﻿using NightlyCode.Scripting.Tokens;
+
+namespace NightlyCode.Scripting.Control {
 
     /// <summary>
     /// returns a value and end execution of current method
     /// </summary>
-    public class Return : IScriptToken {
+    class Return : IScriptToken {
         readonly IScriptToken value;
 
         /// <summary>

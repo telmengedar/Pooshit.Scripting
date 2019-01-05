@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace NightlyCode.Scripting {
+namespace NightlyCode.Scripting.Parser {
 
     /// <summary>
     /// interface for a pool of script hosts

@@ -4,12 +4,13 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using NightlyCode.Scripting.Extensions;
 
 #if WINDOWS_UWP
 using System.Reflection;
 #endif
 
-namespace NightlyCode.Core.Conversion {
+namespace NightlyCode.Scripting.Extern {
 
     /// <summary>
     /// converter used to convert data types
@@ -167,6 +168,9 @@ namespace NightlyCode.Core.Conversion {
 #endif
                 return ConvertToEnum(value, targettype, allownullonvaluetypes);
             }
+
+            if (targettype == typeof(bool))
+                return value.ToBoolean();
 
             ConversionKey key = new ConversionKey(value.GetType(), targettype);
             Func<object, object> specificconverter;

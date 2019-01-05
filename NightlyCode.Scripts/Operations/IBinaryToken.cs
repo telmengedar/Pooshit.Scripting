@@ -1,11 +1,12 @@
 ﻿using System.Xml.Schema;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Operations {
 
     /// <summary>
     /// token applying an operation to two operands
     /// </summary>
-    public interface IBinaryToken : IScriptToken {
+    interface IBinaryToken : IScriptToken {
         
         /// <summary>
         /// left hand side operand

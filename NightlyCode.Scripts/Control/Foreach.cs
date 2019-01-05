@@ -5,10 +5,18 @@ using NightlyCode.Scripting.Operations;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
-    public class Foreach : IControlToken {
+
+    /// <summary>
+    /// loop which iterates over a collection
+    /// </summary>
+    class Foreach : IControlToken {
         readonly IAssignableToken variable;
         readonly IScriptToken collection;
 
+        /// <summary>
+        /// creates a new <see cref="Foreach"/>
+        /// </summary>
+        /// <param name="parameters">parameters containing iterator variable and collection to iterate over</param>
         public Foreach(IScriptToken[] parameters) {
             if (parameters.Length != 2)
                 throw new ScriptParserException("Foreach needs a variable and a collection as parameters");
@@ -20,6 +28,7 @@ namespace NightlyCode.Scripting.Control {
             collection = parameters[1];
         }
 
+        /// <inheritdoc />
         public object Execute() {
             object collectionvalue = collection.Execute();
             if (collectionvalue is IEnumerable enumeration) {
@@ -37,6 +46,7 @@ namespace NightlyCode.Scripting.Control {
             return null;
         }
 
+        /// <inheritdoc />
         public IScriptToken Body { get; set; }
     }
 }

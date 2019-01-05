@@ -1,9 +1,11 @@
-﻿namespace NightlyCode.Scripting.Operations {
+﻿using NightlyCode.Scripting.Tokens;
+
+namespace NightlyCode.Scripting.Operations {
 
     /// <summary>
     /// token to which a value can be assigned
     /// </summary>
-    public interface IAssignableToken : IScriptToken {
+    interface IAssignableToken : IScriptToken {
 
         /// <summary>
         /// assigns a value to this token

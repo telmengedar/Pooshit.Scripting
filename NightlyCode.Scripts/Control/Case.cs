@@ -1,11 +1,12 @@
 ﻿using System.Linq;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
 
     /// <summary>
     /// case for a <see cref="Switch"/> statement
     /// </summary>
-    public class Case : IControlToken {
+    class Case : IControlToken {
         readonly IScriptToken[] conditions;
 
         /// <summary>

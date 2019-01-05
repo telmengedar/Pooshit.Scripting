@@ -1,5 +1,5 @@
 ﻿namespace NightlyCode.Scripting.Tokens {
-    public class ArithmeticBlock : IScriptToken {
+    class ArithmeticBlock : IScriptToken {
         readonly IScriptToken inner;
 
         public ArithmeticBlock(IScriptToken inner) {

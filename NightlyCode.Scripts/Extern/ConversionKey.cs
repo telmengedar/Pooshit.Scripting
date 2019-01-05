@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NightlyCode.Core.Conversion {
+namespace NightlyCode.Scripting.Extern {
 
     /// <summary>
     /// key used for specific conversion

@@ -1,13 +1,13 @@
-﻿using NightlyCode.Core.Conversion;
+﻿using NightlyCode.Scripting.Extensions;
+using NightlyCode.Scripting.Extern;
 using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Extensions;
 
 namespace NightlyCode.Scripting.Operations.Values {
 
     /// <summary>
     /// rolls bits of lhs to the left by rhs steps
     /// </summary>
-    public class RolRight : ValueOperation {
+    class RolRight : ValueOperation {
 
         /// <inheritdoc />
         protected override object Operate() {

@@ -1,9 +1,11 @@
-﻿namespace NightlyCode.Scripting.Control {
+﻿using NightlyCode.Scripting.Tokens;
+
+namespace NightlyCode.Scripting.Control {
 
     /// <summary>
     /// breaks execution of a loop
     /// </summary>
-    public class Break : IScriptToken {
+    class Break : IScriptToken {
 
         /// <inheritdoc />
         public object Execute() {

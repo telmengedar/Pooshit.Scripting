@@ -1,12 +1,13 @@
 ﻿using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extensions;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
 
     /// <summary>
     /// executes a statement block while a condition is met
     /// </summary>
-    public class While : IControlToken {
+    class While : IControlToken {
         readonly IScriptToken condition;
 
         /// <summary>

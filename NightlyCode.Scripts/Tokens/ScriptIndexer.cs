@@ -3,8 +3,8 @@ using System.Collections;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using NightlyCode.Core.Conversion;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Extern;
 using NightlyCode.Scripting.Operations;
 
 namespace NightlyCode.Scripting.Tokens {
@@ -12,7 +12,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// indexer call on an object
     /// </summary>
-    public class ScriptIndexer : IScriptToken, IAssignableToken {
+    class ScriptIndexer : IAssignableToken {
         readonly IScriptToken hosttoken;
         readonly IScriptToken[] parameters;
 

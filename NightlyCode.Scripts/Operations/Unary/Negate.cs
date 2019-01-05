@@ -5,7 +5,7 @@ namespace NightlyCode.Scripting.Operations.Unary {
     /// <summary>
     /// negates the value of a token
     /// </summary>
-    public class Negate : UnaryOperator
+    class Negate : UnaryOperator
     {
         /// <inheritdoc />
         public override object Execute() {

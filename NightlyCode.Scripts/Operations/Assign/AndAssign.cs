@@ -5,7 +5,7 @@ namespace NightlyCode.Scripting.Operations.Assign {
     /// <summary>
     /// computes bitwise and of lhs and rhs and assigns the result to lhs
     /// </summary>
-    public class AndAssign : OperatorAssign
+    class AndAssign : OperatorAssign
     {
         /// <inheritdoc />
         protected override object Compute() {

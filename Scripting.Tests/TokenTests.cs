@@ -1,5 +1,6 @@
 ﻿
 using NightlyCode.Scripting;
+using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
 
 namespace Scripting.Tests {

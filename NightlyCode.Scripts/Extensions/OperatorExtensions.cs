@@ -6,7 +6,7 @@ namespace NightlyCode.Scripting.Extensions {
     /// <summary>
     /// extensions for comparator tokens
     /// </summary>
-    public static class OperatorExtensions {
+    static class OperatorExtensions {
 
         /// <summary>
         /// get number used to sort operator by priority

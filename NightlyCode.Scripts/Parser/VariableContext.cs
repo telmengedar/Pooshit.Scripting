@@ -4,12 +4,12 @@ using System.Linq;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
 
-namespace NightlyCode.Scripting {
+namespace NightlyCode.Scripting.Parser {
 
     /// <summary>
     /// simple lookup for variables
     /// </summary>
-    class VariableContext : IVariableContext, IDisposable {
+    class VariableContext : IVariableContext {
         readonly Dictionary<string, object> values = new Dictionary<string, object>();
         readonly IVariableContext parentcontext;
 

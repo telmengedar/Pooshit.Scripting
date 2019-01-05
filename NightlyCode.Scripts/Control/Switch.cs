@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
 
     /// <summary>
     /// evaluates a value and jumps to matching cases
     /// </summary>
-    public class Switch : IScriptToken {
+    class Switch : IScriptToken {
         readonly IScriptToken condition;
         readonly List<Case> cases=new List<Case>();
 

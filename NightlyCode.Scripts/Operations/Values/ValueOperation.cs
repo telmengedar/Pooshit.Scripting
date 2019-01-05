@@ -1,15 +1,15 @@
 ﻿using System;
 using Microsoft.CSharp.RuntimeBinder;
-using NightlyCode.Core.Conversion;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Operations.Values {
 
     /// <summary>
     /// arithmetic operation to apply to two operands
     /// </summary>
-    public abstract class ValueOperation : IBinaryToken, IOperator {
+    abstract class ValueOperation : IBinaryToken, IOperator {
 
         /// <summary>
         /// executes the value operation

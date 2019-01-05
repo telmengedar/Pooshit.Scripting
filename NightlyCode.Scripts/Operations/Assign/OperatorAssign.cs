@@ -7,7 +7,7 @@ namespace NightlyCode.Scripting.Operations.Assign {
     /// <summary>
     /// computes the result of a binary operation and assigns the result to lhs
     /// </summary>
-    public abstract class OperatorAssign : IBinaryToken, IOperator
+    abstract class OperatorAssign : IBinaryToken, IOperator
     {
         IAssignableToken lhs;
 

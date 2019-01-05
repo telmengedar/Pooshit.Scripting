@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace NightlyCode.Scripting {
+namespace NightlyCode.Scripting.Parser {
 
     /// <summary>
     /// plain implementation of <see cref="IExtensionProvider"/> providing hosts and extension methods
     /// </summary>
-    public class ExtensionProvider : IExtensionProvider {
+    class ExtensionProvider : IExtensionProvider {
         readonly Dictionary<Type, HashSet<MethodInfo>> extensions = new Dictionary<Type, HashSet<MethodInfo>>();
 
         /// <summary>

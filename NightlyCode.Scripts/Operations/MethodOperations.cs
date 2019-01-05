@@ -3,11 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using NightlyCode.Core.Conversion;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Extern;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Operations {
-    public static class MethodOperations {
+    static class MethodOperations {
 
         public static object CallMethod(object host, MethodInfo method, IScriptToken[] parameters, bool extension=false, ParameterInfo[] targetparameters=null, IScriptToken additionalparameters=null) {
             if(targetparameters==null)

@@ -1,5 +1,6 @@
 ﻿using NightlyCode.Scripting;
 using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
 using Scripting.Tests.Data;
 
@@ -26,7 +27,7 @@ namespace Scripting.Tests {
         {
             TestHost testhost=new TestHost();
             ScriptParser parser = new ScriptParser(new Variable("host", testhost));
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "host[\"value\"]=5\n" +
                 "host[\"value\"]++");
             Assert.AreEqual(5, script.Execute());
@@ -38,7 +39,7 @@ namespace Scripting.Tests {
         {
             TestHost testhost = new TestHost();
             ScriptParser parser = new ScriptParser(new Variable("host", testhost));
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "host[\"value\"]=5\n" +
                 "++host[\"value\"]");
             Assert.AreEqual(6, script.Execute());

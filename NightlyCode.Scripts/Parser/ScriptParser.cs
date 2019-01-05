@@ -15,38 +15,28 @@ using NightlyCode.Scripting.Operations.Unary;
 using NightlyCode.Scripting.Operations.Values;
 using NightlyCode.Scripting.Tokens;
 
-namespace NightlyCode.Scripting {
+namespace NightlyCode.Scripting.Parser {
 
     /// <summary>
     /// parses scripts from string data
     /// </summary>
-    public class ScriptParser {
+    public class ScriptParser : IScriptParser {
         readonly VariableContext globalvariables = new VariableContext();
 
         /// <summary>
         /// creates a new <see cref="ScriptParser"/>
         /// </summary>
-        public ScriptParser(params Variable[] variables)
-        : this(new ExtensionProvider(), variables)
-        {
-        }
-
-        /// <summary>
-        /// creates a new <see cref="ScriptParser"/>
-        /// </summary>
-        /// <param name="extensionprovider">pool containing hosts for members</param>
         /// <param name="variables">global variables of script parser</param>
-        public ScriptParser(IExtensionProvider extensionprovider, params Variable[] variables) {
+        public ScriptParser(params Variable[] variables) {
             foreach (Variable variable in variables)
                 globalvariables[variable.Name] = variable.Value;
             globalvariables.IsReadOnly = true;
-            Extensions = extensionprovider;
         }
 
         /// <summary>
         /// access to extensions available to script environment
         /// </summary>
-        public IExtensionProvider Extensions { get; }
+        public IExtensionProvider Extensions { get; } = new ExtensionProvider();
 
         void SkipWhitespaces(string data, ref int index) {
             while (index < data.Length && char.IsWhiteSpace(data[index]))
@@ -737,11 +727,11 @@ namespace NightlyCode.Scripting {
         /// <param name="data">data to parse</param>
         /// <param name="variables">variables valid for this script (flagged as read-only)</param>
         /// <returns>script which can get executed</returns>
-        public IScriptToken Parse(string data, params Variable[] variables) {
+        public IScript Parse(string data, params Variable[] variables) {
             VariableContext variablecontext = new VariableContext(globalvariables, variables) {IsReadOnly = true};
 
             int index = 0;
-            return ParseStatementBlock(data, ref index, variablecontext, true);
+            return new Script(ParseStatementBlock(data, ref index, variablecontext, true));
         }
     }
 }

@@ -1,11 +1,12 @@
 ﻿using NightlyCode.Scripting.Operations;
+using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Tokens {
 
     /// <summary>
     /// access to variable in script
     /// </summary>
-    public class ScriptVariable : IAssignableToken {
+    class ScriptVariable : IAssignableToken {
         readonly IVariableContext variablehost;
 
         /// <summary>

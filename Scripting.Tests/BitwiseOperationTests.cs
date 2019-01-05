@@ -1,25 +1,26 @@
-﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollector.InProcDataCollector;
-using NightlyCode.Scripting;
+﻿using NightlyCode.Scripting;
+using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
 
 namespace Scripting.Tests {
 
     [TestFixture, Parallelizable]
     public class BitwiseOperationTests {
+        IScriptParser parser = new ScriptParser();
 
         [Test]
         public void BitwiseAnd() {
-            Assert.AreEqual(27 & 13, new ScriptParser().Parse("27&13").Execute());
+            Assert.AreEqual(27 & 13, parser.Parse("27&13").Execute());
         }
 
         [Test]
         public void BitwiseOr() {
-            Assert.AreEqual(27 | 13, new ScriptParser().Parse("27|13").Execute());
+            Assert.AreEqual(27 | 13, parser.Parse("27|13").Execute());
         }
 
         [Test]
         public void BitwiseXor() {
-            Assert.AreEqual(27 ^ 13, new ScriptParser().Parse("27^13").Execute());
+            Assert.AreEqual(27 ^ 13, parser.Parse("27^13").Execute());
         }
 
         [TestCase("27<<2", 27<<2)]
@@ -27,7 +28,7 @@ namespace Scripting.Tests {
         [TestCase("8<<33", 0)]
         [TestCase("1073741824<<1", -2147483648)]
         public void BitwiseShiftLeft(string data, object expected) {
-            Assert.AreEqual(expected, new ScriptParser().Parse(data).Execute());
+            Assert.AreEqual(expected, parser.Parse(data).Execute());
         }
 
         [TestCase("27>>1", 27 >> 1)]
@@ -37,15 +38,14 @@ namespace Scripting.Tests {
         [Parallelizable]
         public void BitwiseShiftRight(string data, object expected)
         {
-            Assert.AreEqual(expected, new ScriptParser().Parse(data).Execute());
+            Assert.AreEqual(expected, parser.Parse(data).Execute());
         }
 
         [Test, Parallelizable]
         public void NoShiftPrioritites()
         {
-            ScriptParser parser=new ScriptParser();
-            IScriptToken shiftleftfirst = parser.Parse("-1<<1>>1");
-            IScriptToken shiftrightfirst = parser.Parse("-1>>1<<1");
+            IScript shiftleftfirst = parser.Parse("-1<<1>>1");
+            IScript shiftrightfirst = parser.Parse("-1>>1<<1");
             Assert.AreNotEqual(shiftleftfirst.Execute(), shiftrightfirst.Execute());
         }
 
@@ -55,13 +55,13 @@ namespace Scripting.Tests {
         [TestCase("1>>>62", 4)]
         [Parallelizable]
         public void RolRight(string script, object expected) {
-            Assert.AreEqual(expected, new ScriptParser().Parse(script).Execute());
+            Assert.AreEqual(expected, parser.Parse(script).Execute());
         }
 
         [TestCase("-2147483647<<<1", 3)]
         [Parallelizable]
         public void RolLeft(string script, object expected) {
-            Assert.AreEqual(expected, new ScriptParser().Parse(script).Execute());
+            Assert.AreEqual(expected, parser.Parse(script).Execute());
         }
     }
 }

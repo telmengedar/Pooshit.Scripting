@@ -6,7 +6,7 @@ namespace NightlyCode.Scripting.Operations.Unary {
     /// <summary>
     /// logical negation of boolean values
     /// </summary>
-    public class Not : UnaryOperator {
+    class Not : UnaryOperator {
 
         /// <inheritdoc />
         public override object Execute() {

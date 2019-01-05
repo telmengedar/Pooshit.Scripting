@@ -5,7 +5,7 @@ namespace NightlyCode.Scripting.Operations.Unary {
     /// <summary>
     /// computes the bit-complement of the result of a token
     /// </summary>
-    public class Complement : UnaryOperator {
+    class Complement : UnaryOperator {
 
         /// <inheritdoc />
         public override object Execute() {

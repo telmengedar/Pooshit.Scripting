@@ -1,9 +1,11 @@
-﻿namespace NightlyCode.Scripting.Tokens {
+﻿using NightlyCode.Scripting.Parser;
+
+namespace NightlyCode.Scripting.Tokens {
 
     /// <summary>
     /// value in a script command
     /// </summary>
-    public class ScriptValue : IScriptToken {
+    class ScriptValue : IScriptToken {
         readonly object value;
 
         /// <summary>

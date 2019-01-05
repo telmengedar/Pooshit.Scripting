@@ -1,4 +1,10 @@
-﻿namespace NightlyCode.Scripting.Control {
+﻿using NightlyCode.Scripting.Tokens;
+
+namespace NightlyCode.Scripting.Control {
+
+    /// <summary>
+    /// token containing meta information for parsing process
+    /// </summary>
     class ParserToken : IScriptToken {
 
         /// <summary>
@@ -8,6 +14,7 @@
         public ParserToken(string data) {
             Data = data;
         }
+
         public string Data { get; }
 
         public object Execute() {

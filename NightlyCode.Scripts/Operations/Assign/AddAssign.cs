@@ -5,7 +5,7 @@ namespace NightlyCode.Scripting.Operations.Assign {
     /// <summary>
     /// adds a value to the result of a token and assigns it at the same time
     /// </summary>
-    public class AddAssign : OperatorAssign {
+    class AddAssign : OperatorAssign {
 
         /// <inheritdoc />
         protected override object Compute() {

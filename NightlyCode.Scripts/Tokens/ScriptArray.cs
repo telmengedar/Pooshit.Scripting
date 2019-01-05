@@ -5,7 +5,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// token which represents multiple values
     /// </summary>
-    public class ScriptArray : IScriptToken {
+    class ScriptArray : IScriptToken {
         readonly IScriptToken[] values;
 
         /// <summary>

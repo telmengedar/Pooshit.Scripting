@@ -1,5 +1,6 @@
 ﻿using NightlyCode.Scripting;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
 
 namespace Scripting.Tests {
@@ -15,7 +16,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void ParseCharacter() {
-            IScriptToken script = parser.Parse("'a'");
+            IScript script = parser.Parse("'a'");
             Assert.AreEqual('a', script.Execute());
         }
 

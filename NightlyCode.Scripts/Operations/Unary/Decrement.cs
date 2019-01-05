@@ -7,7 +7,7 @@ namespace NightlyCode.Scripting.Operations.Unary {
     /// <summary>
     /// increments the value of a token by 1
     /// </summary>
-    public class Decrement : UnaryOperator {
+    class Decrement : UnaryOperator {
         IAssignableToken token;
 
         /// <summary>

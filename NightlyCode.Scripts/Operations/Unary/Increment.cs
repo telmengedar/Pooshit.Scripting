@@ -1,5 +1,4 @@
-﻿using NightlyCode.Scripting.Control;
-using NightlyCode.Scripting.Data;
+﻿using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Tokens;
 
@@ -8,7 +7,7 @@ namespace NightlyCode.Scripting.Operations.Unary {
     /// <summary>
     /// increments the value of a token by 1
     /// </summary>
-    public class Increment : UnaryOperator {
+    class Increment : UnaryOperator {
         IAssignableToken token;
 
         /// <summary>

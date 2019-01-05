@@ -1,13 +1,13 @@
 ﻿using System;
-using NightlyCode.Core.Conversion;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Extern;
 
 namespace NightlyCode.Scripting.Extensions {
 
     /// <summary>
     /// extensions for values
     /// </summary>
-    public static class ValueExtensions {
+    static class ValueExtensions {
 
         public static object GetMask(Type masktype, int numberofbits) {
             object mask = Activator.CreateInstance(masktype);

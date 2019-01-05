@@ -1,9 +1,11 @@
-﻿namespace NightlyCode.Scripting.Control {
+﻿using NightlyCode.Scripting.Tokens;
+
+namespace NightlyCode.Scripting.Control {
 
     /// <summary>
     /// token representing a flow control statement
     /// </summary>
-    public interface IControlToken : IScriptToken {
+    interface IControlToken : IScriptToken {
 
         /// <summary>
         /// body of control statement

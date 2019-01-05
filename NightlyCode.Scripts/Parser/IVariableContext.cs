@@ -1,11 +1,11 @@
 ﻿using System;
 
-namespace NightlyCode.Scripting {
+namespace NightlyCode.Scripting.Parser {
 
     /// <summary>
     /// host for script variables
     /// </summary>
-    public interface IVariableContext : IDisposable {
+    interface IVariableContext : IDisposable {
 
         /// <summary>
         /// clears all variable entries

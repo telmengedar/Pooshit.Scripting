@@ -1,12 +1,13 @@
 ﻿using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extensions;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
 
     /// <summary>
     /// loop with an initializer, a condition and an increment
     /// </summary>
-    public class For : IControlToken {
+    class For : IControlToken {
         readonly IScriptToken initializer;
         readonly IScriptToken condition;
         readonly IScriptToken step;
@@ -42,6 +43,7 @@ namespace NightlyCode.Scripting.Control {
         /// <inheritdoc />
         public IScriptToken Body { get; set; }
 
+        /// <inheritdoc />
         public override string ToString() {
             return $"for({initializer},{condition},{step}) {Body}";
         }

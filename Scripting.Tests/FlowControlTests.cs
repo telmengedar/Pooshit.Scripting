@@ -1,6 +1,7 @@
 ﻿
 using NightlyCode.Scripting;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
 
 namespace Scripting.Tests {
@@ -11,7 +12,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void TestIf() {
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "if(10>3)" +
                 "  $result=5;" +
                 "$result");
@@ -20,7 +21,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void TestElse() {
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "if(3>10)" +
                 "  $result=5;" +
                 "else $result=3;" +
@@ -30,7 +31,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void TestFor() {
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$result=0;"+
                 "for($i=0,$i<10,++$i)" +
                 "  $result=$result+$i*10;" +
@@ -41,7 +42,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void TestForeach() {
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$result=0;" +
                 "foreach($i,[1,2,3,4,5,6,7,8,9])" +
                 "  $result=$result+$i;" +
@@ -52,7 +53,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void TestWhile() {
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$result=2;" +
                 "while($result<20)" +
                 "  $result=$result*$result;" +
@@ -63,7 +64,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void TestSwitch() {
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$condition=7;" +
                 "switch($condition)" +
                 "case(2)" +
@@ -81,7 +82,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void SwitchWithDefault()
         {
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$condition=3;" +
                 "switch($condition)" +
                 "case(2)" +
@@ -101,7 +102,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void SwitchMultipleCaseCondition()
         {
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$condition=11;" +
                 "switch($condition)" +
                 "case(2,7,11)" +
@@ -116,7 +117,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void IfWithStatementBlockTrue() {
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$result=0;" +
                 "if(true) {" +
                 "  $result=7;" +
@@ -130,7 +131,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void IfWithStatementBlockFalse()
         {
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$result=0;" +
                 "if(false) {" +
                 "  $result=7;" +
@@ -143,7 +144,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void WhileWithNestedIf() {
-            IScriptToken script= parser.Parse(
+            IScript script= parser.Parse(
                 "$result=0;"+
                 "while($result<100) {"+
                 "  if($result&1==1) {"+
@@ -161,7 +162,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void WhileWithNestedIfWithoutTerminators()
         {
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$result=0\n" +
                 "while($result<100) {" +
                 "  if($result&1==1) {" +
@@ -178,7 +179,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void Return() {
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$result=0;" +
                 "$result=15;" +
                 "return $result;" +
@@ -191,7 +192,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void ReturnInInnerBlock()
         {
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$result=0;" +
                 "foreach($i,[1,2,3,4,5,6,7,8,9]) {" +
                 "  if($result>=10)"+
@@ -212,7 +213,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void BreakWhile() {
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$result=0\n" +
                 "while($result<16384) {" +
                 "  ++$result\n" +
@@ -226,7 +227,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void BreakForeach() {
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$result=0;" +
                 "foreach($i,[1,2,3,4,5,6,7,8,9]) {" +
                 "  if($i==5)" +
@@ -240,7 +241,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void BreakFor() {
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$result=0;" +
                 "for($i=0,$i<64,++$i) {" +
                 "  if($i==10)"+

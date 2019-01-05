@@ -4,13 +4,14 @@ using System.Reflection;
 using System.Text;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Operations;
+using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Tokens {
 
     /// <summary>
     /// calls a method in a script
     /// </summary>
-    public class ScriptMethod : IScriptToken {
+    class ScriptMethod : IScriptToken {
         readonly IExtensionProvider extensions;
         readonly IScriptToken hosttoken;
         readonly string methodname;

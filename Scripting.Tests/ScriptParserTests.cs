@@ -5,6 +5,7 @@ using NightlyCode.Scripting;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Operations;
 using NightlyCode.Scripting.Operations.Assign;
+using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 using NUnit.Framework;
 using Scripting.Tests.Data;
@@ -14,34 +15,17 @@ namespace Scripting.Tests {
     [TestFixture]
     public class ScriptParserTests {
 
-        [TestCase("host.member=value", typeof(Assignment))]
-        [TestCase("host.method(service,user,parameter)", typeof(ScriptMethod))]
-        [TestCase("host.method(host.member)", typeof(ScriptMethod))]
-        [TestCase("$test", typeof(ScriptVariable))]
-        [TestCase("host.method($test,2)", typeof(ScriptMethod))]
-        [TestCase("host.method(\"\",clean)", typeof(ScriptMethod))]
-        [TestCase("host.speak(\"It is quite simple\",\"CereVoice Stuart - English (Scotland)\")", typeof(ScriptMethod))]
-        [TestCase("host.method(1,2,3,[4,4])", typeof(ScriptMethod))]
-        [TestCase("host.property=255.34", typeof(Assignment))]
-        [TestCase("\"TestValue\"", typeof(ScriptValue))]
-        [TestCase("122.3", typeof(ScriptValue))]
-        public void TestValidStatements(string statement, Type expectedroot) {
-            ScriptParser parser = new ScriptParser(new Variable("host", new TestHost()));
-            IScriptToken token = parser.Parse(statement, new Variable("test", "test"));
-            Assert.AreEqual(expectedroot, token.GetType());
-        }
-
         [Test]
         public void TestMethodCallWithArray() {
             ScriptParser parser = new ScriptParser(new Variable("test", new TestHost()));
-            IScriptToken token = parser.Parse("test.testmethod(fuck,[you])");
+            IScript token = parser.Parse("test.testmethod(fuck,[you])");
             Assert.DoesNotThrow(() => token.Execute());
         }
 
         [Test]
         public void TestMethodCallWithSpaces() {
             ScriptParser parser = new ScriptParser(new Variable("test", new TestHost()));
-            IScriptToken token = parser.Parse("test.testmethod( fuck ,[ you , \"for\",real ])");
+            IScript token = parser.Parse("test.testmethod( fuck ,[ you , \"for\",real ])");
             string result = token.Execute() as string;
             Assert.AreEqual("fuck_you,for,real", result);
         }
@@ -49,7 +33,7 @@ namespace Scripting.Tests {
         [Test]
         public void TestTabInParameter() {
             ScriptParser parser = new ScriptParser(new Variable("test", new TestHost()));
-            IScriptToken token = parser.Parse("test.testmethod( \\\" ,[   \"\\t\"])");
+            IScript token = parser.Parse("test.testmethod( \\\" ,[   \"\\t\"])");
             string result = token.Execute() as string;
             Assert.AreEqual("\"_\t", result);
         }
@@ -57,7 +41,7 @@ namespace Scripting.Tests {
         [Test]
         public void AssignVariable() {
             ScriptParser parser = new ScriptParser();
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$number=7\n" +
                 "$number"
             );
@@ -67,7 +51,7 @@ namespace Scripting.Tests {
         [Test]
         public void CallVariableMember() {
             ScriptParser parser = new ScriptParser();
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$number=7\n"+
                 "$number.tostring()"
             );
@@ -78,7 +62,7 @@ namespace Scripting.Tests {
         public void ReadVariableMember()
         {
             ScriptParser parser = new ScriptParser();
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$number=\"longstring\"\n" +
                 "$number.length"
             );
@@ -89,7 +73,7 @@ namespace Scripting.Tests {
         public void ReadMemberChain()
         {
             ScriptParser parser = new ScriptParser();
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$number=\"longstring\"\n" +
                 "$number.length.tostring()"
             );
@@ -115,7 +99,7 @@ namespace Scripting.Tests {
         public void MethodParametersWithMethodCalls()
         {
             ScriptParser parser = new ScriptParser(new Variable("test", new TestHost()));
-            IScriptToken token = parser.Parse("test.testmethod(test.testmethod(a,[b]),test.testmethod(c,[d,e]))");
+            IScript token = parser.Parse("test.testmethod(test.testmethod(a,[b]),test.testmethod(c,[d,e]))");
             Assert.AreEqual("a_b_c_d,e", token.Execute());
         }
 
@@ -144,7 +128,7 @@ namespace Scripting.Tests {
         [Test]
         public void SetArrayValue() {
             ScriptParser parser=new ScriptParser();
-            IScriptToken script=parser.Parse(
+            IScript script=parser.Parse(
                 "$array=[0,1,2,3,4,5]\n" +
                 "$array[2]=7\n" +
                 "$array"
@@ -155,7 +139,7 @@ namespace Scripting.Tests {
         [Test]
         public void MethodCallWithParameter() {
             ScriptParser parser = new ScriptParser(new Variable("test", new TestHost()));
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$parameter1=test1\n" +
                 "$parameter2=test2\n" +
                 "test.testmethod($parameter1,[$parameter2])"
@@ -167,7 +151,7 @@ namespace Scripting.Tests {
         public void ObjectParameterCallWithParameter() {
             TestHost testhost = new TestHost();
             ScriptParser parser = new ScriptParser(new Variable("test", testhost));
-            IScriptToken script = parser.Parse(
+            IScript script = parser.Parse(
                 "$parameter=test\n" +
                 "test.addtesthost(host,$parameter)\n" +
                 "test[host]"

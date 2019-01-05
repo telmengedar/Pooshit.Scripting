@@ -6,11 +6,11 @@ namespace NightlyCode.Scripting.Operations.Logic {
     /// <summary>
     /// computes logical XOR of lhs and rhs
     /// </summary>
-    public class LogicXor : LogicOperation {
+    class LogicXor : LogicOperation {
 
         /// <inheritdoc />
         protected override object Operate() {
-            return Lhs.ToBoolean() != Rhs.ToBoolean();
+            return Lhs.Execute().ToBoolean() != Rhs.Execute().ToBoolean();
         }
 
         /// <inheritdoc />

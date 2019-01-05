@@ -1,13 +1,14 @@
 ﻿using Microsoft.CSharp.RuntimeBinder;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Operations.Comparision {
 
     /// <summary>
     /// operator used to compare two values resulting in a boolean
     /// </summary>
-    public abstract class Comparator : IBinaryToken, IOperator {
+    abstract class Comparator : IBinaryToken, IOperator {
 
         /// <summary>
         /// compares lhs and rhs and returns value of comparision

@@ -5,7 +5,7 @@ namespace NightlyCode.Scripting.Operations.Values {
     /// <summary>
     /// subtracts a RHS from LHS
     /// </summary>
-    public class Subtraction : ValueOperation {
+    class Subtraction : ValueOperation {
 
         /// <inheritdoc />
         protected override object Operate()

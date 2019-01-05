@@ -5,7 +5,7 @@ namespace NightlyCode.Scripting.Operations.Assign {
     /// <summary>
     /// divides a value by the result of a token and assigns it to the same token
     /// </summary>
-    public class DivAssign : OperatorAssign
+    class DivAssign : OperatorAssign
     {
         /// <inheritdoc />
         protected override object Compute() {

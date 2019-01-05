@@ -1,9 +1,12 @@
-﻿namespace NightlyCode.Scripting.Control {
+﻿using NightlyCode.Scripting.Parser;
+using NightlyCode.Scripting.Tokens;
+
+namespace NightlyCode.Scripting.Control {
 
     /// <summary>
     /// a block of statements executed in sequence
     /// </summary>
-    public class StatementBlock : IScriptToken {
+    class StatementBlock : IScriptToken {
         readonly IVariableContext variablecontext;
         readonly IScriptToken[] statements;
         readonly bool methodblock;

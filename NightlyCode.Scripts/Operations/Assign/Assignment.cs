@@ -1,18 +1,14 @@
 ﻿using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Operations.Assign {
 
     /// <summary>
     /// assignment in a script
     /// </summary>
-    public class Assignment : IBinaryToken, IOperator, IAssignableToken {
+    class Assignment : IBinaryToken, IOperator, IAssignableToken {
         IAssignableToken lhs;
-
-        /// <summary>
-        /// creates a new <see cref="Assignment"/>
-        /// </summary>
-        internal Assignment() { }
 
         /// <inheritdoc />
         public object Execute() {

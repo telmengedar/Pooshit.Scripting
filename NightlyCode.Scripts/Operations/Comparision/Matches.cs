@@ -7,7 +7,7 @@ namespace NightlyCode.Scripting.Operations.Comparision {
     /// <summary>
     /// determines whether a string matches a regex
     /// </summary>
-    public class Matches : Comparator {
+    class Matches : Comparator {
 
         /// <inheritdoc />
         protected override object Compare() {

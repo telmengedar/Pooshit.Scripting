@@ -1,13 +1,14 @@
 ﻿using Microsoft.CSharp.RuntimeBinder;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Operations.Logic {
 
     /// <summary>
     /// logic operation on boolean operands
     /// </summary>
-    public abstract class LogicOperation : IBinaryToken, IOperator {
+    abstract class LogicOperation : IBinaryToken, IOperator {
 
         /// <summary>
         /// executes the logic operation

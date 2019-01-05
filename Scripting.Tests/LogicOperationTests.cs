@@ -1,26 +1,42 @@
 ﻿using NightlyCode.Scripting;
+using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
 
 namespace Scripting.Tests {
 
     [TestFixture, Parallelizable]
     public class LogicOperationTests {
+        readonly ScriptParser parser = new ScriptParser();
 
-        [Test]
-        public void TestAnd() {
-            Assert.AreEqual(true, new ScriptParser(new ExtensionProvider()).Parse("3<4&&8>2").Execute());
+        [TestCase("3<4&&8>2", true)]
+        [TestCase("3>4&&8>2", false)]
+        [TestCase("3<4&&8<2", false)]
+        [TestCase("3>4&&8<2", false)]
+        [Parallelizable]
+        public void TestAnd(string data, bool expected) {
+            IScript script = parser.Parse(data);
+            Assert.AreEqual(expected, script.Execute());
         }
 
-        [Test]
-        public void TestOr()
-        {
-            Assert.AreEqual(true, new ScriptParser(new ExtensionProvider()).Parse("3<4&&8>2").Execute());
+        [TestCase("3<4||8>2", true)]
+        [TestCase("3>4||8>2", true)]
+        [TestCase("3<4||8<2", true)]
+        [TestCase("3>4||8<2", false)]
+        [Parallelizable]
+        public void TestOr(string data, bool expected) {
+            IScript script = parser.Parse(data);
+            Assert.AreEqual(expected, script.Execute());
         }
 
-        [Test]
-        public void TestXor()
+        [TestCase("3<4^^8>2", false)]
+        [TestCase("3>4^^8>2", true)]
+        [TestCase("3<4^^8<2", true)]
+        [TestCase("3>4^^8<2", false)]
+        [Parallelizable]
+        public void TestXor(string data, bool expected)
         {
-            Assert.AreEqual(false, new ScriptParser(new ExtensionProvider()).Parse("3<4^^8>2").Execute());
+            IScript script = parser.Parse(data);
+            Assert.AreEqual(expected, script.Execute());
         }
 
     }

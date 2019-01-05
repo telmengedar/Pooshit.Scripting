@@ -1,12 +1,13 @@
 ﻿using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extensions;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
 
     /// <summary>
     /// statement execution a body when a condition is met
     /// </summary>
-    public class If : IControlToken {
+    class If : IControlToken {
         readonly IScriptToken condition;
 
         /// <summary>
@@ -19,6 +20,7 @@ namespace NightlyCode.Scripting.Control {
             condition = parameters[0];
         }
 
+        /// <inheritdoc />
         public object Execute() {
             if (condition.Execute().ToBoolean())
                 return Body.Execute();

@@ -1,9 +1,9 @@
-﻿namespace NightlyCode.Scripting {
+﻿namespace NightlyCode.Scripting.Tokens {
 
     /// <summary>
     /// token of a script which can get executed
     /// </summary>
-    public interface IScriptToken {
+    interface IScriptToken {
 
         /// <summary>
         /// executes the token returning a result

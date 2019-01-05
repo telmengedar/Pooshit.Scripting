@@ -5,7 +5,7 @@ namespace NightlyCode.Scripting.Operations.Assign {
     /// <summary>
     /// shifts bits of a value to the right by the result of a token and assigns it to the same token
     /// </summary>
-    public class ShrAssign : OperatorAssign
+    class ShrAssign : OperatorAssign
     {
         /// <inheritdoc />
         protected override object Compute() {
