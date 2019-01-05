@@ -1,13 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using NightlyCode.Scripting.Control;
 using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Operations;
+using NightlyCode.Scripting.Operations.Assign;
+using NightlyCode.Scripting.Operations.Comparision;
 using NightlyCode.Scripting.Operations.Logic;
-using NightlyCode.Scripting.Operations.OpAssign;
 using NightlyCode.Scripting.Operations.Unary;
 using NightlyCode.Scripting.Operations.Values;
 using NightlyCode.Scripting.Tokens;
@@ -53,12 +56,24 @@ namespace NightlyCode.Scripting {
         IScriptToken[] ParseControlParameters(string data, ref int index, IVariableContext variables) {
             SkipWhitespaces(data, ref index);
             if (data[index] != '(')
-                throw new ScriptException("Expected parameters for control statement");
+                throw new ScriptParserException("Expected parameters for control statement");
             ++index;
             return ParseParameters(data, ref index, variables);
         }
 
         IScriptToken AnalyseToken(string token, string data, ref int index, IVariableContext variables, bool first) {
+            if (token.Length == 0)
+                return new ScriptValue(null);
+
+            if (char.IsDigit(token[0])) {
+                try {
+                    return ParseNumber(token);
+                }
+                catch (Exception) {
+                    return new ScriptValue(token);
+                }
+            }
+
             if (first) {
                 switch (token) {
                 case "if":
@@ -79,6 +94,10 @@ namespace NightlyCode.Scripting {
                     return new Case();
                 case "return":
                     return new Return(Parse(data, ref index, variables));
+                case "throw":
+                    return new Throw(ParseControlParameters(data, ref index, variables));
+                case "break":
+                    return new Break();
                 }
             }
 
@@ -99,14 +118,21 @@ namespace NightlyCode.Scripting {
         IScriptToken ParseToken(string data, ref int index, IVariableContext variables, bool startofstatement) {
             SkipWhitespaces(data, ref index);
 
+            bool parsenumber = false;
             if (index < data.Length) {
                 char character = data[index];
                 if (char.IsDigit(character) || character == '.' || character == '-')
-                    return ParseNumber(data, ref index);
+                    parsenumber = true;
+
                 if (character == '"')
                 {
                     ++index;
                     return ParseLiteral(data, ref index);
+                }
+
+                if (character == '\'') {
+                    ++index;
+                    return ParseCharacter(data, ref index);
                 }
             }
 
@@ -114,17 +140,17 @@ namespace NightlyCode.Scripting {
             for (; index < data.Length; ++index) {
                 char character = data[index];
 
-                if (char.IsLetterOrDigit(character) || character == '_')
+                if (char.IsLetterOrDigit(character) || character == '_' || (parsenumber && character == '.'))
                     tokenname.Append(character);
                 else if (character == '"' || character == '\\') {
                     ++index;
                     tokenname.Append(ParseSpecialCharacter(data[index]));
                 }
-                else return AnalyseToken(tokenname.ToString().TrimEnd(' '), data, ref index, variables, startofstatement);
+                else return AnalyseToken(tokenname.ToString(), data, ref index, variables, startofstatement);
             }
 
             if(tokenname.Length > 0)
-                return AnalyseToken(tokenname.ToString().TrimEnd(' '), data, ref index, variables, startofstatement);
+                return AnalyseToken(tokenname.ToString(), data, ref index, variables, startofstatement);
             return new ScriptValue(null);
         }
 
@@ -146,36 +172,97 @@ namespace NightlyCode.Scripting {
             return null;
         }
 
-        IScriptToken ParseNumber(string data, ref int index)
-        {
-            StringBuilder literal = new StringBuilder();
-            for (; index < data.Length; ++index) {
-                if (char.IsDigit(data[index]) || data[index] == '.')
-                    literal.Append(data[index]);
-                else break;
+        IScriptToken ParseNumber(string data) {
+            string numberdata = data.ToLower();
+            if (numberdata.StartsWith("0x")) {
+                if (numberdata.EndsWith("ul"))
+                    return new ScriptValue(Convert.ToUInt64(numberdata.Substring(0, numberdata.Length - 2), 16));
+                if (numberdata.EndsWith("l"))
+                    return new ScriptValue(Convert.ToInt64(numberdata.Substring(0, numberdata.Length - 1), 16));
+                if (numberdata.EndsWith("us"))
+                    return new ScriptValue(Convert.ToUInt16(numberdata.Substring(0, numberdata.Length - 2), 16));
+                if (numberdata.EndsWith("s"))
+                    return new ScriptValue(Convert.ToInt16(numberdata.Substring(0, numberdata.Length - 1), 16));
+                if (numberdata.EndsWith("sb"))
+                    return new ScriptValue(Convert.ToSByte(numberdata.Substring(0, numberdata.Length - 2), 16));
+                if (numberdata.EndsWith("b"))
+                    return new ScriptValue(Convert.ToByte(numberdata.Substring(0, numberdata.Length - 1), 16));
+                if (numberdata.EndsWith("u"))
+                    return new ScriptValue(Convert.ToUInt32(numberdata.Substring(0, numberdata.Length - 1), 16));
+                return new ScriptValue(Convert.ToInt32(numberdata, 16));
             }
 
-            // this can't be a number
-            if (literal.Length == 0)
-                return new ScriptValue(null);
+            if (numberdata.StartsWith("0o"))
+            {
+                if (numberdata.EndsWith("ul"))
+                    return new ScriptValue(Convert.ToUInt64(numberdata.Substring(2, numberdata.Length-4), 8));
+                if (numberdata.EndsWith("l"))
+                    return new ScriptValue(Convert.ToInt64(numberdata.Substring(2, numberdata.Length - 3), 8));
+                if (numberdata.EndsWith("us"))
+                    return new ScriptValue(Convert.ToUInt16(numberdata.Substring(2, numberdata.Length - 4), 8));
+                if (numberdata.EndsWith("s"))
+                    return new ScriptValue(Convert.ToInt16(numberdata.Substring(2, numberdata.Length - 3), 8));
+                if (numberdata.EndsWith("sb"))
+                    return new ScriptValue(Convert.ToSByte(numberdata.Substring(2, numberdata.Length - 4), 8));
+                if (numberdata.EndsWith("b"))
+                    return new ScriptValue(Convert.ToByte(numberdata.Substring(2, numberdata.Length - 3), 8));
+                if (numberdata.EndsWith("u"))
+                    return new ScriptValue(Convert.ToUInt32(numberdata.Substring(2, numberdata.Length - 3), 8));
+                return new ScriptValue(Convert.ToInt32(numberdata.Substring(2), 8));
+            }
+
+            if (numberdata.StartsWith("0b"))
+            {
+                if (numberdata.EndsWith("ul"))
+                    return new ScriptValue(Convert.ToUInt64(numberdata.Substring(2, numberdata.Length - 4), 2));
+                if (numberdata.EndsWith("l"))
+                    return new ScriptValue(Convert.ToInt64(numberdata.Substring(2, numberdata.Length - 3), 2));
+                if (numberdata.EndsWith("us"))
+                    return new ScriptValue(Convert.ToUInt16(numberdata.Substring(2, numberdata.Length - 4), 2));
+                if (numberdata.EndsWith("s"))
+                    return new ScriptValue(Convert.ToInt16(numberdata.Substring(2, numberdata.Length - 3), 2));
+                if (numberdata.EndsWith("sb"))
+                    return new ScriptValue(Convert.ToSByte(numberdata.Substring(2, numberdata.Length - 4), 2));
+                if (numberdata.EndsWith("b"))
+                    return new ScriptValue(Convert.ToByte(numberdata.Substring(2, numberdata.Length - 3), 2));
+                if (numberdata.EndsWith("u"))
+                    return new ScriptValue(Convert.ToUInt32(numberdata.Substring(2, numberdata.Length - 3), 2));
+                return new ScriptValue(Convert.ToInt32(numberdata.Substring(2), 2));
+            }
+
+            if (numberdata.EndsWith("ul"))
+                return new ScriptValue(Convert.ToUInt64(numberdata.Substring(0, numberdata.Length - 2), 10));
+            if (numberdata.EndsWith("l"))
+                return new ScriptValue(Convert.ToInt64(numberdata.Substring(0, numberdata.Length - 1), 10));
+            if (numberdata.EndsWith("us"))
+                return new ScriptValue(Convert.ToUInt16(numberdata.Substring(0, numberdata.Length - 2), 10));
+            if (numberdata.EndsWith("s"))
+                return new ScriptValue(Convert.ToInt16(numberdata.Substring(0, numberdata.Length - 1), 10));
+            if (numberdata.EndsWith("sb"))
+                return new ScriptValue(Convert.ToSByte(numberdata.Substring(0, numberdata.Length - 2), 10));
+            if (numberdata.EndsWith("b"))
+                return new ScriptValue(Convert.ToByte(numberdata.Substring(0, numberdata.Length - 1), 10));
+            if (numberdata.EndsWith("u"))
+                return new ScriptValue(Convert.ToUInt32(numberdata.Substring(0, numberdata.Length - 1), 10));
 
             int dotcount = 0;
-            for (int i = 0; i < literal.Length; ++i) {
-                if(!char.IsDigit(literal[i]) && literal[i] != '.' || i > 0 && literal[i] == '-')
-                    return new ScriptValue(literal.ToString());
-
-                if (literal[i] == '.')
+            for (int i = 0; i < numberdata.Length; ++i) {
+                if (numberdata[i] == '.')
                     ++dotcount;
             }
 
             switch (dotcount)
             {
                 case 0:
-                    return new ScriptValue(int.Parse(literal.ToString()));
+                    return new ScriptValue(int.Parse(numberdata));
                 case 1:
-                    return new ScriptValue(double.Parse(literal.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture));
+                    if (numberdata.EndsWith("d"))
+                        return new ScriptValue(decimal.Parse(numberdata.Substring(0, numberdata.Length-1), NumberStyles.Float, CultureInfo.InvariantCulture));
+                    if (numberdata.EndsWith("f"))
+                        return new ScriptValue(float.Parse(numberdata.Substring(0, numberdata.Length - 1), NumberStyles.Float, CultureInfo.InvariantCulture));
+                    return new ScriptValue(double.Parse(numberdata, NumberStyles.Float, CultureInfo.InvariantCulture));
                 default:
-                    return new ScriptValue(literal.ToString());
+                    return new ScriptValue(numberdata);
             }
         }
 
@@ -190,6 +277,21 @@ namespace NightlyCode.Scripting {
                 default:
                     return character;
             }
+        }
+
+        IScriptToken ParseCharacter(string data, ref int index) {
+            char character = data[index];
+            if (character == '\\') {
+                ++index;
+                character = ParseSpecialCharacter(data[index]);
+            }
+
+            ++index;
+            if (data[index] != '\'')
+                throw new ScriptParserException("Character literal not terminated");
+            ++index;
+
+            return new ScriptValue(character);
         }
 
         IScriptToken ParseLiteral(string data, ref int index) {
@@ -210,7 +312,7 @@ namespace NightlyCode.Scripting {
                 }
             }
 
-            throw new ScriptException("Literal not terminated");
+            throw new ScriptParserException("Literal not terminated");
         }
 
         IScriptToken ParseMember(IScriptToken host, string data, ref int index, IVariableContext variables) {
@@ -236,7 +338,7 @@ namespace NightlyCode.Scripting {
 
             if (membername.Length > 0)
                 return new ScriptMember(host, membername.ToString());
-            throw new ScriptException("Member name expected");
+            throw new ScriptParserException("Member name expected");
         }
 
         IScriptToken[] ParseArray(string data, ref int index, IVariableContext variables) {
@@ -262,7 +364,7 @@ namespace NightlyCode.Scripting {
                 }
             }
 
-            throw new ScriptException("Array not terminated");
+            throw new ScriptParserException("Array not terminated");
         }
 
         IScriptToken[] ParseParameters(string data, ref int index, IVariableContext variables) {
@@ -287,7 +389,7 @@ namespace NightlyCode.Scripting {
                 }
             }
 
-            throw new ScriptException("Parameter list not terminated");
+            throw new ScriptParserException("Parameter list not terminated");
         }
 
 
@@ -329,23 +431,30 @@ namespace NightlyCode.Scripting {
                     else if (index < data.Length && !char.IsWhiteSpace(data[index]))
                         return new Increment(false);
                     else
-                        throw new ScriptException("Increment without connected operand detected");
+                        throw new ScriptParserException("Increment without connected operand detected");
                 case Operator.Decrement:
                     if (index - parsestart >= 3 && !char.IsWhiteSpace(data[index - 3]))
                         return new Decrement(true);
                     else if (index < data.Length && !char.IsWhiteSpace(data[index]))
                         return new Decrement(false);
                     else
-                        throw new ScriptException("Increment without connected operand detected");
+                        throw new ScriptParserException("Increment without connected operand detected");
                 case Operator.Equal:
+                    return new Equal();
                 case Operator.NotEqual:
+                    return new NotEqual();
                 case Operator.Less:
+                    return new Less();
                 case Operator.LessOrEqual:
+                    return new LessOrEqual();
                 case Operator.Greater:
+                    return new Greater();
                 case Operator.GreaterOrEqual:
+                    return new GreaterOrEqual();
                 case Operator.Matches:
+                    return new Matches();
                 case Operator.NotMatches:
-                    return new ScriptComparision(@operator);
+                    return new MatchesNot();
                 case Operator.Addition:
                     return new Addition();
                 case Operator.Subtraction:
@@ -357,9 +466,11 @@ namespace NightlyCode.Scripting {
                 case Operator.Modulo:
                     return new Modulo();
                 case Operator.LogicAnd:
+                    return new LogicAnd();
                 case Operator.LogicOr:
+                    return new LogicOr();
                 case Operator.LogicXor:
-                    return new LogicComparision(@operator);
+                    return new LogicXor();
                 case Operator.BitwiseAnd:
                     return new BitwiseAnd();
                 case Operator.BitwiseOr:
@@ -370,12 +481,16 @@ namespace NightlyCode.Scripting {
                     return new ShiftLeft();
                 case Operator.ShiftRight:
                     return new ShiftRight();
+                case Operator.RolLeft:
+                    return new RolLeft();
+                case Operator.RolRight:
+                    return new RolRight();
                 case Operator.Not:
                     return new Not();
                 case Operator.Complement:
                     return new Complement();
                 case Operator.Assignment:
-                    return new ScriptAssignment();
+                    return new Assignment();
                 case Operator.AddAssign:
                     return new AddAssign();
                 case Operator.SubAssign:
@@ -397,7 +512,7 @@ namespace NightlyCode.Scripting {
                 case Operator.XorAssign:
                     return new XorAssign();
                 default:
-                    throw new ScriptException($"Unsupported operator {token}");
+                    throw new ScriptParserException($"Unsupported operator {token}");
             }
         }
 
@@ -414,7 +529,7 @@ namespace NightlyCode.Scripting {
             }
 
             if (data[index] != ')')
-                throw new ScriptException("Block not terminated");
+                throw new ScriptParserException("Block not terminated");
 
             ++index;
             return new ArithmeticBlock(block);
@@ -530,7 +645,7 @@ namespace NightlyCode.Scripting {
                         if (unary.IsPostToken)
                         {
                             if (operatorindex.Index == 0)
-                                throw new ScriptException("Posttoken at beginning of tokenlist detected");
+                                throw new ScriptParserException("Posttoken at beginning of tokenlist detected");
 
                             unary.Operand = tokenlist[operatorindex.Index - 1];
                             tokenlist.RemoveAt(operatorindex.Index-1);
@@ -589,14 +704,14 @@ namespace NightlyCode.Scripting {
             {
                 if (statements[i] is IControlToken control) {
                     if (i + 1 >= statements.Count)
-                        throw new ScriptException("If statement without execution block detected");
+                        throw new ScriptParserException("If statement without execution block detected");
                     control.Body = statements[i + 1];
                     statements.RemoveAt(i + 1);
 
                     if (control is Case @case) {
                         Switch @switch = statements[i - 1] as Switch;
                         if (@switch == null)
-                            throw new ScriptException("Case without connected switch statement found");
+                            throw new ScriptParserException("Case without connected switch statement found");
                         @switch.AddCase(@case);
                         statements.RemoveAt(i);
                         --i;
@@ -605,7 +720,7 @@ namespace NightlyCode.Scripting {
                     {
                         If @if = statements[i - 1] as If;
                         if (@if == null)
-                            throw new ScriptException("Else without connected if statement found");
+                            throw new ScriptParserException("Else without connected if statement found");
                         @if.Else = @else.Body;
                         statements.RemoveAt(i);
                         --i;

@@ -45,6 +45,16 @@ namespace NightlyCode.Core.Conversion {
             specificconverters[new ConversionKey(typeof(string), typeof(bool))] = v => (string)v != "" && (string)v != "0" && ((string)v).ToLower() != "false";
             specificconverters[new ConversionKey(typeof(string), typeof(byte[]))] = v => System.Convert.FromBase64String((string)v);
             specificconverters[new ConversionKey(typeof(string), typeof(Color))] = ParseColor;
+
+            specificconverters[new ConversionKey(typeof(sbyte), typeof(ulong))] = v => {unchecked { return (ulong) (sbyte) v; }};
+            specificconverters[new ConversionKey(typeof(short), typeof(ulong))] = v => { unchecked { return (ulong)(short)v; } };
+            specificconverters[new ConversionKey(typeof(int), typeof(ulong))] = v => { unchecked { return (ulong)(int)v; } };
+            specificconverters[new ConversionKey(typeof(long), typeof(ulong))] = v => { unchecked { return (ulong)(long)v; } };
+
+            specificconverters[new ConversionKey(typeof(ulong),typeof(sbyte))] = v => { unchecked { return (sbyte)(ulong)v; } };
+            specificconverters[new ConversionKey(typeof(ulong),typeof(short))] = v => { unchecked { return (short)(ulong)v; } };
+            specificconverters[new ConversionKey(typeof(ulong), typeof(int))] = v => { unchecked { return (int)(ulong)v; } };
+            specificconverters[new ConversionKey(typeof(ulong), typeof(long))] = v => { unchecked { return (long)(ulong)v; } };
         }
 
         static int ParseColorValue(string value) {

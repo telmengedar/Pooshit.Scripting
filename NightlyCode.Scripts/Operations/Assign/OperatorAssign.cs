@@ -1,7 +1,8 @@
 ﻿using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Operations.OpAssign {
+namespace NightlyCode.Scripting.Operations.Assign {
 
     /// <summary>
     /// computes the result of a binary operation and assigns the result to lhs
@@ -30,7 +31,7 @@ namespace NightlyCode.Scripting.Operations.OpAssign {
             {
                 lhs = value as IAssignableToken;
                 if (lhs == null)
-                    throw new ScriptException("Left hand side of an operator assign must be assignable");
+                    throw new ScriptParserException("Left hand side of an operator assign must be assignable");
             }
         }
 

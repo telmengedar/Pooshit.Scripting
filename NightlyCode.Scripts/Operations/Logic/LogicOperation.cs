@@ -1,39 +1,38 @@
-﻿using System;
-using Microsoft.CSharp.RuntimeBinder;
-using NightlyCode.Core.Conversion;
+﻿using Microsoft.CSharp.RuntimeBinder;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
 
-namespace NightlyCode.Scripting.Operations.Values {
+namespace NightlyCode.Scripting.Operations.Logic {
 
     /// <summary>
-    /// arithmetic operation to apply to two operands
+    /// logic operation on boolean operands
     /// </summary>
-    public abstract class ValueOperation : IBinaryToken, IOperator {
+    public abstract class LogicOperation : IBinaryToken, IOperator {
 
         /// <summary>
-        /// executes the value operation
+        /// executes the logic operation
         /// </summary>
-        /// <returns>result of operation</returns>
+        /// <returns>result of logic operation</returns>
         protected abstract object Operate();
 
-        /// <inheritdoc />
         public object Execute() {
-            try {
+            try
+            {
                 return Operate();
             }
-            catch (RuntimeBinderException e) {
+            catch (RuntimeBinderException e)
+            {
                 throw new ScriptRuntimeException(e.Message, null, e);
             }
         }
-
-        /// <inheritdoc />
-        public abstract Operator Operator { get; }
 
         /// <inheritdoc />
         public IScriptToken Lhs { get; set; }
 
         /// <inheritdoc />
         public IScriptToken Rhs { get; set; }
+
+        /// <inheritdoc />
+        public abstract Operator Operator { get; }
     }
 }

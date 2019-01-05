@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using NightlyCode.Core.Conversion;
+using NightlyCode.Scripting.Errors;
 
 namespace NightlyCode.Scripting.Extensions {
 
@@ -7,18 +8,18 @@ namespace NightlyCode.Scripting.Extensions {
     /// extensions for values
     /// </summary>
     public static class ValueExtensions {
-        static readonly List<Type> typelist = new List<Type> {
-            typeof(byte),
-            typeof(short),
-            typeof(int),
-            typeof(long),
-            typeof(float),
-            typeof(double),
-            typeof(decimal),
-            typeof(string)
-        };
 
-        public static int GetNumberOfBits(object value) {
+        public static object GetMask(Type masktype, int numberofbits) {
+            object mask = Activator.CreateInstance(masktype);
+            for (int i = 0; i < numberofbits; ++i) {
+                mask = (dynamic)mask << 1;
+                mask = (dynamic) mask | 1;
+            }
+
+            return mask;
+        }
+
+        public static int GetNumberOfBits(this object value) {
             if (value is int || value is uint)
                 return 32;
             if (value is long || value is ulong)
@@ -27,15 +28,7 @@ namespace NightlyCode.Scripting.Extensions {
                 return 16;
             if (value is byte || value is sbyte)
                 return 8;
-            throw new ScriptException("Type not supported for operation");
-        }
-
-        public static int GetTypeIndex(this Type type) {
-            return typelist.IndexOf(type);
-        }
-
-        public static Type GetValueType(this int index) {
-            return typelist[index];
+            throw new ScriptRuntimeException("Type not supported for operation");
         }
 
         public static bool ToBoolean(this object value) {
@@ -44,9 +37,22 @@ namespace NightlyCode.Scripting.Extensions {
 
             if (value is bool b)
                 return b;
+
+            if (value is string s)
+                return s != "";
+
             if (value is IComparable comparable)
                 return comparable.CompareTo(Activator.CreateInstance(value.GetType())) != 0;
             return false;
+        }
+
+        public static T Convert<T>(this object value) {
+            try {
+                return Converter.Convert<T>(value);
+            }
+            catch (Exception e) {
+                throw new ScriptRuntimeException($"Unable to convert {value} to {typeof(T)}", null, e);
+            }
         }
     }
 }

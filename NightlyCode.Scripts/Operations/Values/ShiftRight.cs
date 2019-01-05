@@ -1,4 +1,6 @@
-﻿using NightlyCode.Scripting.Data;
+﻿using System;
+using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Extensions;
 
 namespace NightlyCode.Scripting.Operations.Values {
 
@@ -8,9 +10,16 @@ namespace NightlyCode.Scripting.Operations.Values {
     public class ShiftRight : ValueOperation {
 
         /// <inheritdoc />
-        protected override object Operate()
-        {
-            return (dynamic)Lhs.Execute() >> (dynamic)Rhs.Execute();
+        protected override object Operate() {
+            object value = Lhs.Execute();
+            int steps = Rhs.Execute().Convert<int>();
+
+            int numberofbits = value.GetNumberOfBits();
+            if (steps >= numberofbits)
+                return Activator.CreateInstance(value.GetType());
+
+            object mask = ValueExtensions.GetMask(value.GetType(), numberofbits-steps);
+            return ((dynamic) value >> (dynamic) steps) & (dynamic) mask;
         }
 
         /// <inheritdoc />

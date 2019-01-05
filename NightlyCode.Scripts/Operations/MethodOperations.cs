@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NightlyCode.Core.Conversion;
+using NightlyCode.Scripting.Errors;
 
 namespace NightlyCode.Scripting.Operations {
     public static class MethodOperations {
@@ -17,11 +18,11 @@ namespace NightlyCode.Scripting.Operations {
                     callparameters = CreateParameters(host, targetparameters.Skip(1).ToArray(), parameters).ToArray();
                 else callparameters = CreateParameters(targetparameters, parameters).ToArray();
             }
-            catch (ScriptException e) {
-                throw new ScriptException($"Unable to convert parameters for {host.GetType().Name}.{method.Name}({string.Join(",", targetparameters.Select(p => p.ParameterType.Name + " " + p.Name))})", e.Message);
+            catch (ScriptRuntimeException e) {
+                throw new ScriptRuntimeException($"Unable to convert parameters for {host.GetType().Name}.{method.Name}({string.Join(",", targetparameters.Select(p => p.ParameterType.Name + " " + p.Name))})", e.Message);
             }
             catch (Exception e) {
-                throw new ScriptException($"Unable to convert parameters for {host.GetType().Name}.{method.Name}({string.Join(",", targetparameters.Select(p => p.ParameterType.Name + " " + p.Name))})", string.Join("\r\n", parameters.Select(p => p.ToString())), e);
+                throw new ScriptRuntimeException($"Unable to convert parameters for {host.GetType().Name}.{method.Name}({string.Join(",", targetparameters.Select(p => p.ParameterType.Name + " " + p.Name))})", string.Join("\r\n", parameters.Select(p => p.ToString())), e);
             }
 
             try {
@@ -30,10 +31,10 @@ namespace NightlyCode.Scripting.Operations {
                 return method.Invoke(extension ? null : host, callparameters);
             }
             catch (TargetInvocationException e) {
-                throw new ScriptException($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)})", e.InnerException?.Message ?? e.Message, e);
+                throw new ScriptRuntimeException($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)})", e.InnerException?.Message ?? e.Message, e);
             }
             catch (Exception e) {
-                throw new ScriptException($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)})", e.Message, e);
+                throw new ScriptRuntimeException($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)})", e.Message, e);
             }
         }
 
@@ -51,7 +52,7 @@ namespace NightlyCode.Scripting.Operations {
                 object value = sourceparameters[i].Execute();
                 if (value == null) {
                     if (targetparameters[i].ParameterType.IsValueType)
-                        throw new ScriptException($"Unable to convert null to {targetparameters[i].ParameterType.Name} since a valuetype is needed");
+                        throw new ScriptRuntimeException($"Unable to convert null to {targetparameters[i].ParameterType.Name} since a valuetype is needed");
                     yield return null;
                     continue;
                 }
@@ -83,7 +84,7 @@ namespace NightlyCode.Scripting.Operations {
                     else value = Converter.Convert(value, targetparameters[i].ParameterType);
                 }
                 catch (Exception e) {
-                    throw new ScriptException($"Unable to convert parameter {i} ({value}) to {targetparameters[i].ParameterType}", null, e);
+                    throw new ScriptRuntimeException($"Unable to convert parameter {i} ({value}) to {targetparameters[i].ParameterType}", null, e);
                 }
 
                 yield return value;

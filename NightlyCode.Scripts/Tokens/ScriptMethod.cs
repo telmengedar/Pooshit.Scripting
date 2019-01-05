@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Operations;
 
 namespace NightlyCode.Scripting.Tokens {
@@ -78,9 +79,9 @@ namespace NightlyCode.Scripting.Tokens {
             }
 
             if (executionlog.Length == 0)
-                throw new ScriptException($"Method '{methodname}' matching the specified parameters count not found on type {host.GetType().Name}", executionlog.ToString());
+                throw new ScriptRuntimeException($"Method '{methodname}' matching the specified parameters count not found on type {host.GetType().Name}", executionlog.ToString());
 
-            throw new ScriptException("None of the matching methods could be invoked using the specified parameters", executionlog.ToString());
+            throw new ScriptRuntimeException("None of the matching methods could be invoked using the specified parameters", executionlog.ToString());
         }
 
         public override string ToString() {

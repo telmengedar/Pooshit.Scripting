@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using NightlyCode.Core.Conversion;
+using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Operations;
 
 namespace NightlyCode.Scripting.Tokens {
@@ -32,20 +33,20 @@ namespace NightlyCode.Scripting.Tokens {
                     return property.GetValue(host);
                 }
                 catch(Exception e) {
-                    throw new ScriptException("Unable to read property", null, e);
+                    throw new ScriptRuntimeException("Unable to read property", null, e);
                 }
             }
 
 
             FieldInfo fieldinfo = host.GetType().GetFields().FirstOrDefault(f => f.Name.ToLower() == membername);
             if (fieldinfo == null)
-                throw new ScriptException($"A member with the name of {membername} was not found in type {host.GetType().Name}");
+                throw new ScriptRuntimeException($"A member with the name of {membername} was not found in type {host.GetType().Name}");
 
             try {
                 return fieldinfo.GetValue(host);
             }
             catch(Exception e) {
-                throw new ScriptException("Unable to read field", null, e);
+                throw new ScriptRuntimeException("Unable to read field", null, e);
             }
         }
 
@@ -58,7 +59,7 @@ namespace NightlyCode.Scripting.Tokens {
             }
             catch (Exception e)
             {
-                throw new ScriptException("Unable to set property", null, e);
+                throw new ScriptRuntimeException("Unable to set property", null, e);
             }
 
             return targetvalue;
@@ -73,7 +74,7 @@ namespace NightlyCode.Scripting.Tokens {
             }
             catch (Exception e)
             {
-                throw new ScriptException("Unable to set field", null, e);
+                throw new ScriptRuntimeException("Unable to set field", null, e);
             }
 
             return targetvalue;
@@ -87,7 +88,7 @@ namespace NightlyCode.Scripting.Tokens {
 
             FieldInfo fieldinfo = host.GetType().GetFields().FirstOrDefault(f => f.Name.ToLower() == membername);
             if (fieldinfo == null)
-                throw new ScriptException($"A member with the name of {membername} was not found in type {host.GetType().Name}");
+                throw new ScriptRuntimeException($"A member with the name of {membername} was not found in type {host.GetType().Name}");
 
             return SetField(host, fieldinfo, token);
         }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using NightlyCode.Core.Conversion;
+using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Operations;
 
 namespace NightlyCode.Scripting.Tokens {
@@ -52,9 +53,9 @@ namespace NightlyCode.Scripting.Tokens {
             }
 
             if (executionlog.Length == 0)
-                throw new ScriptException($"Indexer for '{host.GetType().Name}' matching the specified parameters count not found", executionlog.ToString());
+                throw new ScriptRuntimeException($"Indexer for '{host.GetType().Name}' matching the specified parameters count not found", executionlog.ToString());
 
-            throw new ScriptException("None of the matching indexers could be invoked using the specified parameters", executionlog.ToString());
+            throw new ScriptRuntimeException("None of the matching indexers could be invoked using the specified parameters", executionlog.ToString());
 
         }
 
@@ -85,9 +86,9 @@ namespace NightlyCode.Scripting.Tokens {
             }
 
             if (executionlog.Length == 0)
-                throw new ScriptException($"Indexer for '{host.GetType().Name}' matching the specified parameters count not found", executionlog.ToString());
+                throw new ScriptRuntimeException($"Indexer for '{host.GetType().Name}' matching the specified parameters count not found", executionlog.ToString());
 
-            throw new ScriptException("None of the matching indexers could be invoked using the specified parameters", executionlog.ToString());
+            throw new ScriptRuntimeException("None of the matching indexers could be invoked using the specified parameters", executionlog.ToString());
         }
 
         public override string ToString() {

@@ -13,7 +13,7 @@ namespace Scripting.Tests {
         [TestCase("\"string\"==\"string\"")]
         [Parallelizable]
         public void Equals(string data) {
-            Assert.AreEqual(true, new ScriptParser(new ExtensionProvider()).Parse(data).Execute());
+            Assert.AreEqual(true, new ScriptParser().Parse(data).Execute());
         }
 
         [TestCase("3!=7")]
@@ -22,13 +22,13 @@ namespace Scripting.Tests {
         [Parallelizable]
         public void NotEquals(string data)
         {
-            Assert.AreEqual(true, new ScriptParser(new ExtensionProvider()).Parse(data).Execute());
+            Assert.AreEqual(true, new ScriptParser().Parse(data).Execute());
         }
 
         [Test, Parallelizable]
         public void Less()
         {
-            Assert.AreEqual(true, new ScriptParser(new ExtensionProvider()).Parse("3<8").Execute());
+            Assert.AreEqual(true, new ScriptParser().Parse("3<8").Execute());
         }
 
         [TestCase("3<=3")]
@@ -36,13 +36,13 @@ namespace Scripting.Tests {
         [Parallelizable]
         public void LessEquals(string data)
         {
-            Assert.AreEqual(true, new ScriptParser(new ExtensionProvider()).Parse(data).Execute());
+            Assert.AreEqual(true, new ScriptParser().Parse(data).Execute());
         }
 
         [Test, Parallelizable]
         public void Greater()
         {
-            Assert.AreEqual(true, new ScriptParser(new ExtensionProvider()).Parse("8>4").Execute());
+            Assert.AreEqual(true, new ScriptParser().Parse("8>4").Execute());
         }
 
         [Test, Parallelizable]
@@ -66,8 +66,20 @@ namespace Scripting.Tests {
         [Parallelizable]
         public void GreaterEqualsEquals(string data)
         {
-            Assert.AreEqual(true, new ScriptParser(new ExtensionProvider()).Parse(data).Execute());
+            Assert.AreEqual(true, new ScriptParser().Parse(data).Execute());
         }
 
+        [TestCase("\"TestString\"~~\"^.*t.t.*$\"")]
+        [Parallelizable]
+        public void Matches(string data) {
+            Assert.AreEqual(true, new ScriptParser().Parse(data).Execute());
+        }
+
+        [TestCase("\"234782347\"!~\"[a-zA-Z]+\"")]
+        [Parallelizable]
+        public void MatchesNot(string data)
+        {
+            Assert.AreEqual(true, new ScriptParser().Parse(data).Execute());
+        }
     }
 }

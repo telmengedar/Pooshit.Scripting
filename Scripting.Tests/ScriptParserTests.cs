@@ -4,6 +4,7 @@ using System.Linq;
 using NightlyCode.Scripting;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Operations;
+using NightlyCode.Scripting.Operations.Assign;
 using NightlyCode.Scripting.Tokens;
 using NUnit.Framework;
 using Scripting.Tests.Data;
@@ -13,7 +14,7 @@ namespace Scripting.Tests {
     [TestFixture]
     public class ScriptParserTests {
 
-        [TestCase("host.member=value", typeof(ScriptAssignment))]
+        [TestCase("host.member=value", typeof(Assignment))]
         [TestCase("host.method(service,user,parameter)", typeof(ScriptMethod))]
         [TestCase("host.method(host.member)", typeof(ScriptMethod))]
         [TestCase("$test", typeof(ScriptVariable))]
@@ -21,7 +22,7 @@ namespace Scripting.Tests {
         [TestCase("host.method(\"\",clean)", typeof(ScriptMethod))]
         [TestCase("host.speak(\"It is quite simple\",\"CereVoice Stuart - English (Scotland)\")", typeof(ScriptMethod))]
         [TestCase("host.method(1,2,3,[4,4])", typeof(ScriptMethod))]
-        [TestCase("host.property=255.34", typeof(ScriptAssignment))]
+        [TestCase("host.property=255.34", typeof(Assignment))]
         [TestCase("\"TestValue\"", typeof(ScriptValue))]
         [TestCase("122.3", typeof(ScriptValue))]
         public void TestValidStatements(string statement, Type expectedroot) {

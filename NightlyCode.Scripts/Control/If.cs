@@ -1,4 +1,5 @@
-﻿using NightlyCode.Scripting.Extensions;
+﻿using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Extensions;
 
 namespace NightlyCode.Scripting.Control {
 
@@ -14,7 +15,7 @@ namespace NightlyCode.Scripting.Control {
         /// <param name="parameters">condition statement has to match to execute body</param>
         public If(IScriptToken[] parameters) {
             if (parameters.Length != 1)
-                throw new ScriptException("Expected exactly one condition for 'if' statement");
+                throw new ScriptParserException("Expected exactly one condition for 'if' statement");
             condition = parameters[0];
         }
 

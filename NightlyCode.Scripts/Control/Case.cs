@@ -26,17 +26,24 @@ namespace NightlyCode.Scripting.Control {
         /// </summary>
         public bool IsDefault => conditions == null;
 
+        /// <summary>
+        /// determines whether case matches a value
+        /// </summary>
+        /// <param name="value">value to match</param>
+        /// <returns>true if case matches value, false otherwise</returns>
         public bool Matches(object value) {
             return conditions.Any(c => c.Execute().Equals(value));
         }
 
+        /// <inheritdoc />
         public object Execute() {
-            Body.Execute();
-            return null;
+            return Body.Execute();
         }
 
+        /// <inheritdoc />
         public IScriptToken Body { get; set; }
 
+        /// <inheritdoc />
         public override string ToString() {
             return $"case({string.Join<IScriptToken>(", ", conditions)}) {Body}";
         }

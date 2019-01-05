@@ -30,6 +30,8 @@
         BitwiseXor,
         ShiftLeft,
         ShiftRight,
+        RolLeft,
+        RolRight,
         LogicAnd,
         LogicOr,
         LogicXor,

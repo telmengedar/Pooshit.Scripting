@@ -1,8 +1,6 @@
-﻿using System;
-using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Tokens;
+﻿using NightlyCode.Scripting.Data;
 
-namespace NightlyCode.Scripting.Operations.OpAssign {
+namespace NightlyCode.Scripting.Operations.Assign {
 
     /// <summary>
     /// computes modulus of a value with the result of a token and assigns it to the same token

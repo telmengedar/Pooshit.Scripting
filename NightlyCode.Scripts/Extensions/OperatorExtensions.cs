@@ -1,4 +1,5 @@
 ﻿using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Errors;
 
 namespace NightlyCode.Scripting.Extensions {
 
@@ -39,6 +40,8 @@ namespace NightlyCode.Scripting.Extensions {
                     return 7;
                 case Operator.ShiftLeft:
                 case Operator.ShiftRight:
+                case Operator.RolLeft:
+                case Operator.RolRight:
                     return 8;
                 case Operator.Less:
                 case Operator.LessOrEqual:
@@ -68,7 +71,7 @@ namespace NightlyCode.Scripting.Extensions {
                 case Operator.XorAssign:
                     return 13;
                 default:
-                    throw new ScriptException("Unsupported operator");
+                    throw new ScriptParserException("Unsupported operator");
             }
         }
 
@@ -122,6 +125,10 @@ namespace NightlyCode.Scripting.Extensions {
                 return Operator.ShiftLeft;
             case ">>":
                 return Operator.ShiftRight;
+            case "<<<":
+                return Operator.RolLeft;
+            case ">>>":
+                return Operator.RolRight;
             case "&&":
                 return Operator.LogicAnd;
             case "||":
@@ -153,54 +160,7 @@ namespace NightlyCode.Scripting.Extensions {
             case "--":
                 return Operator.Decrement;
             default:
-                throw new ScriptException($"Unsupported operator type '{data}'");
-            }
-        }
-
-        public static string ToStringExt(this Operator @operator) {
-            switch (@operator) {
-            case Operator.Not:
-                return "!";
-            case Operator.Complement:
-                return "~";
-            case Operator.Modulo:
-                return "%";
-            case Operator.Division:
-                return "/";
-            case Operator.Multiplication:
-                return "*";
-            case Operator.Addition:
-                return "+";
-            case Operator.Subtraction:
-                return "-";
-            case Operator.Less:
-                return "<";
-            case Operator.LessOrEqual:
-                return "<=";
-            case Operator.Greater:
-                return ">";
-            case Operator.GreaterOrEqual:
-                return ">=";
-            case Operator.Equal:
-                return "==";
-            case Operator.NotEqual:
-                return "!=";
-            case Operator.BitwiseAnd:
-                return "&";
-            case Operator.BitwiseOr:
-                return "|";
-            case Operator.BitwiseXor:
-                return "^";
-            case Operator.LogicAnd:
-                return "&&";
-            case Operator.LogicOr:
-                return "||";
-            case Operator.LogicXor:
-                return "^^";
-            case Operator.Assignment:
-                return "=";
-            default:
-                throw new ScriptException($"Unsupported operator {@operator}");
+                throw new ScriptParserException($"Unsupported operator type '{data}'");
             }
         }
     }

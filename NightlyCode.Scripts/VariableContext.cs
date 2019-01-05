@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Errors;
 
 namespace NightlyCode.Scripting {
 
@@ -56,7 +57,7 @@ namespace NightlyCode.Scripting {
         /// <inheritdoc />
         public object GetVariable(string name) {
             if(!ContainsVariable(name))
-                throw new ScriptException($"Variable {name} not found");
+                throw new ScriptRuntimeException($"Variable {name} not found");
 
             if (values.TryGetValue(name, out object value))
                 return value;
@@ -69,7 +70,7 @@ namespace NightlyCode.Scripting {
                 parentcontext.SetVariable(name, value);
             else {
                 if (IsReadOnly)
-                    throw new ScriptException("Variables in this scope are read-only");
+                    throw new ScriptRuntimeException("Variables in this scope are read-only");
                 values[name] = value;
             }
         }

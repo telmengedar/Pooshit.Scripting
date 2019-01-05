@@ -31,6 +31,9 @@
                             return @return.Value?.Execute();
                         return @return;
                     }
+
+                    if (result is Break)
+                        return result;
                 }
             }
 

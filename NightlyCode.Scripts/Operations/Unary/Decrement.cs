@@ -1,4 +1,5 @@
 ﻿using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Operations.Unary {
@@ -40,7 +41,7 @@ namespace NightlyCode.Scripting.Operations.Unary {
             set {
                 token = value as IAssignableToken;
                 if (token == null)
-                    throw new ScriptException("Operand of decrement must be assignable");
+                    throw new ScriptParserException("Operand of decrement must be assignable");
             }
         }
 

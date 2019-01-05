@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using NightlyCode.Scripting.Errors;
 
 namespace NightlyCode.Scripting.Control {
 
@@ -16,7 +17,7 @@ namespace NightlyCode.Scripting.Control {
         /// <param name="parameters">parameters which contain value to evaluate</param>
         public Switch(IScriptToken[] parameters) {
             if (parameters.Length != 1)
-                throw new ScriptException("Switch statement needs exactly one value parameter");
+                throw new ScriptParserException("Switch statement needs exactly one value parameter");
             condition = parameters[0];
         }
 

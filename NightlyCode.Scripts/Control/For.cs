@@ -1,4 +1,5 @@
-﻿using NightlyCode.Scripting.Extensions;
+﻿using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Extensions;
 
 namespace NightlyCode.Scripting.Control {
 
@@ -16,7 +17,7 @@ namespace NightlyCode.Scripting.Control {
         /// <param name="loopparameters"></param>
         public For(IScriptToken[] loopparameters) {
             if (loopparameters.Length != 3)
-                throw new ScriptException("3 loop parameters needed for a 'for' loop");
+                throw new ScriptParserException("3 loop parameters needed for a 'for' loop");
             initializer = loopparameters[0];
             condition = loopparameters[1];
             step = loopparameters[2];
@@ -30,6 +31,8 @@ namespace NightlyCode.Scripting.Control {
                 object value=Body?.Execute();
                 if (value is Return)
                     return value;
+                if (value is Break)
+                    return null;
                 step?.Execute();
             }
 
