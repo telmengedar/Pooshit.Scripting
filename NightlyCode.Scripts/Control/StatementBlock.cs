@@ -17,7 +17,7 @@ namespace NightlyCode.Scripting.Control {
         /// <param name="variablecontext">variable environment for this block</param>
         /// <param name="statements">statements in block</param>
         /// <param name="methodblock">determines whether this is the main block of a method</param>
-        public StatementBlock(IVariableContext variablecontext, IScriptToken[] statements, bool methodblock=false) {
+        public StatementBlock(IScriptToken[] statements, IVariableContext variablecontext=null, bool methodblock=false) {
             this.variablecontext = variablecontext;
             this.statements = statements;
             this.methodblock = methodblock;
@@ -25,22 +25,34 @@ namespace NightlyCode.Scripting.Control {
 
         /// <inheritdoc />
         public object Execute() {
-            object result = null;
-            using (variablecontext) {
-                foreach (IScriptToken statement in statements) {
-                    result = statement.Execute();
-                    if (result is Return @return) {
-                        if (methodblock)
-                            return @return.Value?.Execute();
-                        return @return;
-                    }
-
-                    if (result is Break)
-                        return result;
+            object result;
+            if (variablecontext != null) {
+                
+                using (variablecontext) {
+                    result=ExecuteBlock();
                 }
+                variablecontext.Clear();
+            }
+            else result=ExecuteBlock();
+            return result;
+        }
+
+        object ExecuteBlock() {
+            object result = null;
+            foreach (IScriptToken statement in statements)
+            {
+                result = statement.Execute();
+                if (result is Return @return)
+                {
+                    if (methodblock)
+                        return @return.Value?.Execute();
+                    return @return;
+                }
+
+                if (result is Break)
+                    return result;
             }
 
-            variablecontext.Clear();
             return result;
         }
 

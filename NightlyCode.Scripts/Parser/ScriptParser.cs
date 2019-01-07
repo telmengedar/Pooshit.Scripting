@@ -21,16 +21,22 @@ namespace NightlyCode.Scripting.Parser {
     /// parses scripts from string data
     /// </summary>
     public class ScriptParser : IScriptParser {
-        readonly VariableContext globalvariables = new VariableContext();
+        readonly IVariableProvider globalvariables;
+
+        /// <summary>
+        /// creates a new <see cref="ScriptParser"/>
+        /// </summary>
+        /// <param name="globalvariables">provider for global variables</param>
+        public ScriptParser(IVariableProvider globalvariables) {
+            this.globalvariables = globalvariables;
+        }
 
         /// <summary>
         /// creates a new <see cref="ScriptParser"/>
         /// </summary>
         /// <param name="variables">global variables of script parser</param>
-        public ScriptParser(params Variable[] variables) {
-            foreach (Variable variable in variables)
-                globalvariables[variable.Name] = variable.Value;
-            globalvariables.IsReadOnly = true;
+        public ScriptParser(params Variable[] variables)
+            : this(new VariableProvider(null, variables)) {
         }
 
         /// <summary>
@@ -43,7 +49,7 @@ namespace NightlyCode.Scripting.Parser {
                 ++index;
         }
 
-        IScriptToken[] ParseControlParameters(string data, ref int index, IVariableContext variables) {
+        IScriptToken[] ParseControlParameters(string data, ref int index, IVariableProvider variables) {
             SkipWhitespaces(data, ref index);
             if (data[index] != '(')
                 throw new ScriptParserException("Expected parameters for control statement");
@@ -51,7 +57,7 @@ namespace NightlyCode.Scripting.Parser {
             return ParseParameters(data, ref index, variables);
         }
 
-        IScriptToken AnalyseToken(string token, string data, ref int index, IVariableContext variables, bool first) {
+        IScriptToken AnalyseToken(string token, string data, ref int index, IVariableProvider variables, bool first) {
             if (token.Length == 0)
                 return new ScriptValue(null);
 
@@ -99,13 +105,14 @@ namespace NightlyCode.Scripting.Parser {
                 case "null":
                     return new ScriptValue(null);
                 default:
-                    if (variables.ContainsVariable(token))
-                        return new ScriptVariable(variables, token);
-                    return new ScriptValue(token);
+                    IVariableProvider provider = variables.GetProvider(token);
+                    if (provider == null)
+                        return new ScriptValue(token);
+                    return new ScriptVariable(provider, token);
             }
         }
 
-        IScriptToken ParseToken(string data, ref int index, IVariableContext variables, bool startofstatement) {
+        IScriptToken ParseToken(string data, ref int index, IVariableProvider variables, bool startofstatement) {
             SkipWhitespaces(data, ref index);
 
             bool parsenumber = false;
@@ -305,7 +312,7 @@ namespace NightlyCode.Scripting.Parser {
             throw new ScriptParserException("Literal not terminated");
         }
 
-        IScriptToken ParseMember(IScriptToken host, string data, ref int index, IVariableContext variables) {
+        IScriptToken ParseMember(IScriptToken host, string data, ref int index, IVariableProvider variables) {
             StringBuilder membername = new StringBuilder();
             for (; index < data.Length; ++index)
             {
@@ -331,7 +338,7 @@ namespace NightlyCode.Scripting.Parser {
             throw new ScriptParserException("Member name expected");
         }
 
-        IScriptToken[] ParseArray(string data, ref int index, IVariableContext variables) {
+        IScriptToken[] ParseArray(string data, ref int index, IVariableProvider variables) {
             List<IScriptToken> array = new List<IScriptToken>();
             for (; index < data.Length;)
             {
@@ -357,7 +364,7 @@ namespace NightlyCode.Scripting.Parser {
             throw new ScriptParserException("Array not terminated");
         }
 
-        IScriptToken[] ParseParameters(string data, ref int index, IVariableContext variables) {
+        IScriptToken[] ParseParameters(string data, ref int index, IVariableProvider variables) {
             List<IScriptToken> parameters = new List<IScriptToken>();
             for(; index < data.Length;) {
                 char character = data[index];
@@ -506,7 +513,7 @@ namespace NightlyCode.Scripting.Parser {
             }
         }
 
-        IScriptToken ParseBlock(string data, ref int index, IVariableContext variables) {
+        IScriptToken ParseBlock(string data, ref int index, IVariableProvider variables) {
             IScriptToken block = Parse(data, ref index, variables);
             while (index < data.Length) {
                 if (char.IsWhiteSpace(data[index]))
@@ -525,7 +532,7 @@ namespace NightlyCode.Scripting.Parser {
             return new ArithmeticBlock(block);
         }
 
-        IScriptToken Parse(string data, ref int index, IVariableContext variables, bool startofstatement=false) {
+        IScriptToken Parse(string data, ref int index, IVariableProvider variables, bool startofstatement=false) {
             List<IScriptToken> tokenlist=new List<IScriptToken>();
             List<OperatorIndex> indexlist=new List<OperatorIndex>();
 
@@ -668,7 +675,7 @@ namespace NightlyCode.Scripting.Parser {
             return tokenlist.Single();
         }
 
-        IScriptToken ParseStatementBlock(string data, ref int index, IVariableContext variables, bool methodblock=false) {
+        IScriptToken ParseStatementBlock(string data, ref int index, IVariableProvider variables, bool methodblock=false) {
             variables = new VariableContext(variables);
             List<IScriptToken> statements = new List<IScriptToken>();
             while (index < data.Length) {
@@ -718,7 +725,7 @@ namespace NightlyCode.Scripting.Parser {
                 }
             }
 
-            return new StatementBlock(variables, statements.ToArray(), methodblock);
+            return new StatementBlock(statements.ToArray(), (IVariableContext) variables, methodblock);
         }
 
         /// <summary>
@@ -728,7 +735,7 @@ namespace NightlyCode.Scripting.Parser {
         /// <param name="variables">variables valid for this script (flagged as read-only)</param>
         /// <returns>script which can get executed</returns>
         public IScript Parse(string data, params Variable[] variables) {
-            VariableContext variablecontext = new VariableContext(globalvariables, variables) {IsReadOnly = true};
+            VariableProvider variablecontext = new VariableProvider(globalvariables, variables);
 
             int index = 0;
             return new Script(ParseStatementBlock(data, ref index, variablecontext, true));

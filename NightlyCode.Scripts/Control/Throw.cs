@@ -12,7 +12,7 @@ namespace NightlyCode.Scripting.Control {
         IScriptToken context;
 
         /// <summary>
-        /// creates a new <see cref="Return"/>
+        /// creates a new <see cref="Throw"/>
         /// </summary>
         /// <param name="value">token to return</param>
         public Throw(IScriptToken[] parameters) {

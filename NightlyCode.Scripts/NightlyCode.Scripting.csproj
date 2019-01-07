@@ -5,14 +5,15 @@
     <AssemblyName>NightlyCode.Scripting</AssemblyName>
     <RootNamespace>NightlyCode.Scripting</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.9.2</Version>
-    <Description>Provides an environment to execute simple scripts</Description>
+    <Version>0.9.4-preview</Version>
+    <Description>Provides an environment to parse and execute scripts</Description>
     <Copyright>Toni Gottschall</Copyright>
     <PackageLicenseUrl>http://unlicense.org/</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/telmengedar/NightlyCode.Scripting</PackageProjectUrl>
     <RepositoryUrl>https://github.com/telmengedar/NightlyCode.Scripting</RepositoryUrl>
-    <PackageTags>script, parser</PackageTags>
+    <PackageTags>script, parser, code</PackageTags>
     <Company>NightlyCode</Company>
+    <Authors>Toni Gottschall</Authors>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
@@ -23,6 +24,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
     <DebugType>pdbonly</DebugType>
     <DebugSymbols>true</DebugSymbols>
+    <DocumentationFile>D:\Develop\Projects\NightlyCode.Scripting\NightlyCode.Scripts\NightlyCode.Scripting.xml</DocumentationFile>
   </PropertyGroup>
 
   <Target Name="PostPackNugetDeploy" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">

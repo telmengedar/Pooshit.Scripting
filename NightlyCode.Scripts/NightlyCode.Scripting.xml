@@ -1,0 +1,1502 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>NightlyCode.Scripting</name>
+    </assembly>
+    <members>
+        <member name="T:NightlyCode.Scripting.Control.Break">
+            <summary>
+            breaks execution of a loop
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Break.Execute">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Break.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Control.Case">
+            <summary>
+            case for a <see cref="T:NightlyCode.Scripting.Control.Switch"/> statement
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Case.#ctor">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Control.Case"/>
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Case.#ctor(NightlyCode.Scripting.Tokens.IScriptToken[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Control.Case"/>
+            </summary>
+            <param name="conditions">conditions to match</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.Case.IsDefault">
+            <summary>
+            determines whether this is the default case
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Case.Matches(System.Object)">
+            <summary>
+            determines whether case matches a value
+            </summary>
+            <param name="value">value to match</param>
+            <returns>true if case matches value, false otherwise</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Case.Execute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.Case.Body">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Case.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Control.Else">
+            <summary>
+            token containing body for an <see cref="T:NightlyCode.Scripting.Control.If"/> statement of which condition is not met
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Else.Execute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.Else.Body">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Control.For">
+            <summary>
+            loop with an initializer, a condition and an increment
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.For.#ctor(NightlyCode.Scripting.Tokens.IScriptToken[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Control.For"/> statement 
+            </summary>
+            <param name="loopparameters"></param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.For.Execute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.For.Body">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.For.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Control.Foreach">
+            <summary>
+            loop which iterates over a collection
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Foreach.#ctor(NightlyCode.Scripting.Tokens.IScriptToken[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Control.Foreach"/>
+            </summary>
+            <param name="parameters">parameters containing iterator variable and collection to iterate over</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Foreach.Execute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.Foreach.Body">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Control.IControlToken">
+            <summary>
+            token representing a flow control statement
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.IControlToken.Body">
+            <summary>
+            body of control statement
+            </summary>
+        </member>
+        <member name="T:NightlyCode.Scripting.Control.If">
+            <summary>
+            statement execution a body when a condition is met
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.If.#ctor(NightlyCode.Scripting.Tokens.IScriptToken[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Control.If"/> statement
+            </summary>
+            <param name="parameters">condition statement has to match to execute body</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.If.Execute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.If.Body">
+            <summary>
+            body to execute if condition is met
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.If.Else">
+            <summary>
+            body to execute when condition is not met
+            </summary>
+        </member>
+        <member name="T:NightlyCode.Scripting.Control.ParserToken">
+            <summary>
+            token containing meta information for parsing process
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.ParserToken.#ctor(System.String)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Control.ParserToken"/>
+            </summary>
+            <param name="data">data specifying parser case</param>
+        </member>
+        <member name="T:NightlyCode.Scripting.Control.Return">
+            <summary>
+            returns a value and end execution of current method
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Return.#ctor(NightlyCode.Scripting.Tokens.IScriptToken)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Control.Return"/>
+            </summary>
+            <param name="value">token to return</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.Return.Value">
+            <summary>
+            token resulting in value to return
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Return.Execute">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Return.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Control.StatementBlock">
+            <summary>
+            a block of statements executed in sequence
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.StatementBlock.#ctor(NightlyCode.Scripting.Tokens.IScriptToken[],NightlyCode.Scripting.Parser.IVariableContext,System.Boolean)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Control.StatementBlock"/>
+            </summary>
+            <param name="variablecontext">variable environment for this block</param>
+            <param name="statements">statements in block</param>
+            <param name="methodblock">determines whether this is the main block of a method</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.StatementBlock.Execute">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Control.Switch">
+            <summary>
+            evaluates a value and jumps to matching cases
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Switch.#ctor(NightlyCode.Scripting.Tokens.IScriptToken[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Control.Switch"/> statement
+            </summary>
+            <param name="parameters">parameters which contain value to evaluate</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.Switch.Default">
+            <summary>
+            default case executed if no other case matches
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Switch.AddCase(NightlyCode.Scripting.Control.Case)">
+            <summary>
+            adds a case to the switch statement
+            </summary>
+            <param name="case">case to add</param>
+        </member>
+        <member name="T:NightlyCode.Scripting.Control.Throw">
+            <summary>
+            throws an exception from currently executed code
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Throw.#ctor(NightlyCode.Scripting.Tokens.IScriptToken[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Control.Throw"/>
+            </summary>
+            <param name="value">token to return</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Throw.Execute">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Throw.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Control.While">
+            <summary>
+            executes a statement block while a condition is met
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.While.#ctor(NightlyCode.Scripting.Tokens.IScriptToken[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Control.While"/>
+            </summary>
+            <param name="parameters">parameters containing condition to check</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.While.Execute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.While.Body">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Data.Operator">
+            <summary>
+            operator type
+            </summary>
+            <remarks>
+            the order in this enumeration is used for operator priority
+            </remarks>
+        </member>
+        <member name="T:NightlyCode.Scripting.Data.OperatorIndex">
+            <summary>
+            index of an operator in a token list
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Data.OperatorIndex.#ctor(System.Int32,NightlyCode.Scripting.Operations.IOperator)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Data.OperatorIndex"/>
+            </summary>
+            <param name="index">index where operator is located</param>
+            <param name="token">operator token</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Data.OperatorIndex.Index">
+            <summary>
+            index where operator is located
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Data.OperatorIndex.Token">
+            <summary>
+            operator token
+            </summary>
+        </member>
+        <member name="T:NightlyCode.Scripting.Data.Variable">
+            <summary>
+            variable data
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Data.Variable.#ctor(System.String,System.Object)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Data.Variable"/>
+            </summary>
+            <param name="name">name of variable</param>
+            <param name="value">value value (optional)</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Data.Variable.Name">
+            <summary>
+            name of variable
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Data.Variable.Value">
+            <summary>
+            variable value
+            </summary>
+        </member>
+        <member name="T:NightlyCode.Scripting.Errors.ScriptException">
+            <summary>
+            exception related to script engine
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Errors.ScriptException.#ctor(System.String)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Errors.ScriptException"/>
+            </summary>
+            <param name="message">error message</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Errors.ScriptException.#ctor(System.String,System.Exception)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Errors.ScriptException"/>
+            </summary>
+            <param name="message">error message</param>
+            <param name="innerException">exception which lead to exception</param>
+        </member>
+        <member name="T:NightlyCode.Scripting.Errors.ScriptExecutionException">
+            <summary>
+            error thrown by script
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Errors.ScriptExecutionException.#ctor(System.String,System.Object)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Errors.ScriptException"/>
+            </summary>
+            <param name="message">error message</param>
+            <param name="data">context data providing info for error</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Errors.ScriptExecutionException.#ctor(System.String,System.Exception,System.Object)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Errors.ScriptException"/>
+            </summary>
+            <param name="message">error message</param>
+            <param name="innerException">exception which led to this error</param>
+            <param name="data">context data providing info for error</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Errors.ScriptExecutionException.ContextData">
+            <summary>
+            context data
+            </summary>
+        </member>
+        <member name="T:NightlyCode.Scripting.Errors.ScriptParserException">
+            <summary>
+            exception triggered when parser is unable to parse script
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Errors.ScriptParserException.#ctor(System.String)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Errors.ScriptParserException"/>
+            </summary>
+            <param name="message">error message</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Errors.ScriptParserException.#ctor(System.String,System.Exception)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Errors.ScriptParserException"/>
+            </summary>
+            <param name="message">error message</param>
+            <param name="innerException">exception which triggered this error</param>
+        </member>
+        <member name="T:NightlyCode.Scripting.Errors.ScriptRuntimeException">
+            <summary>
+            exception triggered when an error was encountered parsing or executing a script
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Errors.ScriptRuntimeException.#ctor(System.String,System.String,System.Exception)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Errors.ScriptRuntimeException"/>
+            </summary>
+            <param name="message">error message</param>
+            <param name="details">details for error</param>
+            <param name="innerException">error which lead to this error</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Errors.ScriptRuntimeException.Details">
+            <summary>
+            details for error
+            </summary>
+        </member>
+        <member name="T:NightlyCode.Scripting.Extensions.OperatorExtensions">
+            <summary>
+            extensions for comparator tokens
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Extensions.OperatorExtensions.GetOrderNumber(NightlyCode.Scripting.Data.Operator)">
+            <summary>
+            get number used to sort operator by priority
+            </summary>
+            <param name="operator">operator to sort</param>
+            <returns>number used in sorting algorithm</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Extensions.OperatorExtensions.ParseOperator(System.String)">
+            <summary>
+            parses an operator from string
+            </summary>
+            <param name="data">string to parse</param>
+            <returns>parsed operator</returns>
+        </member>
+        <member name="T:NightlyCode.Scripting.Extensions.ValueExtensions">
+            <summary>
+            extensions for values
+            </summary>
+        </member>
+        <member name="T:NightlyCode.Scripting.Extern.ConversionKey">
+            <summary>
+            key used for specific conversion
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Extern.ConversionKey.#ctor(System.Type,System.Type)">
+            <summary>
+            ctor
+            </summary>
+            <param name="sourcetype"></param>
+            <param name="targettype"></param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Extern.ConversionKey.SourceType">
+            <summary>
+            source type from which to convert
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Extern.ConversionKey.TargetType">
+            <summary>
+            target type to which to convert
+            </summary>
+        </member>
+        <member name="T:NightlyCode.Scripting.Extern.Converter">
+            <summary>
+            converter used to convert data types
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Extern.Converter.#cctor">
+            <summary>
+            cctor
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Extern.Converter.RegisterConverter(NightlyCode.Scripting.Extern.ConversionKey,System.Func{System.Object,System.Object})">
+            <summary>
+            registers a specific converter to be used for a specific conversion
+            </summary>
+            <param name="key"></param>
+            <param name="converter"></param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Extern.Converter.Convert(System.Object,System.Type,System.Boolean)">
+            <summary>
+            converts the value to a specific target type
+            </summary>
+            <param name="value"></param>
+            <param name="targettype"></param>
+            <param name="allownullonvaluetypes"> </param>
+            <returns></returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Extern.Converter.Convert``1(System.Object,System.Boolean)">
+            <summary>
+            converts the value to the specified target type
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="value"></param>
+            <param name="allownullonvaluetypes"> </param>
+            <returns></returns>
+        </member>
+        <member name="T:NightlyCode.Scripting.IScript">
+            <summary>
+            interface for a script
+            </summary>
+            <remarks>does the same as <see cref="T:NightlyCode.Scripting.Tokens.IScriptToken"/> but has a more clear name</remarks>
+        </member>
+        <member name="M:NightlyCode.Scripting.IScript.Execute">
+            <summary>
+            executes the script and returns the result
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.IScript.Execute``1">
+            <summary>
+            executes the script and returns a typed result
+            </summary>
+            <remarks>
+            this just executes <see cref="M:NightlyCode.Scripting.IScript.Execute"/> and tries to convert the result
+            </remarks>
+            <typeparam name="T">type of result to return</typeparam>
+            <returns>result of script execution</returns>
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Assign.AddAssign">
+            <summary>
+            adds a value to the result of a token and assigns it at the same time
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Assign.AddAssign.Compute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Assign.AddAssign.Operator">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Assign.AndAssign">
+            <summary>
+            computes bitwise and of lhs and rhs and assigns the result to lhs
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Assign.AndAssign.Compute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Assign.AndAssign.Operator">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Assign.Assignment">
+            <summary>
+            assignment in a script
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Assign.Assignment.Execute">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Assign.Assignment.Assign(NightlyCode.Scripting.Tokens.IScriptToken)">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Assign.Assignment.Lhs">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Assign.Assignment.Rhs">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Assign.Assignment.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Assign.Assignment.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Assign.DivAssign">
+            <summary>
+            divides a value by the result of a token and assigns it to the same token
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Assign.DivAssign.Compute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Assign.DivAssign.Operator">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Assign.ModAssign">
+            <summary>
+            computes modulus of a value with the result of a token and assigns it to the same token
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Assign.ModAssign.Operator">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Assign.MulAssign">
+            <summary>
+            multiplies a value from the result of a token and assigns it to the same token
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Assign.MulAssign.Compute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Assign.MulAssign.Operator">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Assign.OperatorAssign">
+            <summary>
+            computes the result of a binary operation and assigns the result to lhs
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Assign.OperatorAssign.Compute">
+            <summary>
+            computes the result of the operation
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Assign.OperatorAssign.Execute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Assign.OperatorAssign.Lhs">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Assign.OperatorAssign.Rhs">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Assign.OperatorAssign.Operator">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Assign.OrAssign">
+            <summary>
+            computes bitwise and of lhs and rhs and assigns the result to lhs
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Assign.OrAssign.Compute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Assign.OrAssign.Operator">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Assign.ShlAssign">
+            <summary>
+            shifts bits of a value to the left by the result of a token and assigns it to the same token
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Assign.ShlAssign.Compute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Assign.ShlAssign.Operator">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Assign.ShrAssign">
+            <summary>
+            shifts bits of a value to the right by the result of a token and assigns it to the same token
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Assign.ShrAssign.Compute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Assign.ShrAssign.Operator">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Assign.SubAssign">
+            <summary>
+            subtracts a value from the result of a token and assigns it to the same token
+            </summary>
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Assign.XorAssign">
+            <summary>
+            computes bitwise and of lhs and rhs and assigns the result to lhs
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Assign.XorAssign.Compute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Assign.XorAssign.Operator">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Comparision.Comparator">
+            <summary>
+            operator used to compare two values resulting in a boolean
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Comparator.Compare">
+            <summary>
+            compares lhs and rhs and returns value of comparision
+            </summary>
+            <returns>comparision value</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Comparator.Execute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Comparision.Comparator.Lhs">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Comparision.Comparator.Rhs">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Comparision.Comparator.Operator">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Comparision.Equal">
+            <summary>
+            compares two values for equality
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Equal.Compare">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Comparision.Equal.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Equal.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Comparision.Greater">
+            <summary>
+            compares whether lhs is less than rhs
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Greater.Compare">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Comparision.Greater.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Greater.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Comparision.GreaterOrEqual">
+            <summary>
+            compares whether lhs is less than rhs
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.GreaterOrEqual.Compare">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Comparision.GreaterOrEqual.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.GreaterOrEqual.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Comparision.Less">
+            <summary>
+            compares whether lhs is less than rhs
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Less.Compare">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Comparision.Less.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Less.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Comparision.LessOrEqual">
+            <summary>
+            compares whether lhs is less than rhs
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.LessOrEqual.Compare">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Comparision.LessOrEqual.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.LessOrEqual.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Comparision.Matches">
+            <summary>
+            determines whether a string matches a regex
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Matches.Compare">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Comparision.Matches.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Matches.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Comparision.MatchesNot">
+            <summary>
+            determines whether a string matches a regex
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.MatchesNot.Compare">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Comparision.MatchesNot.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.MatchesNot.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Comparision.NotEqual">
+            <summary>
+            compares two values whether they are not equal
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.NotEqual.Compare">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Comparision.NotEqual.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.NotEqual.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.IAssignableToken">
+            <summary>
+            token to which a value can be assigned
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.IAssignableToken.Assign(NightlyCode.Scripting.Tokens.IScriptToken)">
+            <summary>
+            assigns a value to this token
+            </summary>
+            <param name="token">token resulting in value to assign to this token</param>
+            <returns>resulting value after assignment</returns>
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.IBinaryToken">
+            <summary>
+            token applying an operation to two operands
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.IBinaryToken.Lhs">
+            <summary>
+            left hand side operand
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.IBinaryToken.Rhs">
+            <summary>
+            right hand side operand
+            </summary>
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.IOperator">
+            <summary>
+            scripttoken which operates on other tokens
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.IOperator.Operator">
+            <summary>
+            type of operator
+            </summary>
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.IUnaryToken">
+            <summary>
+            token applying an operation to a single operand
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.IUnaryToken.IsPostToken">
+            <summary>
+            determines whether the operand is ahead of this token or behind it
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.IUnaryToken.Operand">
+            <summary>
+            operand for operation
+            </summary>
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Logic.LogicAnd">
+            <summary>
+            computes logical AND of lhs and rhs
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Logic.LogicAnd.Operate">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Logic.LogicAnd.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Logic.LogicAnd.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Logic.LogicOperation">
+            <summary>
+            logic operation on boolean operands
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Logic.LogicOperation.Operate">
+            <summary>
+            executes the logic operation
+            </summary>
+            <returns>result of logic operation</returns>
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Logic.LogicOperation.Lhs">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Logic.LogicOperation.Rhs">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Logic.LogicOperation.Operator">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Logic.LogicOr">
+            <summary>
+            computes logical OR of lhs and rhs
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Logic.LogicOr.Operate">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Logic.LogicOr.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Logic.LogicOr.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Logic.LogicXor">
+            <summary>
+            computes logical XOR of lhs and rhs
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Logic.LogicXor.Operate">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Logic.LogicXor.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Logic.LogicXor.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Unary.Complement">
+            <summary>
+            computes the bit-complement of the result of a token
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Unary.Complement.Execute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Unary.Complement.Operator">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Unary.Decrement">
+            <summary>
+            increments the value of a token by 1
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Unary.Decrement.#ctor(System.Boolean)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Operations.Unary.Decrement"/>
+            </summary>
+            <param name="post">determines whether this is a post-increment or a pre-increment</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Unary.Decrement.Execute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Unary.Decrement.IsPostToken">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Unary.Decrement.Operand">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Unary.Decrement.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Unary.Decrement.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Unary.Increment">
+            <summary>
+            increments the value of a token by 1
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Unary.Increment.#ctor(System.Boolean)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Operations.Unary.Increment"/>
+            </summary>
+            <param name="post">determines whether this is a post-increment or a pre-increment</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Unary.Increment.Execute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Unary.Increment.IsPostToken">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Unary.Increment.Operand">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Unary.Increment.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Unary.Increment.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Unary.Negate">
+            <summary>
+            negates the value of a token
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Unary.Negate.Execute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Unary.Negate.Operator">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Unary.Not">
+            <summary>
+            logical negation of boolean values
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Unary.Not.Execute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Unary.Not.Operator">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Unary.UnaryOperator">
+            <summary>
+            operator which acts on a single operand which is usually following the operator
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Unary.UnaryOperator.Execute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Unary.UnaryOperator.Operand">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Unary.UnaryOperator.Operator">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Values.Addition">
+            <summary>
+            adds two values or concatenates two strings
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.Addition.Operate">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Values.Addition.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.Addition.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Values.BitwiseAnd">
+            <summary>
+            executes a bitwise and on two integer values
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.BitwiseAnd.Operate">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Values.BitwiseAnd.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.BitwiseAnd.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Values.BitwiseOr">
+            <summary>
+            executes a bitwise OR on two integer values
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.BitwiseOr.Operate">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Values.BitwiseOr.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.BitwiseOr.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Values.BitwiseXor">
+            <summary>
+            executes a bitwise XOR on two integer values
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.BitwiseXor.Operate">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Values.BitwiseXor.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.BitwiseXor.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Values.Division">
+            <summary>
+            divides LHS by RHS
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.Division.Operate">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Values.Division.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.Division.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Values.Modulo">
+            <summary>
+            computes the modulus when dividing LHS by RHS
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.Modulo.Operate">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Values.Modulo.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.Modulo.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Values.Multiplication">
+            <summary>
+            multiplies two values
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.Multiplication.Operate">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Values.Multiplication.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.Multiplication.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Values.RolLeft">
+            <summary>
+            rolls bits of lhs to the left by rhs steps
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.RolLeft.Operate">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Values.RolLeft.Operator">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Values.RolRight">
+            <summary>
+            rolls bits of lhs to the left by rhs steps
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.RolRight.Operate">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Values.RolRight.Operator">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Values.ShiftLeft">
+            <summary>
+            shifts the bits of LHS by RHS to the left
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.ShiftLeft.Operate">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Values.ShiftLeft.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.ShiftLeft.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Values.ShiftRight">
+            <summary>
+            shifts the bits of LHS by RHS to the right
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.ShiftRight.Operate">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Values.ShiftRight.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.ShiftRight.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Values.Subtraction">
+            <summary>
+            subtracts a RHS from LHS
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.Subtraction.Operate">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Values.Subtraction.Operator">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.Subtraction.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Operations.Values.ValueOperation">
+            <summary>
+            arithmetic operation to apply to two operands
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.ValueOperation.Operate">
+            <summary>
+            executes the value operation
+            </summary>
+            <returns>result of operation</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Values.ValueOperation.Execute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Values.ValueOperation.Operator">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Values.ValueOperation.Lhs">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Values.ValueOperation.Rhs">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Parser.ExtensionProvider">
+            <summary>
+            plain implementation of <see cref="T:NightlyCode.Scripting.Parser.IExtensionProvider"/> providing hosts and extension methods
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.ExtensionProvider.Item(System.Type)">
+            <summary>
+            indexer for extension methods
+            </summary>
+            <param name="host">host type for which to get extension methods</param>
+            <returns>available extension methods</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.ExtensionProvider.AddExtensionMethod(System.Type,System.Reflection.MethodInfo)">
+            <summary>
+            adds an extension method to the script pool
+            </summary>
+            <param name="hosttype">type of host for which to add extension</param>
+            <param name="method">method to add</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.ExtensionProvider.AddExtensions``1">
+            <summary>
+            adds methods of an extension type
+            </summary>
+            <typeparam name="T">type of which to add extension methods</typeparam>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.ExtensionProvider.AddExtensions(System.Type)">
+            <summary>
+            adds methods of an extension type
+            </summary>
+            <param name="extensiontype">type of which to add extension methods</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.ExtensionProvider.GetExtensions(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Parser.IExtensionProvider">
+            <summary>
+            interface for a pool of script hosts
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.IExtensionProvider.GetExtensions(System.Type)">
+            <summary>
+            get extension methods available for type
+            </summary>
+            <param name="host">type of host for which to get extension methods</param>
+            <returns>methods available as extension methods</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.IExtensionProvider.AddExtensions(System.Type)">
+            <summary>
+            adds methods of an extension type
+            </summary>
+            <param name="extensiontype">type of which to add extension methods</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.IExtensionProvider.AddExtensions``1">
+            <summary>
+            adds methods of an extension type
+            </summary>
+            <typeparam name="T">type of which to add extension methods</typeparam>
+        </member>
+        <member name="T:NightlyCode.Scripting.Parser.IScriptParser">
+            <summary>
+            interface for a parser of script code
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.IScriptParser.Extensions">
+            <summary>
+            access to extensions available to script environment
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.IScriptParser.Parse(System.String,NightlyCode.Scripting.Data.Variable[])">
+            <summary>
+            parses a script for execution
+            </summary>
+            <param name="data">data to parse</param>
+            <param name="variables">variables valid for this script (flagged as read-only)</param>
+            <returns>script which can get executed</returns>
+        </member>
+        <member name="T:NightlyCode.Scripting.Parser.IVariableContext">
+            <summary>
+            provides a context which contains writable variables
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.IVariableContext.Clear">
+            <summary>
+            clears all variable entries
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.IVariableContext.SetVariable(System.String,System.Object)">
+            <summary>
+            set a value of a variable
+            </summary>
+            <param name="name">variable name</param>
+            <param name="value">value to set</param>
+        </member>
+        <member name="T:NightlyCode.Scripting.Parser.IVariableProvider">
+            <summary>
+            provides named variables to script
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.IVariableProvider.GetVariable(System.String)">
+            <summary>
+            get value of a variable
+            </summary>
+            <param name="name">name of variable</param>
+            <returns>variable value</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.IVariableProvider.ContainsVariable(System.String)">
+            <summary>
+            determines whether the context contains a variable with the specified name
+            </summary>
+            <param name="name">name of variable to check for</param>
+            <returns>true if variable is in this context, false otherwise</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.IVariableProvider.GetProvider(System.String)">
+            <summary>
+            get provider in chain which contains a variable with the specified name
+            </summary>
+            <param name="variable">name of variable to check for</param>
+            <returns>next provider which contains this variable, null if the variable is not found</returns>
+        </member>
+        <member name="T:NightlyCode.Scripting.Parser.ScriptParser">
+            <summary>
+            parses scripts from string data
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.ScriptParser.#ctor(NightlyCode.Scripting.Parser.IVariableProvider)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Parser.ScriptParser"/>
+            </summary>
+            <param name="globalvariables">provider for global variables</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.ScriptParser.#ctor(NightlyCode.Scripting.Data.Variable[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Parser.ScriptParser"/>
+            </summary>
+            <param name="variables">global variables of script parser</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.ScriptParser.Extensions">
+            <summary>
+            access to extensions available to script environment
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.ScriptParser.Parse(System.String,NightlyCode.Scripting.Data.Variable[])">
+            <summary>
+            parses a script for execution
+            </summary>
+            <param name="data">data to parse</param>
+            <param name="variables">variables valid for this script (flagged as read-only)</param>
+            <returns>script which can get executed</returns>
+        </member>
+        <member name="T:NightlyCode.Scripting.Parser.VariableContext">
+            <summary>
+            simple lookup for variables
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.VariableContext.#ctor(NightlyCode.Scripting.Parser.IVariableProvider,NightlyCode.Scripting.Data.Variable[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Parser.VariableContext"/>
+            </summary>
+            <param name="parentprovider">parent variable context</param>
+            <param name="initialvalues">variables to be contained initially in pool</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.VariableContext.Item(System.String)">
+            <summary>
+            indexer for hosts
+            </summary>
+            <param name="name">name of host to get</param>
+            <returns>host instance</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.VariableContext.Clear">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.VariableContext.SetVariable(System.String,System.Object)">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.VariableContext.System#IDisposable#Dispose">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Parser.VariableProvider">
+            <summary>
+            basic implementation of a variable provider used if no custom provider is specified
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.VariableProvider.#ctor(NightlyCode.Scripting.Parser.IVariableProvider,NightlyCode.Scripting.Data.Variable[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Parser.VariableProvider"/>
+            </summary>
+            <param name="parentprovider">parent variable scope</param>
+            <param name="variables">variables to provide</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.VariableProvider.Values">
+            <summary>
+            access to value lookup
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.VariableProvider.GetVariable(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.VariableProvider.ContainsVariable(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.VariableProvider.GetProvider(System.String)">
+            <summary>
+            get provider in chain which contains a variable with the specified name
+            </summary>
+            <param name="variable">name of variable to check for</param>
+            <returns>this if this provider contains this variable, null otherwise</returns>
+        </member>
+        <member name="T:NightlyCode.Scripting.Script">
+            <summary>
+            script parsed by <see cref="T:NightlyCode.Scripting.Parser.ScriptParser"/>
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Script.#ctor(NightlyCode.Scripting.Tokens.IScriptToken)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Script"/>
+            </summary>
+            <param name="script">root token of script to be executed</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Script.Execute">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Script.Execute``1">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Tokens.IScriptToken">
+            <summary>
+            token of a script which can get executed
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.IScriptToken.Execute">
+            <summary>
+            executes the token returning a result
+            </summary>
+            <returns>result of token call</returns>
+        </member>
+        <member name="T:NightlyCode.Scripting.Tokens.ScriptArray">
+            <summary>
+            token which represents multiple values
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptArray.#ctor(NightlyCode.Scripting.Tokens.IScriptToken[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Tokens.ScriptArray"/>
+            </summary>
+            <param name="values">values in array</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptArray.Execute">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptArray.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Tokens.ScriptIndexer">
+            <summary>
+            indexer call on an object
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptIndexer.#ctor(NightlyCode.Scripting.Tokens.IScriptToken,NightlyCode.Scripting.Tokens.IScriptToken[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Tokens.ScriptIndexer"/>
+            </summary>
+            <param name="hosttoken">token representing host</param>
+            <param name="parameters">parameters for indexer call</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptIndexer.Execute">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Tokens.ScriptMember">
+            <summary>
+            reads a value from a host member
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptMember.#ctor(NightlyCode.Scripting.Tokens.IScriptToken,System.String)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Tokens.ScriptMember"/>
+            </summary>
+            <param name="host">host of member</param>
+            <param name="membername">name of member to read</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptMember.Execute">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptMember.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Tokens.ScriptMethod">
+            <summary>
+            calls a method in a script
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptMethod.#ctor(NightlyCode.Scripting.Parser.IExtensionProvider,NightlyCode.Scripting.Tokens.IScriptToken,System.String,NightlyCode.Scripting.Tokens.IScriptToken[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Tokens.ScriptMethod"/>
+            </summary>
+            <param name="extensions">pool containing known hosts</param>
+            <param name="hosttoken">host of method to be called</param>
+            <param name="methodname">name of method to call</param>
+            <param name="parameters">parameters for method call</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptMethod.Execute">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Tokens.ScriptValue">
+            <summary>
+            value in a script command
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptValue.#ctor(System.Object)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Parser.ScriptParser"/>
+            </summary>
+            <param name="value">value</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptValue.Execute">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptValue.ToString">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Tokens.ScriptVariable">
+            <summary>
+            access to variable in script
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptVariable.#ctor(NightlyCode.Scripting.Parser.IVariableProvider,System.String)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Tokens.ScriptVariable"/>
+            </summary>
+            <param name="variablehost">host containing variable information</param>
+            <param name="name">name of variable</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.ScriptVariable.Name">
+            <summary>
+            name of variable
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptVariable.Execute">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptVariable.Assign(NightlyCode.Scripting.Tokens.IScriptToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptVariable.ToString">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>
