@@ -226,6 +226,23 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
+        public void MultiBreak() {
+            IScript script = parser.Parse(
+                "$result=0\n" +
+                "while(true){\n" +
+                "  while($result<128){\n" +
+                "    ++$result\n" +
+                "    if($result>=8)\n" +
+                "      break(2)\n" +
+                "  }\n" +
+                "  throw(\"boo\")\n" +
+                "}\n" +
+                "$result"
+            );
+            Assert.AreEqual(8, script.Execute());
+        }
+
+        [Test, Parallelizable]
         public void BreakForeach() {
             IScript script = parser.Parse(
                 "$result=0;" +

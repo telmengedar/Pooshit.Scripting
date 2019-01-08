@@ -26,8 +26,13 @@ namespace NightlyCode.Scripting.Control {
                 object value=Body.Execute();
                 if (value is Return)
                     return value;
-                if (value is Break)
-                    return null;
+                if (value is Break breaktoken)
+                {
+                    --breaktoken.Depth;
+                    if (breaktoken.Depth <= 0)
+                        return null;
+                    return breaktoken;
+                }
             }
 
             return null;

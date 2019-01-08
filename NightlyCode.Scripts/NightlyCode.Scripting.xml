@@ -9,6 +9,12 @@
             breaks execution of a loop
             </summary>
         </member>
+        <member name="M:NightlyCode.Scripting.Control.Break.#ctor(NightlyCode.Scripting.Tokens.IScriptToken[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Control.Break"/>
+            </summary>
+            <param name="parameters"></param>
+        </member>
         <member name="M:NightlyCode.Scripting.Control.Break.Execute">
             <inheritdoc />
         </member>

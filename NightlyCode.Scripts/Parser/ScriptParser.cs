@@ -49,6 +49,13 @@ namespace NightlyCode.Scripting.Parser {
                 ++index;
         }
 
+        IScriptToken[] TryParseControlParameters(string data, ref int index, IVariableProvider variables) {
+            SkipWhitespaces(data, ref index);
+            if (data[index] != '(')
+                return new IScriptToken[0];
+            return ParseControlParameters(data, ref index, variables);
+        }
+
         IScriptToken[] ParseControlParameters(string data, ref int index, IVariableProvider variables) {
             SkipWhitespaces(data, ref index);
             if (data[index] != '(')
@@ -93,7 +100,7 @@ namespace NightlyCode.Scripting.Parser {
                 case "throw":
                     return new Throw(ParseControlParameters(data, ref index, variables));
                 case "break":
-                    return new Break();
+                    return new Break(TryParseControlParameters(data, ref index, variables));
                 }
             }
 
@@ -104,6 +111,8 @@ namespace NightlyCode.Scripting.Parser {
                     return new ScriptValue(false);
                 case "null":
                     return new ScriptValue(null);
+                case "list":
+                    return new ScriptValue(new List<object>());
                 default:
                     IVariableProvider provider = variables.GetProvider(token);
                     if (provider == null)

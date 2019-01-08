@@ -28,6 +28,9 @@ namespace NightlyCode.Scripting {
         /// <inheritdoc />
         public T Execute<T>() {
             object result = script.Execute();
+            if (result is T execute)
+                return execute;
+
             try {
                 return Converter.Convert<T>(result);
             }

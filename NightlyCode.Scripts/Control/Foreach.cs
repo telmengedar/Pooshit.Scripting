@@ -37,8 +37,13 @@ namespace NightlyCode.Scripting.Control {
                     object bodyvalue=Body?.Execute();
                     if (bodyvalue is Return)
                         return bodyvalue;
-                    if (bodyvalue is Break)
-                        return null;
+                    if (bodyvalue is Break breaktoken)
+                    {
+                        --breaktoken.Depth;
+                        if (breaktoken.Depth <= 0)
+                            return null;
+                        return breaktoken;
+                    }
                 }
             }
             else throw new ScriptRuntimeException("Foreach value is not a collection");

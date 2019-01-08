@@ -1,4 +1,5 @@
 ﻿
+using System.Collections.Generic;
 using NightlyCode.Scripting;
 using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
@@ -75,6 +76,11 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void Decimal() {
             Assert.AreEqual(23478.20002m, parser.Parse("23478.20002d").Execute());
+        }
+
+        [Test, Parallelizable]
+        public void List() {
+            Assert.That(parser.Parse("list").Execute() is List<object>);
         }
     }
 }
