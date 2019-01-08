@@ -428,6 +428,15 @@ namespace NightlyCode.Scripting.Parser {
             }
 
             string operatorstring = token.ToString();
+            if (operatorstring == "//") {
+                ParseSingleLineComment(data, ref index);
+                return null;
+            }
+
+            if (operatorstring == "/*") {
+                ParseMultiLineComment(data, ref index);
+                return null;
+            }
 
             Operator @operator = operatorstring.ParseOperator();
             switch (@operator) {
@@ -522,6 +531,18 @@ namespace NightlyCode.Scripting.Parser {
             }
         }
 
+        void ParseMultiLineComment(string data, ref int index) {
+            while (index < data.Length - 1 && data[index] != '*' && data[index + 1] != '/')
+                ++index;
+            index += 2;
+        }
+
+        void ParseSingleLineComment(string data, ref int index) {
+            while (index < data.Length && data[index] != '\n')
+                ++index;
+            ++index;
+        }
+
         IScriptToken ParseBlock(string data, ref int index, IVariableProvider variables) {
             IScriptToken block = Parse(data, ref index, variables);
             while (index < data.Length) {
@@ -567,6 +588,10 @@ namespace NightlyCode.Scripting.Parser {
                     case '|':
                     case '^':
                         IOperator @operator = ParseOperator(parsestart, data, ref index);
+                        if (@operator == null)
+                            // this most likely means the operator was actually a comment
+                            break;
+
                         if ((@operator.Operator == Operator.Increment || @operator.Operator == Operator.Decrement) && !((IUnaryToken)@operator).IsPostToken && !concat)
                         {
                             index -= 2;
