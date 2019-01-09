@@ -1,4 +1,6 @@
-﻿using NightlyCode.Scripting.Parser;
+﻿using System;
+using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
@@ -41,7 +43,13 @@ namespace NightlyCode.Scripting.Control {
             object result = null;
             foreach (IScriptToken statement in statements)
             {
-                result = statement.Execute();
+                try {
+                    result = statement.Execute();
+                }
+                catch (Exception e) {
+                    throw new ScriptExecutionException($"Unable to execute '{statement}'", e);
+                }
+
                 if (result is Return @return)
                 {
                     if (methodblock)
