@@ -47,7 +47,7 @@ namespace NightlyCode.Scripting.Control {
                     result = statement.Execute();
                 }
                 catch (Exception e) {
-                    throw new ScriptExecutionException($"Unable to execute '{statement}'", e);
+                    throw new ScriptExecutionException($"Unable to execute '{statement}': {e.Message}", e);
                 }
 
                 if (result is Return @return)

@@ -875,6 +875,23 @@
         <member name="M:NightlyCode.Scripting.Operations.Logic.LogicXor.ToString">
             <inheritdoc />
         </member>
+        <member name="T:NightlyCode.Scripting.Operations.MethodOperations">
+            <summary>
+            operations used when calling methods dynamically
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.MethodOperations.MatchesParameterCount(System.Reflection.MethodInfo,NightlyCode.Scripting.Tokens.IScriptToken[],System.Boolean)">
+            <summary>
+            determines whether a method could be called using the provided parameters 
+            </summary>
+            <remarks>
+            this does not determine whether the parameter types actually matches, it only determines whether the parameter count matches
+            </remarks>
+            <param name="method">method to check</param>
+            <param name="parameters">specified script parameters</param>
+            <param name="isextension">determines whether the method is an extension method</param>
+            <returns>true if method count matches, false otherwise</returns>
+        </member>
         <member name="T:NightlyCode.Scripting.Operations.Unary.Complement">
             <summary>
             computes the bit-complement of the result of a token

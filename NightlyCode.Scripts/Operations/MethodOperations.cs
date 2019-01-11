@@ -8,7 +8,40 @@ using NightlyCode.Scripting.Extern;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Operations {
+
+    /// <summary>
+    /// operations used when calling methods dynamically
+    /// </summary>
     static class MethodOperations {
+        /// <summary>
+        /// determines whether a method could be called using the provided parameters 
+        /// </summary>
+        /// <remarks>
+        /// this does not determine whether the parameter types actually matches, it only determines whether the parameter count matches
+        /// </remarks>
+        /// <param name="method">method to check</param>
+        /// <param name="parameters">specified script parameters</param>
+        /// <param name="isextension">determines whether the method is an extension method</param>
+        /// <returns>true if method count matches, false otherwise</returns>
+        public static bool MatchesParameterCount(MethodInfo method, IScriptToken[] parameters, bool isextension = false) {
+            ParameterInfo[] methodparameters = method.GetParameters();
+            if (isextension) {
+                if (methodparameters.Length == parameters.Length + 1)
+                    return true;
+
+                if (methodparameters.Length > 1 && parameters.Length >= methodparameters.Length - 2 && Attribute.IsDefined(methodparameters.Last(), typeof(ParamArrayAttribute)))
+                    return true;
+            }
+            else {
+                if (methodparameters.Length == parameters.Length)
+                    return true;
+
+                if (methodparameters.Length > 0 && parameters.Length >= methodparameters.Length - 1 && Attribute.IsDefined(methodparameters.Last(), typeof(ParamArrayAttribute)))
+                    return true;
+            }
+
+            return false;
+        }
 
         public static object CallMethod(object host, MethodInfo method, IScriptToken[] parameters, bool extension=false, ParameterInfo[] targetparameters=null, IScriptToken additionalparameters=null) {
             if(targetparameters==null)
@@ -43,6 +76,35 @@ namespace NightlyCode.Scripting.Operations {
             return CreateParameters(null, targetparameters, sourceparameters);
         }
 
+        public static object ConvertParameter(object value, Type targettype) {
+            if (targettype.IsArray)
+            {
+                Type elementtype = targettype.GetElementType();
+                if (value is Array valuearray)
+                {
+                    Array array = Array.CreateInstance(elementtype, valuearray.Length);
+                    for (int k = 0; k < array.Length; ++k)
+                        array.SetValue(Converter.Convert(valuearray.GetValue(k), elementtype), k);
+                    return array;
+                }
+                else
+                {
+                    Array array = Array.CreateInstance(elementtype, 1);
+                    array.SetValue(value, 0);
+                    return array;
+                }
+            }
+
+            if (targettype == typeof(IEnumerable))
+            {
+                if (!(value is IEnumerable))
+                    return Converter.Convert(value, targettype);
+            }
+            else return Converter.Convert(value, targettype);
+
+            return null;
+        }
+
         public static IEnumerable<object> CreateParameters(object staticparameter, ParameterInfo[] targetparameters, IScriptToken[] sourceparameters)
         {
             if (staticparameter != null)
@@ -50,7 +112,37 @@ namespace NightlyCode.Scripting.Operations {
 
             for (int i = 0; i < targetparameters.Length; ++i)
             {
-                object value = sourceparameters[i].Execute();
+                object value;
+                if (i == targetparameters.Length - 1 && Attribute.IsDefined(targetparameters.Last(), typeof(ParamArrayAttribute))) {
+                    Type targettype = targetparameters.Last().ParameterType.GetElementType();
+                    if (targettype == null)
+                        throw new ScriptRuntimeException("Methodparameter without type detected");
+
+                    if (i >= sourceparameters.Length) {
+                        yield return Array.CreateInstance(targettype, 0);
+                        yield break;
+                    }
+
+                    Array sourcearray = null;
+                    if (i == sourceparameters.Length - 1) {
+                        value = sourceparameters[i].Execute();
+                        if (value is Array array)
+                            sourcearray = array;
+                        else if (value is IEnumerable enumerable)
+                            sourcearray = enumerable.Cast<object>().ToArray();
+                    }
+
+                    if (sourcearray == null)
+                        sourcearray = sourceparameters.Skip(i).Select(p => p.Execute()).ToArray();
+
+                    Array targetarray = Array.CreateInstance(targettype, sourcearray.Length);
+                    for (int k = 0; k < targetarray.Length; ++k)
+                        targetarray.SetValue(ConvertParameter(sourcearray.GetValue(k), targettype), k);
+                    yield return targetarray;
+                    yield break;
+                }
+
+                value = sourceparameters[i].Execute();
                 if (value == null) {
                     if (targetparameters[i].ParameterType.IsValueType)
                         throw new ScriptRuntimeException($"Unable to convert null to {targetparameters[i].ParameterType.Name} since a valuetype is needed");
@@ -64,25 +156,7 @@ namespace NightlyCode.Scripting.Operations {
                 }
 
                 try {
-                    if (targetparameters[i].ParameterType.IsArray) {
-                        Type elementtype = targetparameters[i].ParameterType.GetElementType();
-                        if (value is Array valuearray) {
-                            Array array = Array.CreateInstance(elementtype, valuearray.Length);
-                            for (int k = 0; k < array.Length; ++k)
-                                array.SetValue(Converter.Convert(valuearray.GetValue(k), elementtype), k);
-                            value = array;
-                        }
-                        else {
-                            Array array = Array.CreateInstance(elementtype, 1);
-                            array.SetValue(value, 0);
-                            value = array;
-                        }
-                    }
-                    else if (targetparameters[i].ParameterType == typeof(IEnumerable)) {
-                        if (!(value is IEnumerable))
-                            value = Converter.Convert(value, targetparameters[i].ParameterType);
-                    }
-                    else value = Converter.Convert(value, targetparameters[i].ParameterType);
+                    value = ConvertParameter(value, targetparameters[i].ParameterType);
                 }
                 catch (Exception e) {
                     throw new ScriptRuntimeException($"Unable to convert parameter {i} ({value}) to {targetparameters[i].ParameterType}", null, e);

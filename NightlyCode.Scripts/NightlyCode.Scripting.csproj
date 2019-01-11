@@ -5,13 +5,13 @@
     <AssemblyName>NightlyCode.Scripting</AssemblyName>
     <RootNamespace>NightlyCode.Scripting</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.9.7-preview</Version>
+    <Version>0.9.9-preview</Version>
     <Description>Provides an environment to parse and execute scripts</Description>
     <Copyright>Toni Gottschall</Copyright>
     <PackageLicenseUrl>http://unlicense.org/</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/telmengedar/NightlyCode.Scripting</PackageProjectUrl>
     <RepositoryUrl>https://github.com/telmengedar/NightlyCode.Scripting</RepositoryUrl>
-    <PackageTags>script, parser, code</PackageTags>
+    <PackageTags>script, parser, code, dynamic</PackageTags>
     <Company>NightlyCode</Company>
     <Authors>Toni Gottschall</Authors>
   </PropertyGroup>

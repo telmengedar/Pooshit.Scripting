@@ -34,7 +34,10 @@ namespace NightlyCode.Scripting.Tokens {
         /// <inheritdoc />
         public object Execute() {
             object host = hosttoken.Execute();
-            MethodInfo[] methods = host.GetType().GetMethods().Where(m => m.Name.ToLower() == methodname && m.GetParameters().Length == parameters.Length).ToArray();
+            if (host == null)
+                throw new ScriptExecutionException($"'{hosttoken}' results in null");
+
+            MethodInfo[] methods = host.GetType().GetMethods().Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters)).ToArray();
 
             StringBuilder executionlog = new StringBuilder();
 
@@ -50,7 +53,7 @@ namespace NightlyCode.Scripting.Tokens {
             if (extensions != null) {
                 Type extensionbase = host.GetType();
                 while (extensionbase != null) {
-                    foreach (MethodInfo method in extensions.GetExtensions(extensionbase).Where(m => m.Name.ToLower() == methodname && m.GetParameters().Length == parameters.Length + 1)) {
+                    foreach (MethodInfo method in extensions.GetExtensions(extensionbase).Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters, true))) {
                         try {
                             return MethodOperations.CallMethod(host, method, parameters, true);
                         }
@@ -66,7 +69,7 @@ namespace NightlyCode.Scripting.Tokens {
             }
 
             foreach (Type interfacetype in host.GetType().GetInterfaces()) {
-                foreach (MethodInfo method in extensions.GetExtensions(interfacetype).Where(m => m.Name.ToLower() == methodname && m.GetParameters().Length == parameters.Length + 1))
+                foreach (MethodInfo method in extensions.GetExtensions(interfacetype).Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters, true)))
                 {
                     try
                     {
