@@ -3,7 +3,7 @@
     /// <summary>
     /// token of a script which can get executed
     /// </summary>
-    interface IScriptToken {
+    public interface IScriptToken {
 
         /// <summary>
         /// executes the token returning a result

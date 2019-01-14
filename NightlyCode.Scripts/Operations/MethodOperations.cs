@@ -13,6 +13,7 @@ namespace NightlyCode.Scripting.Operations {
     /// operations used when calling methods dynamically
     /// </summary>
     static class MethodOperations {
+
         /// <summary>
         /// determines whether a method could be called using the provided parameters 
         /// </summary>
@@ -23,24 +24,48 @@ namespace NightlyCode.Scripting.Operations {
         /// <param name="parameters">specified script parameters</param>
         /// <param name="isextension">determines whether the method is an extension method</param>
         /// <returns>true if method count matches, false otherwise</returns>
-        public static bool MatchesParameterCount(MethodInfo method, IScriptToken[] parameters, bool isextension = false) {
+        public static bool MatchesParameterCount(MethodBase method, IScriptToken[] parameters, bool isextension = false) {
             ParameterInfo[] methodparameters = method.GetParameters();
-            if (isextension) {
-                if (methodparameters.Length == parameters.Length + 1)
-                    return true;
+            bool hasparams = methodparameters.Length > 0 && Attribute.IsDefined(methodparameters.Last(), typeof(ParamArrayAttribute));
+            int minimumcount = methodparameters.Count(p => !p.HasDefaultValue);
+            if (hasparams)
+                --minimumcount;
+            if (isextension)
+                // extension methods have their first parameter specified by script engine
+                --minimumcount;
 
-                if (methodparameters.Length > 1 && parameters.Length >= methodparameters.Length - 2 && Attribute.IsDefined(methodparameters.Last(), typeof(ParamArrayAttribute)))
-                    return true;
+            if (parameters.Length < minimumcount)
+                return false;
+
+            if (hasparams)
+                return true;
+
+            return parameters.Length <= methodparameters.Length;
+        }
+
+        /// <summary>
+        /// calls a constructor using the specified parameters
+        /// </summary>
+        /// <param name="constructor">constructor to call</param>
+        /// <param name="parameters">parameters for constructor</param>
+        /// <returns></returns>
+        public static object CallConstructor(ConstructorInfo constructor, IScriptToken[] parameters) {
+            ParameterInfo[] targetparameters = constructor.GetParameters();
+            object[] callparameters;
+
+            try {
+                callparameters = CreateParameters(targetparameters, parameters).ToArray();
             }
-            else {
-                if (methodparameters.Length == parameters.Length)
-                    return true;
-
-                if (methodparameters.Length > 0 && parameters.Length >= methodparameters.Length - 1 && Attribute.IsDefined(methodparameters.Last(), typeof(ParamArrayAttribute)))
-                    return true;
+            catch (Exception e) {
+                throw new ScriptRuntimeException($"Unable to convert parameters for {constructor}", null, e);
             }
 
-            return false;
+            try {
+                return constructor.Invoke(callparameters);
+            }
+            catch (Exception e) {
+                throw new ScriptRuntimeException($"Unable to call {constructor}", null, e);
+            }
         }
 
         public static object CallMethod(object host, MethodInfo method, IScriptToken[] parameters, bool extension=false, ParameterInfo[] targetparameters=null, IScriptToken additionalparameters=null) {
@@ -110,11 +135,23 @@ namespace NightlyCode.Scripting.Operations {
             if (staticparameter != null)
                 yield return staticparameter;
 
-            for (int i = 0; i < targetparameters.Length; ++i)
-            {
+            for (int i = 0; i < targetparameters.Length; ++i) {
+                ParameterInfo targetparameter = targetparameters[i];
+                if (i >= sourceparameters.Length) {
+                    if (Attribute.IsDefined(targetparameter, typeof(ParamArrayAttribute))) {
+                        // ReSharper disable once AssignNullToNotNullAttribute
+                        yield return Array.CreateInstance(targetparameter.ParameterType.GetElementType(), 0);
+                        continue;
+                    }
+                    if (!targetparameter.HasDefaultValue)
+                        throw new ScriptRuntimeException($"Unable to create parameter {i}. No value specified and parameter doesn't provide a default value.");
+                    yield return targetparameter.DefaultValue;
+                    continue;
+                }
+
                 object value;
-                if (i == targetparameters.Length - 1 && Attribute.IsDefined(targetparameters.Last(), typeof(ParamArrayAttribute))) {
-                    Type targettype = targetparameters.Last().ParameterType.GetElementType();
+                if (i == targetparameters.Length - 1 && Attribute.IsDefined(targetparameter, typeof(ParamArrayAttribute))) {
+                    Type targettype = targetparameter.ParameterType.GetElementType();
                     if (targettype == null)
                         throw new ScriptRuntimeException("Methodparameter without type detected");
 
@@ -144,22 +181,22 @@ namespace NightlyCode.Scripting.Operations {
 
                 value = sourceparameters[i].Execute();
                 if (value == null) {
-                    if (targetparameters[i].ParameterType.IsValueType)
-                        throw new ScriptRuntimeException($"Unable to convert null to {targetparameters[i].ParameterType.Name} since a valuetype is needed");
+                    if (targetparameter.ParameterType.IsValueType)
+                        throw new ScriptRuntimeException($"Unable to convert null to {targetparameter.ParameterType.Name} since a valuetype is needed");
                     yield return null;
                     continue;
                 }
 
-                if (targetparameters[i].ParameterType.IsInstanceOfType(value)) {
+                if (targetparameter.ParameterType.IsInstanceOfType(value)) {
                     yield return value;
                     continue;
                 }
 
                 try {
-                    value = ConvertParameter(value, targetparameters[i].ParameterType);
+                    value = ConvertParameter(value, targetparameter.ParameterType);
                 }
                 catch (Exception e) {
-                    throw new ScriptRuntimeException($"Unable to convert parameter {i} ({value}) to {targetparameters[i].ParameterType}", null, e);
+                    throw new ScriptRuntimeException($"Unable to convert parameter {i} ({value}) to {targetparameter.ParameterType}", null, e);
                 }
 
                 yield return value;

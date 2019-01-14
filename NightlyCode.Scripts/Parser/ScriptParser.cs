@@ -29,6 +29,7 @@ namespace NightlyCode.Scripting.Parser {
         /// <param name="globalvariables">provider for global variables</param>
         public ScriptParser(IVariableProvider globalvariables) {
             this.globalvariables = globalvariables;
+            Types.AddType<List<object>>("list");
         }
 
         /// <summary>
@@ -43,6 +44,11 @@ namespace NightlyCode.Scripting.Parser {
         /// access to extensions available to script environment
         /// </summary>
         public IExtensionProvider Extensions { get; } = new ExtensionProvider();
+
+        /// <summary>
+        /// access to types which can be created using 'new' keyword
+        /// </summary>
+        public ITypeProvider Types { get; } = new TypeProvider();
 
         void SkipWhitespaces(string data, ref int index) {
             while (index < data.Length && char.IsWhiteSpace(data[index]))
@@ -111,8 +117,10 @@ namespace NightlyCode.Scripting.Parser {
                     return new ScriptValue(false);
                 case "null":
                     return new ScriptValue(null);
-                case "list":
-                    return new ScriptValue(new List<object>());
+                case "new":
+                    string type = ParseName(data, ref index);
+                    ITypeInstanceProvider typeprovider = Types.GetType(type);
+                    return new NewInstance(typeprovider, ParseControlParameters(data, ref index, variables));
                 default:
                     IVariableProvider provider = variables.GetProvider(token);
                     if (provider == null)
@@ -162,6 +170,7 @@ namespace NightlyCode.Scripting.Parser {
 
         string ParseName(string data, ref int index)
         {
+            SkipWhitespaces(data, ref index);
             StringBuilder tokenname = new StringBuilder();
 
             for (; index < data.Length; ++index)

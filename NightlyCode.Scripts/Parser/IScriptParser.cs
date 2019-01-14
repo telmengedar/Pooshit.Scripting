@@ -13,6 +13,11 @@ namespace NightlyCode.Scripting.Parser {
         IExtensionProvider Extensions { get; }
 
         /// <summary>
+        /// access to types which can be created using 'new' keyword
+        /// </summary>
+        ITypeProvider Types { get; }
+
+        /// <summary>
         /// parses a script for execution
         /// </summary>
         /// <param name="data">data to parse</param>

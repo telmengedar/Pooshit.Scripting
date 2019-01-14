@@ -79,8 +79,8 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void List() {
-            Assert.That(parser.Parse("list").Execute() is List<object>);
+        public void New() {
+            Assert.That(parser.Parse("new list()").Execute() is List<object>);
         }
     }
 }
