@@ -42,5 +42,10 @@ namespace NightlyCode.Scripting.Providers {
 
             throw new ScriptRuntimeException($"Unable to call constructor for '{type.Name}'", executionlog.ToString());
         }
+
+        /// <inheritdoc />
+        public override string ToString() {
+            return $"{type.Name}";
+        }
     }
 }

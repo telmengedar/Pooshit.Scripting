@@ -7,7 +7,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// access to variable in script
     /// </summary>
-    class ScriptVariable : IAssignableToken {
+    class ScriptVariable : AssignableToken {
         readonly IVariableProvider variablehost;
 
         /// <summary>
@@ -26,7 +26,7 @@ namespace NightlyCode.Scripting.Tokens {
         public string Name { get; }
 
         /// <inheritdoc />
-        public object Execute() {
+        protected override object ExecuteToken() {
             IVariableProvider provider = variablehost.GetProvider(Name);
             if (provider == null)
                 throw new ScriptRuntimeException($"Variable {Name} not declared");
@@ -35,7 +35,7 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        public object Assign(IScriptToken token) {
+        protected override object AssignToken(IScriptToken token) {
             IVariableProvider provider = variablehost.GetProvider(Name);
             if (provider == null)
                 // auto declare variable in current scope if variable is not found

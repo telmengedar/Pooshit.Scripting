@@ -6,7 +6,9 @@ namespace NightlyCode.Scripting.Operations.Logic {
     /// <summary>
     /// computes logical XOR of lhs and rhs
     /// </summary>
-    class LogicXor : LogicOperation {
+    public class LogicXor : LogicOperation {
+        internal LogicXor() {
+        }
 
         /// <inheritdoc />
         protected override object Operate() {

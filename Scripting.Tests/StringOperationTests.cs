@@ -7,7 +7,7 @@ namespace Scripting.Tests
 {
     [TestFixture, Parallelizable]
     public class StringOperationTests {
-        IScriptParser parser = new ScriptParser();
+        readonly IScriptParser parser = new ScriptParser();
 
         [TestCase("\"test\"-\"_1\"")]
         [TestCase("\"test\"/\"_1\"")]
@@ -47,6 +47,16 @@ namespace Scripting.Tests
         public void LogicXor()
         {
             Assert.AreEqual(false, parser.Parse("\"test\"^^\"test7\"").Execute());
+        }
+
+        [Test, Parallelizable]
+        public void PlusAssign() {
+            IScript script = parser.Parse(
+                "$value=\"\"\n" +
+                "$value+=\"bla\""
+            );
+
+            Assert.AreEqual("bla", script.Execute());
         }
     }
 }

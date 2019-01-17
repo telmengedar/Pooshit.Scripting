@@ -7,7 +7,9 @@ namespace NightlyCode.Scripting.Operations.Values {
     /// <summary>
     /// rolls bits of lhs to the left by rhs steps
     /// </summary>
-    class RolRight : ValueOperation {
+    public class RolRight : ValueOperation {
+        internal RolRight() {
+        }
 
         /// <inheritdoc />
         protected override object Operate() {

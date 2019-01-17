@@ -7,13 +7,13 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// breaks execution of a loop
     /// </summary>
-    class Break : IScriptToken {
+    public class Break : IScriptToken {
 
         /// <summary>
         /// creates a new <see cref="Break"/>
         /// </summary>
         /// <param name="parameters"></param>
-        public Break(IScriptToken[] parameters) {
+        internal Break(IScriptToken[] parameters) {
             if (parameters.Length > 1)
                 throw new ScriptParserException("Too many parameters for break token");
             if (parameters.Length == 1)

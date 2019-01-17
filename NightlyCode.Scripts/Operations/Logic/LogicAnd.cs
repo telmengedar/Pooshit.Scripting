@@ -6,7 +6,9 @@ namespace NightlyCode.Scripting.Operations.Logic {
     /// <summary>
     /// computes logical AND of lhs and rhs
     /// </summary>
-    class LogicAnd : LogicOperation {
+    public class LogicAnd : LogicOperation {
+        internal LogicAnd() {
+        }
 
         /// <inheritdoc />
         protected override object Operate() {

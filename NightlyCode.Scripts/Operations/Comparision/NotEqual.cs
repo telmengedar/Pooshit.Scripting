@@ -5,7 +5,9 @@ namespace NightlyCode.Scripting.Operations.Comparision {
     /// <summary>
     /// compares two values whether they are not equal
     /// </summary>
-    class NotEqual : Comparator {
+    public class NotEqual : Comparator {
+        internal NotEqual() {
+        }
 
         /// <inheritdoc />
         protected override object Compare()

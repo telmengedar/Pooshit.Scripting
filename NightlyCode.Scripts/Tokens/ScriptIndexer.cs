@@ -12,7 +12,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// indexer call on an object
     /// </summary>
-    class ScriptIndexer : IAssignableToken {
+    class ScriptIndexer : AssignableToken {
         readonly IScriptToken hosttoken;
         readonly IScriptToken[] parameters;
 
@@ -27,16 +27,21 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        public object Execute() {
+        protected override object ExecuteToken() {
             object host = hosttoken.Execute();
-            if (parameters.Length == 1) {
-                if (host is Array array)
-                    return array.GetValue(Converter.Convert<int>(parameters[0].Execute()));
-                if (host is IEnumerable enumerable)
-                    return enumerable.Cast<object>().Skip(Converter.Convert<int>(parameters[0].Execute())).First();
-            }
 
             PropertyInfo[] indexer = host.GetType().GetProperties().Where(p => p.GetIndexParameters().Length == parameters.Length).ToArray();
+            if (indexer.Length == 0) {
+                if (parameters.Length == 1)
+                {
+                    if (host is Array array)
+                        return array.GetValue(Converter.Convert<int>(parameters[0].Execute()));
+                    if (host is IEnumerable enumerable)
+                        return enumerable.Cast<object>().Skip(Converter.Convert<int>(parameters[0].Execute())).First();
+                }
+
+                throw new ScriptRuntimeException($"No indexer methods found on {host}");
+            }
 
             StringBuilder executionlog = new StringBuilder();
 
@@ -59,7 +64,7 @@ namespace NightlyCode.Scripting.Tokens {
 
         }
 
-        public object Assign(IScriptToken token) {
+        protected override object AssignToken(IScriptToken token) {
             object host = hosttoken.Execute();
             if (parameters.Length == 1) {
                 if (host is Array array) {
@@ -75,9 +80,8 @@ namespace NightlyCode.Scripting.Tokens {
 
             foreach (PropertyInfo method in indexer)
             {
-                try
-                {
-                    return MethodOperations.CallMethod(host, method.SetMethod, parameters, false, method.GetIndexParameters(), token);
+                try {
+                    return MethodOperations.CallMethod(host, method.SetMethod, parameters.Concat(new[] {token}).ToArray(), false, method.SetMethod.GetParameters());
                 }
                 catch (Exception e)
                 {

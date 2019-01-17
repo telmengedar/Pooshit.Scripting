@@ -8,7 +8,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// evaluates a value and jumps to matching cases
     /// </summary>
-    class Switch : IScriptToken {
+    class Switch : ScriptToken {
         readonly IScriptToken condition;
         readonly List<Case> cases=new List<Case>();
 
@@ -37,7 +37,8 @@ namespace NightlyCode.Scripting.Control {
             else cases.Add(@case);
         }
 
-        public object Execute() {
+        protected override object ExecuteToken()
+        {
             object value = condition.Execute();
             Case @case = cases.FirstOrDefault(c => c.Matches(value));
             if (@case == null)

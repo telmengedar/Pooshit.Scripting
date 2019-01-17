@@ -5,14 +5,14 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// token containing body for an <see cref="If"/> statement of which condition is not met
     /// </summary>
-    class Else : IControlToken {
+    class Else : ControlToken {
 
         /// <inheritdoc />
-        public object Execute() {
+        protected override object ExecuteToken() {
             throw new System.NotImplementedException();
         }
 
         /// <inheritdoc />
-        public IScriptToken Body { get; set; }
+        public override IScriptToken Body { get; internal set; }
     }
 }

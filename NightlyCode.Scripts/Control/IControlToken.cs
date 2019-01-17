@@ -10,6 +10,6 @@ namespace NightlyCode.Scripting.Control {
         /// <summary>
         /// body of control statement
         /// </summary>
-        IScriptToken Body { get; set; }
+        IScriptToken Body { get; }
     }
 }

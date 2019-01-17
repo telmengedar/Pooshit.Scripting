@@ -6,7 +6,9 @@ namespace NightlyCode.Scripting.Operations.Comparision {
     /// <summary>
     /// compares two values for equality
     /// </summary>
-    class Equal : Comparator {
+    public class Equal : Comparator {
+        internal Equal() {
+        }
 
         /// <inheritdoc />
         protected override object Compare()

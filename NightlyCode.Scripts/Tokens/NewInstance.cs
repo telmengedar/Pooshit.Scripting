@@ -18,5 +18,10 @@ namespace NightlyCode.Scripting.Tokens {
         public object Execute() {
             return provider.Create(parameters);
         }
+
+        /// <inheritdoc />
+        public override string ToString() {
+            return $"new {provider}({string.Join<IScriptToken>(", ", parameters)})";
+        }
     }
 }

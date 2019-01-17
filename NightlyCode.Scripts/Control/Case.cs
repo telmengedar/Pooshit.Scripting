@@ -6,19 +6,19 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// case for a <see cref="Switch"/> statement
     /// </summary>
-    class Case : IControlToken {
+    public class Case : ControlToken {
         readonly IScriptToken[] conditions;
 
         /// <summary>
         /// creates a new <see cref="Case"/>
         /// </summary>
-        public Case() { }
+        internal Case() { }
 
         /// <summary>
         /// creates a new <see cref="Case"/>
         /// </summary>
         /// <param name="conditions">conditions to match</param>
-        public Case(IScriptToken[] conditions) {
+        internal Case(IScriptToken[] conditions) {
             this.conditions = conditions;
         }
 
@@ -37,12 +37,13 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        public object Execute() {
+        protected override object ExecuteToken()
+        {
             return Body.Execute();
         }
 
         /// <inheritdoc />
-        public IScriptToken Body { get; set; }
+        public override IScriptToken Body { get; internal set; }
 
         /// <inheritdoc />
         public override string ToString() {

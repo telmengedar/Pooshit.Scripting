@@ -21,7 +21,9 @@ namespace NightlyCode.Scripting.Parser {
         }
 
         /// <inheritdoc />
-        public void AddType<T>(string name) {
+        public void AddType<T>(string name=null) {
+            if (name == null)
+                name = typeof(T).Name.ToLower();
             AddType(name, new TypeInstanceProvider(typeof(T)));
         }
 

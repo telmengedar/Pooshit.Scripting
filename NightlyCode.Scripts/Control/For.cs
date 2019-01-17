@@ -7,7 +7,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// loop with an initializer, a condition and an increment
     /// </summary>
-    class For : IControlToken {
+    public class For : ControlToken {
         readonly IScriptToken initializer;
         readonly IScriptToken condition;
         readonly IScriptToken step;
@@ -16,7 +16,7 @@ namespace NightlyCode.Scripting.Control {
         /// creates a new <see cref="For"/> statement 
         /// </summary>
         /// <param name="loopparameters"></param>
-        public For(IScriptToken[] loopparameters) {
+        internal For(IScriptToken[] loopparameters) {
             if (loopparameters.Length != 3)
                 throw new ScriptParserException("3 loop parameters needed for a 'for' loop");
             initializer = loopparameters[0];
@@ -25,7 +25,8 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        public object Execute() {
+        protected override object ExecuteToken()
+        {
             initializer?.Execute();
 
             while (condition.Execute().ToBoolean()) {
@@ -46,11 +47,11 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        public IScriptToken Body { get; set; }
+        public override IScriptToken Body { get; internal set; }
 
         /// <inheritdoc />
         public override string ToString() {
-            return $"for({initializer},{condition},{step}) {Body}";
+            return $"for({initializer}, {condition}, {step}) {Body}";
         }
     }
 }

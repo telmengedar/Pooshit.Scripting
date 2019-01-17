@@ -5,7 +5,9 @@ namespace NightlyCode.Scripting.Operations.Comparision {
     /// <summary>
     /// compares whether lhs is less than rhs
     /// </summary>
-    class Less : Comparator {
+    public class Less : Comparator {
+        internal Less() {
+        }
 
         /// <inheritdoc />
         protected override object Compare()

@@ -7,16 +7,19 @@ namespace NightlyCode.Scripting.Operations.Assign {
     /// <summary>
     /// assignment in a script
     /// </summary>
-    class Assignment : IBinaryToken, IOperator, IAssignableToken {
+    public class Assignment : AssignableToken, IBinaryToken, IOperator {
         IAssignableToken lhs;
 
+        internal Assignment() {
+        }
+
         /// <inheritdoc />
-        public object Execute() {
+        protected override object ExecuteToken() {
             return lhs.Assign(Rhs);
         }
 
         /// <inheritdoc />
-        public object Assign(IScriptToken token) {
+        protected override object AssignToken(IScriptToken token) {
             if (Rhs is IAssignableToken assignable)
                 return assignable.Assign(token);
             throw new ScriptRuntimeException("Can't assign value to non assignable token");

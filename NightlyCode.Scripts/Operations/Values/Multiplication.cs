@@ -5,7 +5,9 @@ namespace NightlyCode.Scripting.Operations.Values {
     /// <summary>
     /// multiplies two values
     /// </summary>
-    class Multiplication : ValueOperation {
+    public class Multiplication : ValueOperation {
+        internal Multiplication() {
+        }
 
         /// <inheritdoc />
         protected override object Operate()

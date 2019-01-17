@@ -5,7 +5,9 @@ namespace NightlyCode.Scripting.Operations.Values {
     /// <summary>
     /// executes a bitwise XOR on two integer values
     /// </summary>
-    class BitwiseXor : ValueOperation {
+    public class BitwiseXor : ValueOperation {
+        internal BitwiseXor() {
+        }
 
         /// <inheritdoc />
         protected override object Operate()

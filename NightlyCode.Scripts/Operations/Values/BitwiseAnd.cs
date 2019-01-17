@@ -5,7 +5,9 @@ namespace NightlyCode.Scripting.Operations.Values {
     /// <summary>
     /// executes a bitwise and on two integer values
     /// </summary>
-    class BitwiseAnd : ValueOperation {
+    public class BitwiseAnd : ValueOperation {
+        internal BitwiseAnd() {
+        }
 
         /// <inheritdoc />
         protected override object Operate() {

@@ -7,7 +7,7 @@ namespace NightlyCode.Scripting.Operations.Assign {
     /// <summary>
     /// computes the result of a binary operation and assigns the result to lhs
     /// </summary>
-    abstract class OperatorAssign : IBinaryToken, IOperator
+    public abstract class OperatorAssign : ScriptToken, IBinaryToken, IOperator
     {
         IAssignableToken lhs;
 
@@ -18,7 +18,7 @@ namespace NightlyCode.Scripting.Operations.Assign {
         protected abstract object Compute();
 
         /// <inheritdoc />
-        public object Execute()
+        protected override object ExecuteToken()
         {
             return lhs.Assign(new ScriptValue(Compute()));
         }

@@ -5,7 +5,9 @@ namespace NightlyCode.Scripting.Operations.Values {
     /// <summary>
     /// computes the modulus when dividing LHS by RHS
     /// </summary>
-    class Modulo : ValueOperation {
+    public class Modulo : ValueOperation {
+        internal Modulo() {
+        }
 
         /// <inheritdoc />
         protected override object Operate()

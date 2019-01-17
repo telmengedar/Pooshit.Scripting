@@ -8,7 +8,7 @@ namespace NightlyCode.Scripting.Operations.Logic {
     /// <summary>
     /// logic operation on boolean operands
     /// </summary>
-    abstract class LogicOperation : IBinaryToken, IOperator {
+    public abstract class LogicOperation : ScriptToken, IBinaryToken, IOperator {
 
         /// <summary>
         /// executes the logic operation
@@ -16,7 +16,8 @@ namespace NightlyCode.Scripting.Operations.Logic {
         /// <returns>result of logic operation</returns>
         protected abstract object Operate();
 
-        public object Execute() {
+        protected override object ExecuteToken()
+        {
             try
             {
                 return Operate();

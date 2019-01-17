@@ -6,7 +6,9 @@ namespace NightlyCode.Scripting.Operations.Logic {
     /// <summary>
     /// computes logical OR of lhs and rhs
     /// </summary>
-    class LogicOr : LogicOperation {
+    public class LogicOr : LogicOperation {
+        internal LogicOr() {
+        }
 
         /// <inheritdoc />
         protected override object Operate() {

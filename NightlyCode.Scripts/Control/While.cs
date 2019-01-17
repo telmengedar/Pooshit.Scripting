@@ -7,7 +7,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// executes a statement block while a condition is met
     /// </summary>
-    class While : IControlToken {
+    class While : ControlToken {
         readonly IScriptToken condition;
 
         /// <summary>
@@ -21,7 +21,8 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        public object Execute() {
+        protected override object ExecuteToken()
+        {
             while (condition.Execute().ToBoolean()) {
                 object value=Body.Execute();
                 if (value is Return)
@@ -39,6 +40,6 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        public IScriptToken Body { get; set; }
+        public override IScriptToken Body { get; internal set; }
     }
 }

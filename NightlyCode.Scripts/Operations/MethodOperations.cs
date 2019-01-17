@@ -68,7 +68,7 @@ namespace NightlyCode.Scripting.Operations {
             }
         }
 
-        public static object CallMethod(object host, MethodInfo method, IScriptToken[] parameters, bool extension=false, ParameterInfo[] targetparameters=null, IScriptToken additionalparameters=null) {
+        public static object CallMethod(object host, MethodInfo method, IScriptToken[] parameters, bool extension=false, ParameterInfo[] targetparameters=null) {
             if(targetparameters==null)
                 targetparameters = method.GetParameters();
             object[] callparameters;
@@ -85,8 +85,6 @@ namespace NightlyCode.Scripting.Operations {
             }
 
             try {
-                if (additionalparameters != null)
-                    return method.Invoke(extension ? null : host, callparameters.Concat(new[] {additionalparameters.Execute()}).ToArray());
                 return method.Invoke(extension ? null : host, callparameters);
             }
             catch (TargetInvocationException e) {
@@ -117,6 +115,25 @@ namespace NightlyCode.Scripting.Operations {
                     Array array = Array.CreateInstance(elementtype, 1);
                     array.SetValue(value, 0);
                     return array;
+                }
+            }
+
+            if (targettype.IsGenericType) {
+                if (targettype.GetGenericTypeDefinition() == typeof(IEnumerable<>)) {
+                    Type genericargument = targettype.GetGenericArguments()[0];
+                    if (value is Array valuearray)
+                    {
+                        Array array = Array.CreateInstance(genericargument, valuearray.Length);
+                        for (int k = 0; k < array.Length; ++k)
+                            array.SetValue(Converter.Convert(valuearray.GetValue(k), genericargument), k);
+                        return array;
+                    }
+                    else
+                    {
+                        Array array = Array.CreateInstance(genericargument, 1);
+                        array.SetValue(value, 0);
+                        return array;
+                    }
                 }
             }
 
@@ -165,7 +182,7 @@ namespace NightlyCode.Scripting.Operations {
                         value = sourceparameters[i].Execute();
                         if (value is Array array)
                             sourcearray = array;
-                        else if (value is IEnumerable enumerable)
+                        else if (value is IEnumerable enumerable && !(value is string))
                             sourcearray = enumerable.Cast<object>().ToArray();
                     }
 

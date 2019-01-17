@@ -9,7 +9,7 @@ namespace NightlyCode.Scripting.Operations.Values {
     /// <summary>
     /// arithmetic operation to apply to two operands
     /// </summary>
-    abstract class ValueOperation : IBinaryToken, IOperator {
+    public abstract class ValueOperation : ScriptToken, IBinaryToken, IOperator {
 
         /// <summary>
         /// executes the value operation
@@ -18,7 +18,8 @@ namespace NightlyCode.Scripting.Operations.Values {
         protected abstract object Operate();
 
         /// <inheritdoc />
-        public object Execute() {
+        protected override object ExecuteToken()
+        {
             try {
                 return Operate();
             }

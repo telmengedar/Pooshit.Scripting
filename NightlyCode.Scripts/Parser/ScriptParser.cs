@@ -107,6 +107,8 @@ namespace NightlyCode.Scripting.Parser {
                     return new Throw(ParseControlParameters(data, ref index, variables));
                 case "break":
                     return new Break(TryParseControlParameters(data, ref index, variables));
+                case "using":
+                    return new Using(ParseControlParameters(data, ref index, variables));
                 }
             }
 
@@ -119,7 +121,7 @@ namespace NightlyCode.Scripting.Parser {
                     return new ScriptValue(null);
                 case "new":
                     string type = ParseName(data, ref index);
-                    ITypeInstanceProvider typeprovider = Types.GetType(type);
+                    ITypeInstanceProvider typeprovider = Types.GetType(type.ToLower());
                     return new NewInstance(typeprovider, ParseControlParameters(data, ref index, variables));
                 default:
                     IVariableProvider provider = variables.GetProvider(token);
@@ -742,7 +744,7 @@ namespace NightlyCode.Scripting.Parser {
 
             for (int i = 0; i < statements.Count;++i)
             {
-                if (statements[i] is IControlToken control) {
+                if (statements[i] is ControlToken control) {
                     if (i + 1 >= statements.Count)
                         throw new ScriptParserException("If statement without execution block detected");
                     control.Body = statements[i + 1];

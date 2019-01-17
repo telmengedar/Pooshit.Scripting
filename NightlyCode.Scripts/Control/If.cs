@@ -7,7 +7,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// statement execution a body when a condition is met
     /// </summary>
-    class If : IControlToken {
+    class If : ControlToken {
         readonly IScriptToken condition;
 
         /// <summary>
@@ -21,7 +21,8 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        public object Execute() {
+        protected override object ExecuteToken()
+        {
             if (condition.Execute().ToBoolean())
                 return Body.Execute();
             return Else?.Execute();
@@ -30,12 +31,12 @@ namespace NightlyCode.Scripting.Control {
         /// <summary>
         /// body to execute if condition is met
         /// </summary>
-        public IScriptToken Body { get; set; }
+        public override IScriptToken Body { get; internal set; }
 
         /// <summary>
         /// body to execute when condition is not met
         /// </summary>
-        public IScriptToken Else { get; set; }
+        public IScriptToken Else { get; internal set; }
 
         public override string ToString() {
             if (Else != null)

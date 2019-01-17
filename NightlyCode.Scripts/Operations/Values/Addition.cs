@@ -5,7 +5,9 @@ namespace NightlyCode.Scripting.Operations.Values {
     /// <summary>
     /// adds two values or concatenates two strings
     /// </summary>
-    class Addition : ValueOperation {
+    public class Addition : ValueOperation {
+        internal Addition() {
+        }
 
         /// <inheritdoc />
         protected override object Operate() {

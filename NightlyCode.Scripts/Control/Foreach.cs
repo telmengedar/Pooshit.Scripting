@@ -9,7 +9,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// loop which iterates over a collection
     /// </summary>
-    class Foreach : IControlToken {
+    public class Foreach : ControlToken {
         readonly IAssignableToken variable;
         readonly IScriptToken collection;
 
@@ -17,7 +17,7 @@ namespace NightlyCode.Scripting.Control {
         /// creates a new <see cref="Foreach"/>
         /// </summary>
         /// <param name="parameters">parameters containing iterator variable and collection to iterate over</param>
-        public Foreach(IScriptToken[] parameters) {
+        internal Foreach(IScriptToken[] parameters) {
             if (parameters.Length != 2)
                 throw new ScriptParserException("Foreach needs a variable and a collection as parameters");
 
@@ -29,7 +29,7 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        public object Execute() {
+        protected override object ExecuteToken() {
             object collectionvalue = collection.Execute();
             if (collectionvalue is IEnumerable enumeration) {
                 foreach (object value in enumeration.Cast<object>()) {
@@ -52,6 +52,11 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        public IScriptToken Body { get; set; }
+        public override IScriptToken Body { get; internal set; }
+
+        /// <inheritdoc />
+        public override string ToString() {
+            return $"foreach({variable}, {collection}) {Body}";
+        }
     }
 }

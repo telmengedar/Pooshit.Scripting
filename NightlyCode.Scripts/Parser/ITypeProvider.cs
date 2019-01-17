@@ -24,7 +24,7 @@
         /// </summary>
         /// <typeparam name="T">type to create</typeparam>
         /// <param name="name">name to use to create type</param>
-        void AddType<T>(string name);
+        void AddType<T>(string name=null);
 
         /// <summary>
         /// removes the specified type instance provider

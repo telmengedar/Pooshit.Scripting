@@ -8,7 +8,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// a block of statements executed in sequence
     /// </summary>
-    class StatementBlock : IScriptToken {
+    class StatementBlock : ScriptToken {
         readonly IVariableContext variablecontext;
         readonly IScriptToken[] statements;
         readonly bool methodblock;
@@ -26,7 +26,8 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        public object Execute() {
+        protected override object ExecuteToken()
+        {
             object result;
             if (variablecontext != null) {
                 
@@ -64,5 +65,8 @@ namespace NightlyCode.Scripting.Control {
             return result;
         }
 
+        public override string ToString() {
+            return $"{{ {string.Join<IScriptToken>("\n", statements)} }}";
+        }
     }
 }

@@ -9,7 +9,7 @@ namespace NightlyCode.Scripting.Control {
     /// </summary>
     class Throw : IScriptToken {
         readonly IScriptToken message;
-        IScriptToken context;
+        readonly IScriptToken context;
 
         /// <summary>
         /// creates a new <see cref="Throw"/>

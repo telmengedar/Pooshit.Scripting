@@ -10,7 +10,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// reads a value from a host member
     /// </summary>
-    class ScriptMember : IAssignableToken {
+    class ScriptMember : AssignableToken {
         readonly IScriptToken hosttoken;
         readonly string membername;
 
@@ -25,7 +25,7 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        public object Execute() {
+        protected override object ExecuteToken() {
             object host = hosttoken.Execute();
             PropertyInfo property = host.GetType().GetProperties().FirstOrDefault(p => p.Name.ToLower() == membername);
             if(property != null) {
@@ -80,7 +80,7 @@ namespace NightlyCode.Scripting.Tokens {
             return targetvalue;
         }
 
-        public object Assign(IScriptToken token) {
+        protected override object AssignToken(IScriptToken token) {
             object host = hosttoken.Execute();
             PropertyInfo property = host.GetType().GetProperties().FirstOrDefault(p => p.Name.ToLower() == membername);
             if (property != null)

@@ -5,14 +5,24 @@ namespace NightlyCode.Scripting.Operations.Unary {
     /// <summary>
     /// negates the value of a token
     /// </summary>
-    class Negate : UnaryOperator
+    public class Negate : UnaryOperator
     {
+        internal Negate() {
+        }
+
         /// <inheritdoc />
-        public override object Execute() {
+        protected override object ExecuteToken()
+        {
             return -(dynamic) Operand.Execute();
         }
 
         /// <inheritdoc />
         public override Operator Operator => Operator.Negate;
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"-{Operand}";
+        }
     }
 }

@@ -5,7 +5,9 @@ namespace NightlyCode.Scripting.Operations.Values {
     /// <summary>
     /// divides LHS by RHS
     /// </summary>
-    class Division : ValueOperation {
+    public class Division : ValueOperation {
+        internal Division() {
+        }
 
         /// <inheritdoc />
         protected override object Operate()

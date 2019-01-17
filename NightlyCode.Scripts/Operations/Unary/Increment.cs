@@ -7,19 +7,20 @@ namespace NightlyCode.Scripting.Operations.Unary {
     /// <summary>
     /// increments the value of a token by 1
     /// </summary>
-    class Increment : UnaryOperator {
+    public class Increment : UnaryOperator {
         IAssignableToken token;
 
         /// <summary>
         /// creates a new <see cref="Increment"/>
         /// </summary>
         /// <param name="post">determines whether this is a post-increment or a pre-increment</param>
-        public Increment(bool post) {
+        internal Increment(bool post) {
             IsPostToken = post;
         }
 
         /// <inheritdoc />
-        public override object Execute() {
+        protected override object ExecuteToken()
+        {
             if (IsPostToken) {
                 object result = Operand.Execute();
                 token.Assign(new ScriptValue((dynamic) result + 1));

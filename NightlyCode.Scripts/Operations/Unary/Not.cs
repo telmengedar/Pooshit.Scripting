@@ -6,14 +6,23 @@ namespace NightlyCode.Scripting.Operations.Unary {
     /// <summary>
     /// logical negation of boolean values
     /// </summary>
-    class Not : UnaryOperator {
+    public class Not : UnaryOperator {
+        internal Not() {
+        }
 
         /// <inheritdoc />
-        public override object Execute() {
+        protected override object ExecuteToken()
+        {
             return !Operand.Execute().ToBoolean();
         }
 
         /// <inheritdoc />
         public override Operator Operator => Operator.Not;
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"!{Operand}";
+        }
     }
 }

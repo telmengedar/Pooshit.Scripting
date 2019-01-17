@@ -7,7 +7,9 @@ namespace NightlyCode.Scripting.Operations.Values {
     /// <summary>
     /// shifts the bits of LHS by RHS to the left
     /// </summary>
-    class ShiftLeft : ValueOperation {
+    public class ShiftLeft : ValueOperation {
+        internal ShiftLeft() {
+        }
 
         /// <inheritdoc />
         protected override object Operate()

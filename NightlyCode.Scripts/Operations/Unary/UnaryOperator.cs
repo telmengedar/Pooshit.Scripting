@@ -6,10 +6,7 @@ namespace NightlyCode.Scripting.Operations.Unary {
     /// <summary>
     /// operator which acts on a single operand which is usually following the operator
     /// </summary>
-    abstract class UnaryOperator : IUnaryToken, IOperator {
-
-        /// <inheritdoc />
-        public abstract object Execute();
+    public abstract class UnaryOperator : ScriptToken, IUnaryToken, IOperator {
 
         public virtual bool IsPostToken => false;
 
