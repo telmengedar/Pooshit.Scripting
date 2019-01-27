@@ -58,6 +58,31 @@
         <member name="M:NightlyCode.Scripting.Control.Case.ToString">
             <inheritdoc />
         </member>
+        <member name="T:NightlyCode.Scripting.Control.Continue">
+            <summary>
+            breaks execution of a loop
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Continue.#ctor(NightlyCode.Scripting.Tokens.IScriptToken[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Control.Break"/>
+            </summary>
+            <param name="parameters"></param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.Continue.Depth">
+            <summary>
+            specifies the depth of continue statement
+            </summary>
+            <remarks>
+            a depth of 2 means that the current loop ended the the outer loop is continued instead
+            </remarks>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Continue.Execute">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Continue.ToString">
+            <inheritdoc />
+        </member>
         <member name="T:NightlyCode.Scripting.Control.ControlToken">
             <summary>
             token representing a control structure
@@ -243,6 +268,9 @@
             <summary>
             block which handles a disposable resource
             </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Using.ExecuteToken">
+            <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Control.Using.Body">
             <inheritdoc />

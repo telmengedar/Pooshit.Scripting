@@ -107,6 +107,8 @@ namespace NightlyCode.Scripting.Parser {
                     return new Throw(ParseControlParameters(data, ref index, variables));
                 case "break":
                     return new Break(TryParseControlParameters(data, ref index, variables));
+                case "continue":
+                    return new Continue(TryParseControlParameters(data, ref index, variables));
                 case "using":
                     return new Using(ParseControlParameters(data, ref index, variables));
                 }

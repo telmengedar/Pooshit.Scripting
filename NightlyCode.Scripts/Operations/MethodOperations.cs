@@ -13,6 +13,147 @@ namespace NightlyCode.Scripting.Operations {
     /// operations used when calling methods dynamically
     /// </summary>
     static class MethodOperations {
+        static readonly Type[] floatlist = {
+            typeof(float), typeof(double), typeof(decimal)
+        };
+
+        static readonly Type[] integerlist = {
+            typeof(byte), typeof(sbyte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong)
+        };
+
+        public static bool IsFloatingPoint(Type type) {
+            return Array.IndexOf(floatlist, type) > -1;
+        }
+
+        public static bool IsInteger(Type type) {
+            return Array.IndexOf(integerlist, type) > -1;
+        }
+
+        public static Tuple<T,int> GetMethodMatchValue<T>(T method, object[] parameters, bool isextension = false)
+        where T : MethodBase
+        {
+            int result = isextension ? 1000 : 0;
+            ParameterInfo[] methodparameters = method.GetParameters();
+            if (isextension) methodparameters = methodparameters.Skip(1).ToArray();
+            bool hasparams = methodparameters.Length > 0 && Attribute.IsDefined(methodparameters.Last(), typeof(ParamArrayAttribute));
+
+            int index=0;
+            for(int i=0;i<methodparameters.Length;++i) {
+                Type methodparameter = i == methodparameters.Length - 1 && hasparams ? methodparameters[i].ParameterType.GetElementType() : methodparameters[i].ParameterType;
+
+                if (index >= parameters.Length)
+                    return new Tuple<T, int>(method, result);
+
+                object parameter = parameters[index++];
+                if (i == methodparameters.Length - 1 && hasparams) {
+                    if (parameter is Array array) {
+                        if (array.Length == 0)
+                            continue;
+                        parameter = array.GetValue(0);
+                    }
+                    else if (parameter is IEnumerable enumerable) {
+                        if (!enumerable.Cast<object>().Any())
+                            continue;
+                        parameter = enumerable.Cast<object>().First();
+                    }
+                }
+
+                if (parameter == null) {
+                    if (methodparameter.IsValueType)
+                        return new Tuple<T, int>(method, -1);
+                    continue;
+                }
+
+                if (methodparameter.IsArray) {
+                    
+                    if (parameter is Array array) {
+                        if (array.Length == 0)
+                            continue;
+                        parameter = array.GetValue(0);
+                    }
+                    else if (parameter is IEnumerable enumerable) {
+                        if (!enumerable.Cast<object>().Any())
+                            continue;
+                        parameter = enumerable.Cast<object>().First();
+                    }
+
+                    methodparameter = methodparameter.GetElementType();
+                }
+                else if (typeof(IEnumerable).IsAssignableFrom(methodparameter)) {
+                    if (parameter is Array array)
+                    {
+                        if (array.Length == 0)
+                            continue;
+                        parameter = array.GetValue(0);
+                    }
+                    else if (parameter is IEnumerable enumerable)
+                    {
+                        if (!enumerable.Cast<object>().Any())
+                            continue;
+                        parameter = enumerable.Cast<object>().First();
+                    }
+
+                    methodparameter = methodparameter.IsGenericType ? methodparameter.GetGenericArguments()[0] : typeof(object);
+                }
+
+                if (methodparameter == typeof(object)) {
+                    result += 80;
+                    continue;
+                }
+
+                if (methodparameter == parameter.GetType())
+                    continue;
+
+                if (methodparameter == typeof(string)) {
+                    result += 200;
+                    continue;
+                }
+
+                if (IsFloatingPoint(parameter.GetType())) {
+                    if (!IsFloatingPoint(methodparameter))
+                        return new Tuple<T, int>(method, -1);
+                    result += 15;
+                    continue;
+                }
+
+                if (IsInteger(parameter.GetType()))
+                {
+                    if (IsInteger(methodparameter))
+                        result+= 3;
+                    else if (IsFloatingPoint(methodparameter))
+                        result += 8;
+                    else if (methodparameter == typeof(char))
+                        result += 12;
+                    else if (methodparameter.IsEnum)
+                        result += 4;
+                    else return new Tuple<T, int>(method, -1);
+                    continue;
+                }
+
+                if (parameter is char) {
+                    if (IsInteger(methodparameter))
+                        result += 5;
+                    else return new Tuple<T, int>(method, -1);
+                    continue;
+                }
+
+                if (methodparameter != null && methodparameter.IsInstanceOfType(parameter)) {
+                    result += 40;
+                    continue;
+                }
+
+                if (parameter is string) {
+                    if (methodparameter.IsEnum)
+                        result += 20;
+                    else result += 120;
+                    continue;
+                }
+
+                return new Tuple<T, int>(method, -1);
+            }
+
+            return new Tuple<T, int>(method, result);
+        }
 
         /// <summary>
         /// determines whether a method could be called using the provided parameters 
@@ -51,10 +192,10 @@ namespace NightlyCode.Scripting.Operations {
         /// <returns></returns>
         public static object CallConstructor(ConstructorInfo constructor, IScriptToken[] parameters) {
             ParameterInfo[] targetparameters = constructor.GetParameters();
-            object[] callparameters;
+            object[] callparameters = parameters.Select(p => p.Execute()).ToArray();
 
             try {
-                callparameters = CreateParameters(targetparameters, parameters).ToArray();
+                callparameters = CreateParameters(targetparameters, callparameters).ToArray();
             }
             catch (Exception e) {
                 throw new ScriptRuntimeException($"Unable to convert parameters for {constructor}", null, e);
@@ -68,9 +209,10 @@ namespace NightlyCode.Scripting.Operations {
             }
         }
 
-        public static object CallMethod(object host, MethodInfo method, IScriptToken[] parameters, bool extension=false, ParameterInfo[] targetparameters=null) {
+        public static object CallMethod(object host, MethodInfo method, object[] parameters, bool extension=false, ParameterInfo[] targetparameters=null) {
             if(targetparameters==null)
                 targetparameters = method.GetParameters();
+
             object[] callparameters;
             try {
                 if (extension)
@@ -95,7 +237,7 @@ namespace NightlyCode.Scripting.Operations {
             }
         }
 
-        public static IEnumerable<object> CreateParameters(ParameterInfo[] targetparameters, IScriptToken[] sourceparameters) {
+        public static IEnumerable<object> CreateParameters(ParameterInfo[] targetparameters, object[] sourceparameters) {
             return CreateParameters(null, targetparameters, sourceparameters);
         }
 
@@ -147,7 +289,7 @@ namespace NightlyCode.Scripting.Operations {
             return null;
         }
 
-        public static IEnumerable<object> CreateParameters(object staticparameter, ParameterInfo[] targetparameters, IScriptToken[] sourceparameters)
+        public static IEnumerable<object> CreateParameters(object staticparameter, ParameterInfo[] targetparameters, object[] sourceparameters)
         {
             if (staticparameter != null)
                 yield return staticparameter;
@@ -179,7 +321,7 @@ namespace NightlyCode.Scripting.Operations {
 
                     Array sourcearray = null;
                     if (i == sourceparameters.Length - 1) {
-                        value = sourceparameters[i].Execute();
+                        value = sourceparameters[i];
                         if (value is Array array)
                             sourcearray = array;
                         else if (value is IEnumerable enumerable && !(value is string))
@@ -187,7 +329,7 @@ namespace NightlyCode.Scripting.Operations {
                     }
 
                     if (sourcearray == null)
-                        sourcearray = sourceparameters.Skip(i).Select(p => p.Execute()).ToArray();
+                        sourcearray = sourceparameters.Skip(i).ToArray();
 
                     Array targetarray = Array.CreateInstance(targettype, sourcearray.Length);
                     for (int k = 0; k < targetarray.Length; ++k)
@@ -196,7 +338,7 @@ namespace NightlyCode.Scripting.Operations {
                     yield break;
                 }
 
-                value = sourceparameters[i].Execute();
+                value = sourceparameters[i];
                 if (value == null) {
                     if (targetparameter.ParameterType.IsValueType)
                         throw new ScriptRuntimeException($"Unable to convert null to {targetparameter.ParameterType.Name} since a valuetype is needed");

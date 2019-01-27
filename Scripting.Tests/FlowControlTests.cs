@@ -269,5 +269,34 @@ namespace Scripting.Tests {
             );
             Assert.AreEqual(9, script.Execute());
         }
+
+        [Test, Parallelizable]
+        public void ContinueFor() {
+            IScript script = parser.Parse(
+                "$result=0\n"+
+                "for($i=0,$i<10,++$i) {"+
+                "  if($i&1==1) continue\n"+
+                "  $result+=$i\n"+
+                "}"+
+                "$result"
+            );
+            Assert.AreEqual(20, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void MultiContinueFor() {
+            IScript script = parser.Parse(
+                "$result=0\n" +
+                "for($i=0,$i<4,++$i) {" +
+                "  for($k=0,$k<4,++$k) {"+
+                "    if($i&1==1 && $k>2) continue(2)\n" +
+                "    $result+=$k\n" +
+                "  }"+
+                "  ++$result\n"+
+                "}" +
+                "$result"
+            );
+            Assert.AreEqual(20, script.Execute());
+        }
     }
 }

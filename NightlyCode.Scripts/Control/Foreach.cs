@@ -39,10 +39,15 @@ namespace NightlyCode.Scripting.Control {
                         return bodyvalue;
                     if (bodyvalue is Break breaktoken)
                     {
-                        --breaktoken.Depth;
-                        if (breaktoken.Depth <= 0)
+                        if (breaktoken.Depth <= 1)
                             return null;
-                        return breaktoken;
+                        return new Break(new ScriptValue(breaktoken.Depth - 1));
+                    }
+                    if (value is Continue continuetoken)
+                    {
+                        if (continuetoken.Depth <= 1)
+                            continue;
+                        return new Continue(new ScriptValue(continuetoken.Depth - 1));
                     }
                 }
             }

@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extern;
 using NightlyCode.Scripting.Operations;
@@ -43,25 +42,14 @@ namespace NightlyCode.Scripting.Tokens {
                 throw new ScriptRuntimeException($"No indexer methods found on {host}");
             }
 
-            StringBuilder executionlog = new StringBuilder();
+            object[] parametervalues = parameters.Select(p => p.Execute()).ToArray();
+            Tuple<MethodInfo, int>[] evaluated = indexer.Select(i => MethodOperations.GetMethodMatchValue(i.GetMethod, parametervalues)).Where(e=>e.Item2>=0).ToArray();
 
-            foreach (PropertyInfo method in indexer)
-            {
-                try
-                {
-                    return MethodOperations.CallMethod(host, method.GetMethod, parameters,false,method.GetIndexParameters());
-                }
-                catch (Exception e)
-                {
-                    executionlog.AppendLine(e.Message);
-                }
-            }
+            if (evaluated.Length == 0)
+                throw new ScriptRuntimeException($"No index getter found on '{host.GetType().Name}' which matched the specified parameters '{string.Join(", ", parametervalues)}'");
 
-            if (executionlog.Length == 0)
-                throw new ScriptRuntimeException($"Indexer for '{host.GetType().Name}' matching the specified parameters count not found", executionlog.ToString());
-
-            throw new ScriptRuntimeException("None of the matching indexers could be invoked using the specified parameters", executionlog.ToString());
-
+            MethodInfo method = evaluated.OrderBy(m => m.Item2).Select(m => m.Item1).First();
+            return MethodOperations.CallMethod(host, method, parametervalues);
         }
 
         protected override object AssignToken(IScriptToken token) {
@@ -76,23 +64,13 @@ namespace NightlyCode.Scripting.Tokens {
 
             PropertyInfo[] indexer = host.GetType().GetProperties().Where(p => p.GetIndexParameters().Length == parameters.Length).ToArray();
 
-            StringBuilder executionlog = new StringBuilder();
+            object[] parametervalues = parameters.Select(p => p.Execute()).Concat(new[] {token.Execute()}).ToArray();
+            Tuple<MethodInfo, int>[] evaluated = indexer.Select(i => MethodOperations.GetMethodMatchValue(i.SetMethod, parametervalues)).Where(e=>e.Item2>=0).OrderBy(m=>m.Item2).ToArray();
 
-            foreach (PropertyInfo method in indexer)
-            {
-                try {
-                    return MethodOperations.CallMethod(host, method.SetMethod, parameters.Concat(new[] {token}).ToArray(), false, method.SetMethod.GetParameters());
-                }
-                catch (Exception e)
-                {
-                    executionlog.AppendLine(e.Message);
-                }
-            }
+            if (evaluated.Length == 0)
+                throw new ScriptRuntimeException($"No index setter found on '{host.GetType().Name}' which matched the specified parameters '{string.Join(", ", parametervalues)}'");
 
-            if (executionlog.Length == 0)
-                throw new ScriptRuntimeException($"Indexer for '{host.GetType().Name}' matching the specified parameters count not found", executionlog.ToString());
-
-            throw new ScriptRuntimeException("None of the matching indexers could be invoked using the specified parameters", executionlog.ToString());
+            return MethodOperations.CallMethod(host, evaluated[0].Item1, parametervalues);
         }
 
         public override string ToString() {

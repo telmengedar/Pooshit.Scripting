@@ -7,19 +7,25 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// breaks execution of a loop
     /// </summary>
-    public class Break : IScriptToken {
+    public class Continue : IScriptToken {
 
         /// <summary>
         /// creates a new <see cref="Break"/>
         /// </summary>
         /// <param name="parameters"></param>
-        internal Break(params IScriptToken[] parameters) {
+        internal Continue(params IScriptToken[] parameters) {
             if (parameters.Length > 1)
-                throw new ScriptParserException("Too many parameters for break token");
+                throw new ScriptParserException("Too many parameters for continue token");
             if (parameters.Length == 1)
                 Depth = parameters[0].Execute().Convert<int>();
         }
 
+        /// <summary>
+        /// specifies the depth of continue statement
+        /// </summary>
+        /// <remarks>
+        /// a depth of 2 means that the current loop ended the the outer loop is continued instead
+        /// </remarks>
         public int Depth { get; } = 1;
 
         /// <inheritdoc />
@@ -29,7 +35,7 @@ namespace NightlyCode.Scripting.Control {
 
         /// <inheritdoc />
         public override string ToString() {
-            return "break";
+            return "continue";
         }
     }
 }

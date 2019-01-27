@@ -2,7 +2,7 @@
 
 namespace Scripting.Tests.Data {
 
-    public class Parameter {
+    public class Parameter : IParameter {
         public string Name { get; set; }
         public string Value { get; set; }
 

@@ -39,53 +39,35 @@ namespace NightlyCode.Scripting.Tokens {
 
             MethodInfo[] methods = host.GetType().GetMethods().Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters)).ToArray();
 
-            StringBuilder executionlog = new StringBuilder();
-
-            foreach(MethodInfo method in methods) {
-                try {
-                    return MethodOperations.CallMethod(host, method, parameters);
-                }
-                catch (Exception e) {
-                    executionlog.AppendLine(e.Message);
-                }
+            object[] parametervalues = parameters.Select(p => p.Execute()).ToArray();
+            Tuple<MethodInfo, int>[] evaluation = methods.Select(m => MethodOperations.GetMethodMatchValue(m, parametervalues)).Where(e=>e.Item2>=0).OrderBy(m => m.Item2).ToArray();
+            if (evaluation.Length > 0) {
+                return MethodOperations.CallMethod(host, evaluation[0].Item1, parametervalues);
             }
 
             if (extensions != null) {
                 Type extensionbase = host.GetType();
                 while (extensionbase != null) {
-                    foreach (MethodInfo method in extensions.GetExtensions(extensionbase).Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters, true))) {
-                        try {
-                            return MethodOperations.CallMethod(host, method, parameters, true);
-                        }
-                        catch (Exception e) {
-                            executionlog.AppendLine(e.Message);
-                        }
-                    }
+                    methods = extensions.GetExtensions(extensionbase).Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters, true)).ToArray();
+                    evaluation = methods.Select(m => MethodOperations.GetMethodMatchValue(m, parametervalues, true)).OrderBy(m => m.Item2).ToArray();
+                    if (evaluation.Length > 0)
+                        return MethodOperations.CallMethod(host, evaluation[0].Item1, parametervalues, true);
 
                     if (extensionbase == typeof(object))
                         break;
                     extensionbase = extensionbase.BaseType;
                 }
-            }
 
-            foreach (Type interfacetype in host.GetType().GetInterfaces()) {
-                foreach (MethodInfo method in extensions.GetExtensions(interfacetype).Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters, true)))
-                {
-                    try
-                    {
-                        return MethodOperations.CallMethod(host, method, parameters, true);
-                    }
-                    catch (Exception e)
-                    {
-                        executionlog.AppendLine(e.Message);
-                    }
+
+                foreach (Type interfacetype in host.GetType().GetInterfaces()) {
+                    methods = extensions.GetExtensions(interfacetype).Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters, true)).ToArray();
+                    evaluation = methods.Select(m => MethodOperations.GetMethodMatchValue(m, parametervalues, true)).OrderBy(m => m.Item2).ToArray();
+                    if (evaluation.Length > 0)
+                        return MethodOperations.CallMethod(host, evaluation[0].Item1, parametervalues, true);
                 }
             }
 
-            if (executionlog.Length == 0)
-                throw new ScriptRuntimeException($"Method '{methodname}' matching the specified parameters count not found on type {host.GetType().Name}", executionlog.ToString());
-
-            throw new ScriptRuntimeException("None of the matching methods could be invoked using the specified parameters", executionlog.ToString());
+            throw new ScriptRuntimeException($"Method '{methodname}' matching the parameters '({string.Join(",", parametervalues)})' not found on type {host.GetType().Name}");
         }
 
         public override string ToString() {

@@ -58,8 +58,9 @@ namespace NightlyCode.Scripting.Control {
                     return @return;
                 }
 
-                if (result is Break)
+                if (result is Break || result is Continue)
                     return result;
+
             }
 
             return result;

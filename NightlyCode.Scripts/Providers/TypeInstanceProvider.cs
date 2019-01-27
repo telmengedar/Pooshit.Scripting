@@ -30,17 +30,12 @@ namespace NightlyCode.Scripting.Providers {
             if (constructors.Length == 0)
                 throw new ScriptRuntimeException($"No matching constructors available for '{type.Name}({string.Join<IScriptToken>(",", parameters)})'");
 
-            StringBuilder executionlog=new StringBuilder();
-            foreach (ConstructorInfo constructor in constructors) {
-                try {
-                    return MethodOperations.CallConstructor(constructor, parameters);
-                }
-                catch (Exception e) {
-                    executionlog.AppendLine(e.Message);
-                }
-            }
+            object[] parametervalues = parameters.Select(p => p.Execute()).ToArray();
+            Tuple<ConstructorInfo, int>[] evaluated = constructors.Select(c => MethodOperations.GetMethodMatchValue(c, parametervalues)).Where(e => e.Item2 >= 0).ToArray();
+            if (evaluated.Length == 0)
+                throw new ScriptRuntimeException($"No matching constructor found for '{type.Name}({string.Join(", ", parametervalues)})'");
 
-            throw new ScriptRuntimeException($"Unable to call constructor for '{type.Name}'", executionlog.ToString());
+            return MethodOperations.CallConstructor(evaluated[0].Item1, parameters);
         }
 
         /// <inheritdoc />

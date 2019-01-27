@@ -16,6 +16,7 @@ namespace NightlyCode.Scripting.Control {
             this.disposables = disposables;
         }
 
+        /// <inheritdoc />
         protected override object ExecuteToken() {
             List<IDisposable> values=new List<IDisposable>();
             try {
