@@ -7,7 +7,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// throws an exception from currently executed code
     /// </summary>
-    class Throw : IScriptToken {
+    public class Throw : IScriptToken {
         readonly IScriptToken message;
         readonly IScriptToken context;
 
@@ -15,7 +15,7 @@ namespace NightlyCode.Scripting.Control {
         /// creates a new <see cref="Throw"/>
         /// </summary>
         /// <param name="value">token to return</param>
-        public Throw(IScriptToken[] parameters) {
+        internal Throw(IScriptToken[] parameters) {
             if(parameters.Length==0)
                 throw new ScriptParserException("You need to throw at least a message");
             if (parameters.Length > 2)

@@ -1,4 +1,5 @@
-﻿using NightlyCode.Scripting.Data;
+﻿using System;
+using NightlyCode.Scripting.Data;
 
 namespace NightlyCode.Scripting.Parser {
 
@@ -24,5 +25,10 @@ namespace NightlyCode.Scripting.Parser {
         /// <param name="variables">variables valid for this script (flagged as read-only)</param>
         /// <returns>script which can get executed</returns>
         IScript Parse(string data, params Variable[] variables);
+
+        /// <summary>
+        /// triggered when a token was parsed
+        /// </summary>
+        event Action<TokenType, int, int> TokenParsed;
     }
 }

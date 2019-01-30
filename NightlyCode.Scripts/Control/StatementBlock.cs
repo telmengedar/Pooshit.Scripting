@@ -8,7 +8,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// a block of statements executed in sequence
     /// </summary>
-    class StatementBlock : ScriptToken {
+    public class StatementBlock : ScriptToken {
         readonly IVariableContext variablecontext;
         readonly IScriptToken[] statements;
         readonly bool methodblock;
@@ -19,7 +19,7 @@ namespace NightlyCode.Scripting.Control {
         /// <param name="variablecontext">variable environment for this block</param>
         /// <param name="statements">statements in block</param>
         /// <param name="methodblock">determines whether this is the main block of a method</param>
-        public StatementBlock(IScriptToken[] statements, IVariableContext variablecontext=null, bool methodblock=false) {
+        internal StatementBlock(IScriptToken[] statements, IVariableContext variablecontext=null, bool methodblock=false) {
             this.variablecontext = variablecontext;
             this.statements = statements;
             this.methodblock = methodblock;

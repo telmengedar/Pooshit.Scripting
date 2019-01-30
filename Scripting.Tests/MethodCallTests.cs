@@ -19,6 +19,10 @@ namespace Scripting.Tests {
             return $"{title} {name} {string.Join(" ", additional)}";
         }
 
+        public string Ambigious(byte[] bytearray) {
+            return "bytearray";
+        }
+
         public string Ambigious(string parameter) {
             return "string";
         }
@@ -119,6 +123,12 @@ namespace Scripting.Tests {
         {
             IScript script = parser.Parse($"$test.ambigious({parameter})", new Variable("test", this));
             Assert.AreEqual("int", script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void CallAmbigiousMethodByteArray() {
+            IScript script = parser.Parse($"$test.ambigious([1,2,3,4,5])", new Variable("test", this));
+            Assert.AreEqual("bytearray", script.Execute());
         }
     }
 }

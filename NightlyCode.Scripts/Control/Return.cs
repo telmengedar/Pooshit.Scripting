@@ -5,14 +5,14 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// returns a value and end execution of current method
     /// </summary>
-    class Return : IScriptToken {
+    public class Return : IScriptToken {
         readonly IScriptToken value;
 
         /// <summary>
         /// creates a new <see cref="Return"/>
         /// </summary>
         /// <param name="value">token to return</param>
-        public Return(IScriptToken value) {
+        internal Return(IScriptToken value) {
             this.value = value;
         }
 

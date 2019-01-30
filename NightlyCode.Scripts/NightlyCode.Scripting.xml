@@ -1363,6 +1363,11 @@
             <param name="variables">variables valid for this script (flagged as read-only)</param>
             <returns>script which can get executed</returns>
         </member>
+        <member name="E:NightlyCode.Scripting.Parser.IScriptParser.TokenParsed">
+            <summary>
+            triggered when a token was parsed
+            </summary>
+        </member>
         <member name="T:NightlyCode.Scripting.Parser.ITypeInstanceProvider">
             <summary>
             interface for a provider of type-instances
@@ -1484,6 +1489,59 @@
             <param name="data">data to parse</param>
             <param name="variables">variables valid for this script (flagged as read-only)</param>
             <returns>script which can get executed</returns>
+        </member>
+        <member name="E:NightlyCode.Scripting.Parser.ScriptParser.TokenParsed">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Parser.TokenType">
+            <summary>
+            token types known to parser
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Parser.TokenType.Literal">
+            <summary>
+            string type
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Parser.TokenType.Number">
+            <summary>
+            number
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Parser.TokenType.Variable">
+            <summary>
+            variable value
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Parser.TokenType.Control">
+            <summary>
+            control specifier
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Parser.TokenType.Type">
+            <summary>
+            registered type
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Parser.TokenType.Method">
+            <summary>
+            method call
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Parser.TokenType.Property">
+            <summary>
+            property
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Parser.TokenType.Operator">
+            <summary>
+            operator
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Parser.TokenType.Comment">
+            <summary>
+            code comment
+            </summary>
         </member>
         <member name="T:NightlyCode.Scripting.Parser.TypeProvider">
             <inheritdoc />
@@ -1705,6 +1763,11 @@
             creates a new <see cref="T:NightlyCode.Scripting.Parser.ScriptParser"/>
             </summary>
             <param name="value">value</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.ScriptValue.Value">
+            <summary>
+            contained value
+            </summary>
         </member>
         <member name="M:NightlyCode.Scripting.Tokens.ScriptValue.Execute">
             <inheritdoc />

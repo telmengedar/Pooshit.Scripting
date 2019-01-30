@@ -39,6 +39,7 @@ namespace NightlyCode.Scripting.Operations {
 
             int index=0;
             for(int i=0;i<methodparameters.Length;++i) {
+                int multiplicator = 1;
                 Type methodparameter = i == methodparameters.Length - 1 && hasparams ? methodparameters[i].ParameterType.GetElementType() : methodparameters[i].ParameterType;
 
                 if (index >= parameters.Length)
@@ -51,11 +52,13 @@ namespace NightlyCode.Scripting.Operations {
                             continue;
                         parameter = array.GetValue(0);
                     }
-                    else if (parameter is IEnumerable enumerable) {
+                    else if (parameter is IEnumerable enumerable && !(parameter is string)) {
                         if (!enumerable.Cast<object>().Any())
                             continue;
                         parameter = enumerable.Cast<object>().First();
                     }
+
+                    multiplicator = 100;
                 }
 
                 if (parameter == null) {
@@ -71,22 +74,23 @@ namespace NightlyCode.Scripting.Operations {
                             continue;
                         parameter = array.GetValue(0);
                     }
-                    else if (parameter is IEnumerable enumerable) {
+                    else if (parameter is IEnumerable enumerable && !(parameter is string)) {
                         if (!enumerable.Cast<object>().Any())
                             continue;
                         parameter = enumerable.Cast<object>().First();
                     }
 
                     methodparameter = methodparameter.GetElementType();
+                    multiplicator = 100;
                 }
-                else if (typeof(IEnumerable).IsAssignableFrom(methodparameter)) {
+                else if (typeof(IEnumerable).IsAssignableFrom(methodparameter) && methodparameter != typeof(string)) {
                     if (parameter is Array array)
                     {
                         if (array.Length == 0)
                             continue;
                         parameter = array.GetValue(0);
                     }
-                    else if (parameter is IEnumerable enumerable)
+                    else if (parameter is IEnumerable enumerable && !(parameter is string))
                     {
                         if (!enumerable.Cast<object>().Any())
                             continue;
@@ -94,58 +98,62 @@ namespace NightlyCode.Scripting.Operations {
                     }
 
                     methodparameter = methodparameter.IsGenericType ? methodparameter.GetGenericArguments()[0] : typeof(object);
+                    multiplicator = 100;
                 }
 
                 if (methodparameter == typeof(object)) {
-                    result += 80;
+                    result += 100*multiplicator;
                     continue;
                 }
+
+                if (!(parameter is string) && (parameter is Array || parameter is IEnumerable))
+                    return new Tuple<T, int>(method, -1);
 
                 if (methodparameter == parameter.GetType())
                     continue;
 
                 if (methodparameter == typeof(string)) {
-                    result += 200;
+                    result += 80;
                     continue;
                 }
 
                 if (IsFloatingPoint(parameter.GetType())) {
                     if (!IsFloatingPoint(methodparameter))
                         return new Tuple<T, int>(method, -1);
-                    result += 15;
+                    result += 15 * multiplicator;
                     continue;
                 }
 
                 if (IsInteger(parameter.GetType()))
                 {
                     if (IsInteger(methodparameter))
-                        result+= 3;
+                        result+= 3 * multiplicator;
                     else if (IsFloatingPoint(methodparameter))
-                        result += 8;
+                        result += 8 * multiplicator;
                     else if (methodparameter == typeof(char))
-                        result += 12;
+                        result += 12 * multiplicator;
                     else if (methodparameter.IsEnum)
-                        result += 4;
+                        result += 4 * multiplicator;
                     else return new Tuple<T, int>(method, -1);
                     continue;
                 }
 
                 if (parameter is char) {
                     if (IsInteger(methodparameter))
-                        result += 5;
+                        result += 5 * multiplicator;
                     else return new Tuple<T, int>(method, -1);
                     continue;
                 }
 
                 if (methodparameter != null && methodparameter.IsInstanceOfType(parameter)) {
-                    result += 40;
+                    result += 30 * multiplicator;
                     continue;
                 }
 
                 if (parameter is string) {
                     if (methodparameter.IsEnum)
-                        result += 20;
-                    else result += 120;
+                        result += 20 * multiplicator;
+                    else result += 50 * multiplicator;
                     continue;
                 }
 
@@ -255,7 +263,7 @@ namespace NightlyCode.Scripting.Operations {
                 else
                 {
                     Array array = Array.CreateInstance(elementtype, 1);
-                    array.SetValue(value, 0);
+                    array.SetValue(Converter.Convert(value, elementtype), 0);
                     return array;
                 }
             }

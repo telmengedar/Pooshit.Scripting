@@ -41,6 +41,37 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
+        public void SingleEmptyLoop() {
+            IScript script = parser.Parse(
+                "for($i=0,$i<10,++$i)"
+            );
+            Assert.DoesNotThrow(() => script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void ForWithoutBody() {
+            IScript script = parser.Parse(
+                "$result=0\n" +
+                "for($i=0,$i<10,++$i);\n" +
+                "++$result"
+            );
+            Assert.AreEqual(1, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void ForWithCommentBeforeBody()
+        {
+            IScript script = parser.Parse(
+                "$result=0\n" +
+                "for($i=0,$i<10,++$i)\n" +
+                "// increment result\n"+
+                "++$result\n"+
+                "$result"
+            );
+            Assert.AreEqual(10, script.Execute());
+        }
+
+        [Test, Parallelizable]
         public void TestForeach() {
             IScript script = parser.Parse(
                 "$result=0;" +

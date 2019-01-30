@@ -8,7 +8,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// evaluates a value and jumps to matching cases
     /// </summary>
-    class Switch : ScriptToken {
+    public class Switch : ScriptToken {
         readonly IScriptToken condition;
         readonly List<Case> cases=new List<Case>();
 
@@ -16,7 +16,7 @@ namespace NightlyCode.Scripting.Control {
         /// creates a new <see cref="Switch"/> statement
         /// </summary>
         /// <param name="parameters">parameters which contain value to evaluate</param>
-        public Switch(IScriptToken[] parameters) {
+        internal Switch(IScriptToken[] parameters) {
             if (parameters.Length != 1)
                 throw new ScriptParserException("Switch statement needs exactly one value parameter");
             condition = parameters[0];

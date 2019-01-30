@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NightlyCode.Scripting;
 using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Operations;
-using NightlyCode.Scripting.Operations.Assign;
+using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Parser;
-using NightlyCode.Scripting.Tokens;
 using NUnit.Framework;
 using Scripting.Tests.Data;
 
@@ -15,14 +12,14 @@ namespace Scripting.Tests {
     [TestFixture]
     public class ScriptParserTests {
 
-        [Test]
+        [Test, Parallelizable]
         public void TestMethodCallWithArray() {
             ScriptParser parser = new ScriptParser(new Variable("test", new TestHost()));
             IScript token = parser.Parse("test.testmethod(fuck,[you])");
             Assert.DoesNotThrow(() => token.Execute());
         }
 
-        [Test]
+        [Test, Parallelizable]
         public void TestMethodCallWithSpaces() {
             ScriptParser parser = new ScriptParser(new Variable("test", new TestHost()));
             IScript token = parser.Parse("test.testmethod( fuck ,[ you , \"for\",real ])");
@@ -30,7 +27,7 @@ namespace Scripting.Tests {
             Assert.AreEqual("fuck_you,for,real", result);
         }
 
-        [Test]
+        [Test, Parallelizable]
         public void TestTabInParameter() {
             ScriptParser parser = new ScriptParser(new Variable("test", new TestHost()));
             IScript token = parser.Parse("test.testmethod( \\\" ,[   \"\\t\"])");
@@ -38,7 +35,7 @@ namespace Scripting.Tests {
             Assert.AreEqual("\"_\t", result);
         }
 
-        [Test]
+        [Test, Parallelizable]
         public void AssignVariable() {
             ScriptParser parser = new ScriptParser();
             IScript script = parser.Parse(
@@ -48,7 +45,7 @@ namespace Scripting.Tests {
             Assert.AreEqual(7, script.Execute());
         }
 
-        [Test]
+        [Test, Parallelizable]
         public void CallVariableMember() {
             ScriptParser parser = new ScriptParser();
             IScript script = parser.Parse(
@@ -58,7 +55,7 @@ namespace Scripting.Tests {
             Assert.AreEqual("7", script.Execute());
         }
 
-        [Test]
+        [Test, Parallelizable]
         public void ReadVariableMember()
         {
             ScriptParser parser = new ScriptParser();
@@ -69,7 +66,7 @@ namespace Scripting.Tests {
             Assert.AreEqual(10, script.Execute());
         }
 
-        [Test]
+        [Test, Parallelizable]
         public void ReadMemberChain()
         {
             ScriptParser parser = new ScriptParser();
@@ -80,14 +77,14 @@ namespace Scripting.Tests {
             Assert.AreEqual("10", script.Execute());
         }
 
-        [Test]
+        [Test, Parallelizable]
         public void ExtensionMethods() {
             ScriptParser parser = new ScriptParser();
             parser.Extensions.AddExtensions<TestExtensions>();
             Assert.AreEqual("longstring", parser.Parse("\"long\".append(string)").Execute());
         }
 
-        [Test]
+        [Test, Parallelizable]
         public void ExtensionsForBaseTypes()
         {
             ScriptParser parser = new ScriptParser();
@@ -95,7 +92,7 @@ namespace Scripting.Tests {
             Assert.DoesNotThrow(() => parser.Parse("\"long\".hashy()").Execute());
         }
 
-        [Test]
+        [Test, Parallelizable]
         public void MethodParametersWithMethodCalls()
         {
             ScriptParser parser = new ScriptParser(new Variable("test", new TestHost()));
@@ -103,7 +100,7 @@ namespace Scripting.Tests {
             Assert.AreEqual("a_b_c_d,e", token.Execute());
         }
 
-        [Test]
+        [Test, Parallelizable]
         public void CallIndexer()
         {
             ScriptParser parser = new ScriptParser(new Variable("test", new TestHost()));
@@ -111,21 +108,21 @@ namespace Scripting.Tests {
             Assert.AreEqual(8, parser.Parse("test[data]").Execute());
         }
 
-        [Test]
+        [Test, Parallelizable]
         public void CallIndexerOnString()
         {
             ScriptParser parser = new ScriptParser();
             Assert.AreEqual('s', parser.Parse("testedstuff[6]").Execute());
         }
 
-        [Test]
+        [Test, Parallelizable]
         public void CallIndexerOnArray()
         {
             ScriptParser parser = new ScriptParser();
             Assert.AreEqual(9, parser.Parse("[9,7,3,3,2,9,0][5]").Execute());
         }
 
-        [Test]
+        [Test, Parallelizable]
         public void SetArrayValue() {
             ScriptParser parser=new ScriptParser();
             IScript script=parser.Parse(
@@ -136,7 +133,7 @@ namespace Scripting.Tests {
             Assert.IsTrue(new[] {0, 1, 7, 3, 4, 5}.Cast<object>().SequenceEqual((IEnumerable<object>) script.Execute()));
         }
 
-        [Test]
+        [Test, Parallelizable]
         public void MethodCallWithParameter() {
             ScriptParser parser = new ScriptParser(new Variable("test", new TestHost()));
             IScript script = parser.Parse(
@@ -147,7 +144,7 @@ namespace Scripting.Tests {
             Assert.AreEqual("test1_test2",script.Execute());
         }
 
-        [Test]
+        [Test, Parallelizable]
         public void ObjectParameterCallWithParameter() {
             TestHost testhost = new TestHost();
             ScriptParser parser = new ScriptParser(new Variable("test", testhost));
@@ -159,6 +156,41 @@ namespace Scripting.Tests {
 
             object result = script.Execute();
             Assert.AreEqual(testhost["host"], result);
+        }
+
+        [Test, Parallelizable]
+        public void ParseIncompleteScript() {
+            IScriptParser parser = new ScriptParser();
+            Assert.Throws<ScriptParserException>(() => parser.Parse(
+                "for ($variable=3,$variable<7,++$variable)\n" +
+                "{\n" +
+                "    // comment it out\n" +
+                "    if (\n" +
+                "}"));
+        }
+
+        [Test, Parallelizable]
+        public void EmptyLineAtEnd()
+        {
+            IScriptParser parser = new ScriptParser();
+            Assert.DoesNotThrow(() => parser.Parse(
+                "for ($variable=3,$variable<7,++$variable)\n" +
+                "{\n" +
+                "    $variable\n" +
+                "}\n" +
+                " "));
+        }
+
+        [Test, Parallelizable]
+        public void CommentAtEnd()
+        {
+            IScriptParser parser = new ScriptParser();
+            Assert.DoesNotThrow(() => parser.Parse(
+                "for ($variable=3,$variable<7,++$variable)\n" +
+                "{\n" +
+                "    $variable\n" +
+                "}\n" +
+                "// some comment"));
         }
     }
 }

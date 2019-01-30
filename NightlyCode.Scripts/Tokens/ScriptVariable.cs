@@ -7,7 +7,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// access to variable in script
     /// </summary>
-    class ScriptVariable : AssignableToken {
+    public class ScriptVariable : AssignableToken {
         readonly IVariableProvider variablehost;
 
         /// <summary>
@@ -15,7 +15,7 @@ namespace NightlyCode.Scripting.Tokens {
         /// </summary>
         /// <param name="variablehost">host containing variable information</param>
         /// <param name="name">name of variable</param>
-        public ScriptVariable(IVariableProvider variablehost, string name) {
+        internal ScriptVariable(IVariableProvider variablehost, string name) {
             this.variablehost = variablehost;
             Name = name;
         }
