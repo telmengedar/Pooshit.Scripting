@@ -11,7 +11,7 @@ To use the script engine effectively it is necessary to add types to instantiate
 ### Global Variables
 The most simple way to extend functionality of the script engine is to provide instances with some functionality using global variables. These variables are read-only and every instance method can be called on that variable using it's keyword.
 
-```
+``` csharp
 // HttpProvider is just an example for an thinkable instance and not available in library
 IScriptParser parser=new ScriptParser(new Variable("http", new HttpProvider()))
 IScript script=parser.Parse("http.get(\"http://www.google.de/\")");
@@ -21,7 +21,7 @@ script.Execute();
 ### Add Types
 Added types can be instantiated using the **new** keyword and all instance methods and properties of this type are then available to be called or used in expressions.
 
-```
+``` csharp
 IScriptParser parser=new ScriptParser();
 parser.Types.AddType<DateTime>();
 IScript script=parser.Parse("new datetime(2012,9,4)");
@@ -31,7 +31,7 @@ script.Execute();
 ### Extensions
 Existing types can be extended with methods. For this a class containing static methods taking an instance of the type to extend as first parameter. Such a method can then be called like it would be an instance method of the extended type. Unlike c# extension methods, the class does not need to be static and the extension parameter does not need to be marked with a **this** keyword.
 
-```
+``` csharp
 IScriptParser parser=new ScriptParser();
 parser.Extensions.AddExtensions<StringExtensions>();
 IScript script=parser.Parse("\"test\".beautify()");
@@ -101,7 +101,7 @@ Note: Shift and Rol operations are executed in a bitwise and not in an arithmeti
 |-|-|-|
 |0|boolean|Condition based on which the corresponding body is executed|
 
-```
+``` csharp
 $condition=true
 if($condition)
 	statement.execute()
@@ -119,7 +119,7 @@ else
 |-|-|-|
 |0|boolean|Condition checked before every loop. The loop body is executed until this condition evaluates to *false*|
 
-```
+``` csharp
 $condition=true
 $counter=0
 while($condition)
@@ -141,7 +141,7 @@ while($condition)
 |1|boolean|Condition checked before every loop. The loop body is executed until this condition evaluates to *false*|
 |2|statement|Statement executed after every loop run. This is usually used to increment or decrement a loop variable but can theoretically be any statement|
 
-```
+``` csharp
 $array=[1,2,3,4,5,6,7]
 $sum=0
 for($i,$i<$array.length,++$i)
@@ -159,7 +159,7 @@ for($i,$i<$array.length,++$i)
 |0|variable|Name of a variable which is used to contain the current item of the iteration|
 |1|enumeration|An enumeration over which to iterate|
 
-```
+``` csharp
 $sum=0
 foreach($item,[1,2,3,4,5])
 	$sum+=$item
@@ -175,7 +175,7 @@ foreach($item,[1,2,3,4,5])
 |-|-|-|
 |0|object|expression which is compared to the branches|
 
-```
+``` csharp
 $result=0
 switch(rng.next(10))
 	case(1,5,8)
@@ -190,7 +190,7 @@ switch(rng.next(10))
 
 *Return* ends the execution of the script and returns a value. The expression following the return is evaluated to the returned value.
 
-```
+``` csharp
 for($i=0,$i<5,++$i)
 	if(rng.next(100)<3)
 		return true
@@ -201,7 +201,7 @@ return false
 
 *Breaks* ends execution of enclosing loops. *Break* can optionally be called with a parameter specifying the loop depth to be *broken* out of.
 
-```
+``` csharp
 while(true)
 {
 	if(rng.next(5)>3)
@@ -209,7 +209,7 @@ while(true)
 }
 ```
 
-```
+``` csharp
 for($i=0,$i<100,++$i)
 {
 	for($k=0,$k<5,++$k)
@@ -224,7 +224,7 @@ for($i=0,$i<100,++$i)
 
 *Continue* ends execution of the current loop body and starts the loop again. Like *break* it can optionally called with a parameter specifying the loop to be *continued*.
 
-```
+``` csharp
 for($i=0,$i<100,++$i)
 {
 	for($k=0,$k<5,++$k)
