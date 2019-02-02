@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using NightlyCode.Scripting;
 using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
 using Scripting.Tests.Data;
@@ -11,6 +12,15 @@ namespace Scripting.Tests {
 
     [TestFixture]
     public class ScriptParserTests {
+        IScriptParser parser=new ScriptParser();
+
+        public static IEnumerable<string> IncompleteScripts {
+            get {
+                foreach(string resource in typeof(ScriptParserTests).Assembly.GetManifestResourceNames().Where(r=>r.StartsWith("Scripting.Tests.Scripts.Incomplete.")))
+                    using (StreamReader reader = new StreamReader(typeof(ScriptParserTests).Assembly.GetManifestResourceStream(resource)))
+                        yield return reader.ReadToEnd();
+            }
+        }
 
         [Test, Parallelizable]
         public void TestMethodCallWithArray() {
@@ -159,14 +169,16 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void ParseIncompleteScript() {
+        [Description("Provides some incomplete scripts and ensures that the parser doesn't freeze.")]
+        public async Task ParseIncompleteScript([ValueSource(nameof(IncompleteScripts))]string scriptdata) {
             IScriptParser parser = new ScriptParser();
-            Assert.Throws<ScriptParserException>(() => parser.Parse(
-                "for ($variable=3,$variable<7,++$variable)\n" +
-                "{\n" +
-                "    // comment it out\n" +
-                "    if (\n" +
-                "}"));
+
+            Task parsetask = Task.Run(() => parser.Parse(scriptdata));
+            if (await Task.WhenAny(parsetask, Task.Delay(200)) != parsetask) {
+                Assert.Fail("Parser did not succeed in time");
+            }
+
+            Assert.Pass();
         }
 
         [Test, Parallelizable]
@@ -191,6 +203,12 @@ namespace Scripting.Tests {
                 "    $variable\n" +
                 "}\n" +
                 "// some comment"));
+        }
+
+        [Test, Parallelizable]
+        public void SingleBreakInWhile() {
+            IScript script = parser.Parse("while(true) break");
+            Assert.DoesNotThrow(() => script.Execute());
         }
     }
 }

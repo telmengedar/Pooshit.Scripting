@@ -1,0 +1,5 @@
+﻿for ($variable=3,$variable<7,++$variable)
+{
+    // comment it out
+    if (
+}

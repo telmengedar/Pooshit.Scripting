@@ -45,6 +45,8 @@
         ShrAssign,
         AndAssign,
         OrAssign,
-        XorAssign
+        XorAssign,
+        SingleLineComment,
+        MultilineComment
     }
 }

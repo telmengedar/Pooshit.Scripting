@@ -13,6 +13,7 @@ using NightlyCode.Scripting.Operations.Comparision;
 using NightlyCode.Scripting.Operations.Logic;
 using NightlyCode.Scripting.Operations.Unary;
 using NightlyCode.Scripting.Operations.Values;
+using NightlyCode.Scripting.Parser.Operators;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Parser {
@@ -21,6 +22,7 @@ namespace NightlyCode.Scripting.Parser {
     /// parses scripts from string data
     /// </summary>
     public class ScriptParser : IScriptParser {
+        readonly OperatorTree operatortree = new OperatorTree();
         readonly IVariableProvider globalvariables;
 
         /// <summary>
@@ -28,6 +30,7 @@ namespace NightlyCode.Scripting.Parser {
         /// </summary>
         /// <param name="globalvariables">provider for global variables</param>
         public ScriptParser(IVariableProvider globalvariables) {
+            InitializeOperators();
             this.globalvariables = globalvariables;
             Types.AddType<List<object>>("list");
         }
@@ -50,6 +53,50 @@ namespace NightlyCode.Scripting.Parser {
         /// </summary>
         public ITypeProvider Types { get; } = new TypeProvider();
 
+        void InitializeOperators() {
+            operatortree.Add("~", Operator.Complement);
+            operatortree.Add("!", Operator.Not);
+            operatortree.Add("=", Operator.Assignment);
+            operatortree.Add("==", Operator.Equal);
+            operatortree.Add("!=", Operator.NotEqual);
+            operatortree.Add("<>", Operator.NotEqual);
+            operatortree.Add("<", Operator.Less);
+            operatortree.Add("<=", Operator.LessOrEqual);
+            operatortree.Add(">", Operator.Greater);
+            operatortree.Add(">=", Operator.GreaterOrEqual);
+            operatortree.Add("~~", Operator.Matches);
+            operatortree.Add("!~", Operator.NotMatches);
+            operatortree.Add("+", Operator.Addition);
+            operatortree.Add("-", Operator.Subtraction);
+            operatortree.Add("*", Operator.Multiplication);
+            operatortree.Add("/", Operator.Division);
+            operatortree.Add("%", Operator.Modulo);
+            operatortree.Add("&", Operator.BitwiseAnd);
+            operatortree.Add("|", Operator.BitwiseOr);
+            operatortree.Add("^", Operator.BitwiseXor);
+            operatortree.Add("<<", Operator.ShiftLeft);
+            operatortree.Add(">>", Operator.ShiftRight);
+            operatortree.Add("<<<", Operator.RolLeft);
+            operatortree.Add(">>>", Operator.RolRight);
+            operatortree.Add("&&", Operator.LogicAnd);
+            operatortree.Add("||", Operator.LogicOr);
+            operatortree.Add("^^", Operator.LogicXor);
+            operatortree.Add("+=", Operator.AddAssign);
+            operatortree.Add("-=", Operator.SubAssign);
+            operatortree.Add("*=", Operator.MulAssign);
+            operatortree.Add("/=", Operator.DivAssign);
+            operatortree.Add("%=", Operator.ModAssign);
+            operatortree.Add("<<=", Operator.ShlAssign);
+            operatortree.Add(">>=", Operator.ShrAssign);
+            operatortree.Add("&=", Operator.AndAssign);
+            operatortree.Add("|=", Operator.OrAssign);
+            operatortree.Add("^=", Operator.XorAssign);
+            operatortree.Add("++", Operator.Increment);
+            operatortree.Add("--", Operator.Decrement);
+            operatortree.Add("//", Operator.SingleLineComment);
+            operatortree.Add("/*", Operator.MultilineComment);
+        }
+
         void SkipWhitespaces(string data, ref int index) {
             while (index < data.Length && char.IsWhiteSpace(data[index]))
                 ++index;
@@ -57,7 +104,7 @@ namespace NightlyCode.Scripting.Parser {
 
         IScriptToken[] TryParseControlParameters(string data, ref int index, IVariableProvider variables) {
             SkipWhitespaces(data, ref index);
-            if (data[index] != '(')
+            if (index >= data.Length || data[index] != '(')
                 return new IScriptToken[0];
             return ParseControlParameters(data, ref index, variables);
         }
@@ -397,6 +444,7 @@ namespace NightlyCode.Scripting.Parser {
         }
 
         IScriptToken[] ParseArray(string data, ref int index, IVariableProvider variables) {
+            SkipWhitespaces(data, ref index);
             List<IScriptToken> array = new List<IScriptToken>();
             for (; index < data.Length;)
             {
@@ -414,7 +462,10 @@ namespace NightlyCode.Scripting.Parser {
                     ++index;
                     break;
                 default:
-                    array.Add(Parse(data, ref index, variables));
+                    IScriptToken element = Parse(data, ref index, variables);
+                    if (element == null)
+                        throw new ScriptParserException("Invalid array specification");
+                    array.Add(element);
                     break;
                 }
             }
@@ -450,11 +501,12 @@ namespace NightlyCode.Scripting.Parser {
 
         IOperator ParseOperator(int parsestart,string data, ref int index) {
             int startoperator = index;
-            StringBuilder token = new StringBuilder();
 
+            OperatorNode node = operatortree.Root;
             bool done = false;
-            while (index < data.Length && !done) {
-                switch (data[index]) {
+            while (index < data.Length) {
+                char character = data[index];
+                switch (character) {
                 case '=':
                 case '!':
                 case '~':
@@ -468,31 +520,42 @@ namespace NightlyCode.Scripting.Parser {
                 case '&':
                 case '|':
                 case '^':
-                    token.Append(data[index]);
                     ++index;
                     break;
                 default:
                     done = true;
                     break;
                 }
+
+                if (done)
+                    break;
+
+                OperatorNode current = node[character];
+                if (current == null)
+                    break;
+
+                node = current;
+                if (!node.HasChildren)
+                    break;
             }
 
-            string operatorstring = token.ToString();
-            if (operatorstring == "//") {
-                ParseSingleLineComment(data, ref index);
-                TokenParsed?.Invoke(TokenType.Comment, startoperator, index);
-                return null;
+            if (node == null)
+                throw new ScriptParserException("Operator expected but nothing found");
+
+            switch (node.Operator) {
+                case Operator.SingleLineComment:
+                    ParseSingleLineComment(data, ref index);
+                    TokenParsed?.Invoke(TokenType.Comment, startoperator, index);
+                    return null;
+                case Operator.MultilineComment:
+                    ParseMultiLineComment(data, ref index);
+                    TokenParsed?.Invoke(TokenType.Comment, startoperator, index);
+                    return null;
             }
 
-            if (operatorstring == "/*") {
-                ParseMultiLineComment(data, ref index);
-                TokenParsed?.Invoke(TokenType.Comment, startoperator, index);
-                return null;
-            }
 
             TokenParsed?.Invoke(TokenType.Operator, startoperator, index);
-            Operator @operator = operatorstring.ParseOperator();
-            switch (@operator) {
+            switch (node.Operator) {
                 case Operator.Increment:
                     if (index - parsestart >= 3 && !char.IsWhiteSpace(data[index - 3]))
                         return new Increment(true);
@@ -580,7 +643,7 @@ namespace NightlyCode.Scripting.Parser {
                 case Operator.XorAssign:
                     return new XorAssign();
                 default:
-                    throw new ScriptParserException($"Unsupported operator {token}");
+                    throw new ScriptParserException($"Unsupported operator '{node.Operator}'");
             }
         }
 

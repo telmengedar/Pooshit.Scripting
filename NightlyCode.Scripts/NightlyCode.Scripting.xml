@@ -435,13 +435,6 @@
             <param name="operator">operator to sort</param>
             <returns>number used in sorting algorithm</returns>
         </member>
-        <member name="M:NightlyCode.Scripting.Extensions.OperatorExtensions.ParseOperator(System.String)">
-            <summary>
-            parses an operator from string
-            </summary>
-            <param name="data">string to parse</param>
-            <returns>parsed operator</returns>
-        </member>
         <member name="T:NightlyCode.Scripting.Extensions.ValueExtensions">
             <summary>
             extensions for values
@@ -1454,6 +1447,70 @@
             </summary>
             <param name="variable">name of variable to check for</param>
             <returns>next provider which contains this variable, null if the variable is not found</returns>
+        </member>
+        <member name="T:NightlyCode.Scripting.Parser.Operators.OperatorNode">
+            <summary>
+            node in an operator tree
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.Operators.OperatorNode.#ctor(System.Char)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Parser.Operators.OperatorNode"/>
+            </summary>
+            <param name="character">character of node</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.Operators.OperatorNode.Item(System.Char)">
+            <summary>
+            access to children of node
+            </summary>
+            <param name="character">character identifying the child</param>
+            <returns>node mapping to the specified character</returns>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.Operators.OperatorNode.Character">
+            <summary>
+            character defining the leaf
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.Operators.OperatorNode.Operator">
+            <summary>
+            operator mapped to the node
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.Operators.OperatorNode.HasChildren">
+            <summary>
+            determines whether the operator node has children
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.Operators.OperatorNode.GetChildOrDefault(System.Char)">
+            <summary>
+            get child if it exists in node or null if no child is found for character
+            </summary>
+            <param name="character">character leading to the node</param>
+            <returns>node if any is found or null</returns>
+        </member>
+        <member name="T:NightlyCode.Scripting.Parser.Operators.OperatorTree">
+            <summary>
+            tree containing operator information
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.Operators.OperatorTree.Root">
+            <summary>
+            tree trunk
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.Operators.OperatorTree.Add(System.String,NightlyCode.Scripting.Data.Operator)">
+            <summary>
+            adds an operator to the tree
+            </summary>
+            <param name="data">data identifying the operator</param>
+            <param name="op">operator type</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.Operators.OperatorTree.Get(System.String)">
+            <summary>
+            get the operator node matching to the data
+            </summary>
+            <param name="data">data making up the operator</param>
+            <returns>node matching the operator data</returns>
         </member>
         <member name="T:NightlyCode.Scripting.Parser.ScriptParser">
             <summary>
