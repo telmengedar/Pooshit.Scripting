@@ -15,6 +15,11 @@
             </summary>
             <param name="parameters"></param>
         </member>
+        <member name="P:NightlyCode.Scripting.Control.Break.Depth">
+            <summary>
+            number of loops to break with this statement
+            </summary>
+        </member>
         <member name="M:NightlyCode.Scripting.Control.Break.Execute">
             <inheritdoc />
         </member>
@@ -176,6 +181,9 @@
             body to execute when condition is not met
             </summary>
         </member>
+        <member name="M:NightlyCode.Scripting.Control.If.ToString">
+            <inheritdoc />
+        </member>
         <member name="T:NightlyCode.Scripting.Control.ParserToken">
             <summary>
             token containing meta information for parsing process
@@ -225,6 +233,9 @@
         <member name="M:NightlyCode.Scripting.Control.StatementBlock.ExecuteToken">
             <inheritdoc />
         </member>
+        <member name="M:NightlyCode.Scripting.Control.StatementBlock.ToString">
+            <inheritdoc />
+        </member>
         <member name="T:NightlyCode.Scripting.Control.Switch">
             <summary>
             evaluates a value and jumps to matching cases
@@ -247,6 +258,12 @@
             </summary>
             <param name="case">case to add</param>
         </member>
+        <member name="M:NightlyCode.Scripting.Control.Switch.ExecuteToken">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Switch.ToString">
+            <inheritdoc />
+        </member>
         <member name="T:NightlyCode.Scripting.Control.Throw">
             <summary>
             throws an exception from currently executed code
@@ -256,7 +273,7 @@
             <summary>
             creates a new <see cref="T:NightlyCode.Scripting.Control.Throw"/>
             </summary>
-            <param name="value">token to return</param>
+            <param name="parameters">parameters for throw</param>
         </member>
         <member name="M:NightlyCode.Scripting.Control.Throw.Execute">
             <inheritdoc />
@@ -273,6 +290,9 @@
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Control.Using.Body">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Using.ToString">
             <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.Control.While">
@@ -299,6 +319,211 @@
             <remarks>
             the order in this enumeration is used for operator priority
             </remarks>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.Not">
+            <summary>
+            Negates a boolean value
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.Negate">
+            <summary>
+            negates an arithmetic value
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.Complement">
+            <summary>
+            Flips every bit of a numerical value
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.Increment">
+            <summary>
+            Increments the token this operator is attached to by 1
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.Decrement">
+            <summary>
+            Decrements the token this operator is attached to by 1
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.Division">
+            <summary>
+            Divides the left hand side value by the right hand side value
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.Multiplication">
+            <summary>
+            Multiplies the left hand side value by the right hand side value
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.Modulo">
+            <summary>
+            Computes the remainder when dividing the left hand side value by the right hand side value
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.Subtraction">
+            <summary>
+            Subtracts the right hand side value from the left hand side
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.Addition">
+            <summary>
+            Adds left hand side and right hand side
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.Less">
+            <summary>
+            Determines whether the left hand side value is less than the right hand side value
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.LessOrEqual">
+            <summary>
+            Determines whether the left hand side value is less than or equal to the right hand side value
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.Greater">
+            <summary>
+            Determines whether the left hand side value is greater than the right hand side value
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.GreaterOrEqual">
+            <summary>
+            Determines whether the left hand side value is greater than or equal to the right hand side value
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.Equal">
+            <summary>
+            Determines whether the left hand side is equal to the right hand side
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.NotEqual">
+            <summary>
+            Not Equals|Determines whether the left hand side is not equal to the right hand side
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.Matches">
+            <summary>
+            Determines whether the left hand side value matches the regex pattern on the right hand side
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.NotMatches">
+            <summary>
+            Determines whether the left hand side value does not match the regex pattern of the right hand side
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.BitwiseAnd">
+            <summary>
+            Applies a bitwise and between left hand side and right hand side
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.BitwiseOr">
+            <summary>
+            Applies a bitwise or between left hand side and right hand side
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.BitwiseXor">
+            <summary>
+            Applies a bitwise xor between left hand side and right hand side
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.ShiftLeft">
+            <summary>
+            Shifts left the bits of the left hand side value by the number of steps specified by the right hand side value
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.ShiftRight">
+            <summary>
+            Shifts right the bits of the left hand side value by the number of steps specified by the right hand side value
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.RolLeft">
+            <summary>
+            Rolls left the bits of the left hand side value by the number of steps specified by the right hand side value
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.RolRight">
+            <summary>
+            Rolls right the bits of the left hand side value by the number of steps specified by the right hand side value
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.LogicAnd">
+            <summary>
+            Computes the logical and between the left hand side boolean and the right hand side boolean
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.LogicOr">
+            <summary>
+            Computes the logical or between the left hand side boolean and the right hand side boolean
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.LogicXor">
+            <summary>
+            Computes the logical xor between the left hand side boolean and the right hand side boolean
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.Assignment">
+            <summary>
+            Assigns the value of the right hand side expression to the left hand side token
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.AddAssign">
+            <summary>
+            Adds the right hand side to the left hand side storing the result in the left hand side
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.SubAssign">
+            <summary>
+            Subtracts the right hand side from the left hand side storing the result in the left hand side
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.DivAssign">
+            <summary>
+            Divides the left hand side by the right hand side storing the result in the left hand side
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.MulAssign">
+            <summary>
+            Multiplicates the right hand side with the left hand side storing the result in the left hand side
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.ModAssign">
+            <summary>
+            Computes the remainder when dividing the left hand side by the right hand side storing the result in the left hand side
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.ShlAssign">
+            <summary>
+            Shifts left the left hand side by the number of steps indicated by the right hand side storing the result in the left hand side
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.ShrAssign">
+            <summary>
+            Shifts right the left hand side by the number of steps indicated by the right hand side storing the result in the left hand side
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.AndAssign">
+            <summary>
+            Applies a bitwise and between left hand side and right hand side storing the result in the left hand side
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.OrAssign">
+            <summary>
+            Applies a bitwise or between left hand side and right hand side storing the result in the left hand side
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.XorAssign">
+            <summary>
+            Applies a bitwise xor between left hand side and right hand side storing the result in the left hand side
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.SingleLineComment">
+            <summary>
+            marks all characters until the next linebreak as a comment
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Data.Operator.MultilineComment">
+            <summary>
+            marks all characters until a multiline comment terminator as a comment
+            </summary>
         </member>
         <member name="T:NightlyCode.Scripting.Data.OperatorIndex">
             <summary>
@@ -604,6 +829,9 @@
             computes modulus of a value with the result of a token and assigns it to the same token
             </summary>
         </member>
+        <member name="M:NightlyCode.Scripting.Operations.Assign.ModAssign.Compute">
+            <inheritdoc />
+        </member>
         <member name="P:NightlyCode.Scripting.Operations.Assign.ModAssign.Operator">
             <inheritdoc />
         </member>
@@ -693,6 +921,12 @@
             <summary>
             subtracts a value from the result of a token and assigns it to the same token
             </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Operations.Assign.SubAssign.Compute">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Assign.SubAssign.Operator">
+            <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Operations.Assign.SubAssign.ToString">
             <inheritdoc />
@@ -923,6 +1157,9 @@
             </summary>
             <returns>result of logic operation</returns>
         </member>
+        <member name="M:NightlyCode.Scripting.Operations.Logic.LogicOperation.ExecuteToken">
+            <inheritdoc />
+        </member>
         <member name="P:NightlyCode.Scripting.Operations.Logic.LogicOperation.Lhs">
             <inheritdoc />
         </member>
@@ -1083,6 +1320,9 @@
             <summary>
             operator which acts on a single operand which is usually following the operator
             </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Operations.Unary.UnaryOperator.IsPostToken">
+            <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Unary.UnaryOperator.Operand">
             <inheritdoc />

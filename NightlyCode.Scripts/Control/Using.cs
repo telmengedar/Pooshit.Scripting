@@ -48,6 +48,7 @@ namespace NightlyCode.Scripting.Control {
         /// <inheritdoc />
         public override IScriptToken Body { get; internal set; }
 
+        /// <inheritdoc />
         public override string ToString() {
             return $"using({string.Join<IScriptToken>(",", disposables)} {Body}";
         }

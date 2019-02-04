@@ -38,6 +38,7 @@ namespace NightlyCode.Scripting.Control {
         /// </summary>
         public IScriptToken Else { get; internal set; }
 
+        /// <inheritdoc />
         public override string ToString() {
             if (Else != null)
                 return $"if({condition}) {Body} else {Else}";

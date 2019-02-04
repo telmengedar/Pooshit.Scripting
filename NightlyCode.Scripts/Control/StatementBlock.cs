@@ -66,6 +66,7 @@ namespace NightlyCode.Scripting.Control {
             return result;
         }
 
+        /// <inheritdoc />
         public override string ToString() {
             return $"{{ {string.Join<IScriptToken>("\n", statements)} }}";
         }

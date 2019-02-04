@@ -20,6 +20,9 @@ namespace NightlyCode.Scripting.Control {
                 Depth = parameters[0].Execute().Convert<int>();
         }
 
+        /// <summary>
+        /// number of loops to break with this statement
+        /// </summary>
         public int Depth { get; } = 1;
 
         /// <inheritdoc />

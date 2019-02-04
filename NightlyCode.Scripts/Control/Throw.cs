@@ -14,7 +14,7 @@ namespace NightlyCode.Scripting.Control {
         /// <summary>
         /// creates a new <see cref="Throw"/>
         /// </summary>
-        /// <param name="value">token to return</param>
+        /// <param name="parameters">parameters for throw</param>
         internal Throw(IScriptToken[] parameters) {
             if(parameters.Length==0)
                 throw new ScriptParserException("You need to throw at least a message");

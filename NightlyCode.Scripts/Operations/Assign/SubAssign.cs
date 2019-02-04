@@ -10,10 +10,12 @@ namespace NightlyCode.Scripting.Operations.Assign {
         internal SubAssign() {
         }
 
+        /// <inheritdoc />
         protected override object Compute() {
             return (dynamic) Lhs.Execute() - (dynamic) Rhs.Execute();
         }
 
+        /// <inheritdoc />
         public override Operator Operator => Operator.SubAssign;
 
         /// <inheritdoc />

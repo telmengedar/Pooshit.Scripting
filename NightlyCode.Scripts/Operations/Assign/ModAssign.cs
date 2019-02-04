@@ -10,6 +10,7 @@ namespace NightlyCode.Scripting.Operations.Assign {
         internal ModAssign() {
         }
 
+        /// <inheritdoc />
         protected override object Compute() {
             return (dynamic) Lhs.Execute() % (dynamic) Rhs.Execute();
         }

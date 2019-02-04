@@ -16,6 +16,7 @@ namespace NightlyCode.Scripting.Operations.Logic {
         /// <returns>result of logic operation</returns>
         protected abstract object Operate();
 
+        /// <inheritdoc />
         protected override object ExecuteToken()
         {
             try

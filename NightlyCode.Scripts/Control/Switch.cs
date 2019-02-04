@@ -37,6 +37,7 @@ namespace NightlyCode.Scripting.Control {
             else cases.Add(@case);
         }
 
+        /// <inheritdoc />
         protected override object ExecuteToken()
         {
             object value = condition.Execute();
@@ -46,6 +47,7 @@ namespace NightlyCode.Scripting.Control {
             return @case.Execute();
         }
 
+        /// <inheritdoc />
         public override string ToString() {
             if (Default != null)
                 return $"switch({condition}) {string.Join(" ", cases)} default {Default.Body}";

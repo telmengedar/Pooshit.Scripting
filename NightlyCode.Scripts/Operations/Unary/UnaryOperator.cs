@@ -8,6 +8,7 @@ namespace NightlyCode.Scripting.Operations.Unary {
     /// </summary>
     public abstract class UnaryOperator : ScriptToken, IUnaryToken, IOperator {
 
+        /// <inheritdoc />
         public virtual bool IsPostToken => false;
 
         /// <inheritdoc />
