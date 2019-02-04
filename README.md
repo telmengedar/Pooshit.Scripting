@@ -182,7 +182,7 @@ switch(rng.next(10))
 		$result=1
 	case(6)
 		$result=2
-	default*
+	default
 		$result=0
 ```
 

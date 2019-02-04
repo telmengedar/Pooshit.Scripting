@@ -11,7 +11,7 @@
     <PackageLicenseUrl>http://unlicense.org/</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/telmengedar/NightlyCode.Scripting</PackageProjectUrl>
     <RepositoryUrl>https://github.com/telmengedar/NightlyCode.Scripting</RepositoryUrl>
-    <PackageTags>script, parser, code, dynamic</PackageTags>
+    <PackageTags>script, parser, code, dynamic, expression</PackageTags>
     <Company>NightlyCode</Company>
     <Authors>Toni Gottschall</Authors>
   </PropertyGroup>
