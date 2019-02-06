@@ -777,6 +777,9 @@ namespace NightlyCode.Scripting.Parser {
                         concat = false;
                         break;
                 }
+                if (index == starttoken && !done)
+                    throw new ScriptParserException("Unable to parse code");
+
                 SkipWhitespaces(data, ref index);
             }
 
@@ -828,17 +831,23 @@ namespace NightlyCode.Scripting.Parser {
         }
 
         IScriptToken ParseStatementBlock(string data, ref int index, IVariableProvider variables, bool methodblock=false) {
+            SkipWhitespaces(data, ref index);
+
             variables = new VariableContext(variables);
             List<IScriptToken> statements = new List<IScriptToken>();
             while (index < data.Length) {
-                SkipWhitespaces(data, ref index);
                 if (index < data.Length && data[index] == '}') {
                     ++index;
                     break;
                 }
 
+                int tokenstart = index;
                 IScriptToken token = Parse(data, ref index, variables, true);
+                if (index == tokenstart)
+                    throw new ScriptParserException("Unable to parse code");
+
                 statements.Add(token);
+                SkipWhitespaces(data, ref index);
             }
 
             if (statements.Count == 0)

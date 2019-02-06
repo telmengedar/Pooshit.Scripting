@@ -1,0 +1,108 @@
+﻿//Product - Prod_StartPreflight
+
+//Authentification
+$user="ctrl-s"
+$password="symphony"
+
+$cloudflow=new cloudflowapi("172.17.6.50:9090")
+$sessionid=$cloudflow.auth.createsession($user,$password)
+
+//Retrieve One-Up PDF from S3 and upload it to Cloudflow
+//$folder=$cloudflow.files.createfolder($sessionid, "cloudflow://PP_FILE_STORE/", "Ctrl-S")
+/*$stream=s3.retrieve(this["LayoutUrl"])
+using($stream) {
+	this["CloudflowOneUpPath"]=$cloudflow.assets.uploadfile($sessionid, $folder, this.Name+".pdf", $stream)
+}*/
+
+//Start Preflight Workflow
+
+
+//$response=$cloudflow.hub.startfromwhitepaper($sessionid,"Test_Preflight","Start", [this["CloudflowOneUpPath"]])
+
+//Build JSON Object for Cloudflow
+$Product=new jsonobject()
+$Product["Deployment"]=this["Deployment"]
+$Product["DielineFile"]="
+
+$response=$cloudflow.hub.startfromwhitepaper($sessionid,"Test_Preflight","Start", [this["DielineFile"]], $Product)
+
+this["CloudflowPreflightAnswer"]=$response.tostring()	
+
+/*
+f9a78936-5955-4e08-bac2-116f8ae3ab4e
+
+
+setResultVariables(
+{
+  "Job": {
+    "PrintingMachine": {
+    	"Id": "4100"
+    },
+    "CuttingMachine": {
+		"Id": "6100"
+    },
+    "PrintingTool": {
+    	"Width":1100,
+    	"Height":900,
+    	"GripperPlateOffset":34,
+    	"GripperPaperOffset":14
+    },
+    "PrintSheet": {
+    	"Width":1000,
+    	"Height":800
+    },
+    "Name": "P000000", 
+    "Positions": [
+      {
+        "Name": "O000000-P000000",
+        "Amount": "300"
+      }, 
+      {
+        "Name": "O000000-P000000",
+        "Amount": "300"
+      }, 
+      {
+        "Name": "O000000-P000000",
+        "Amount": "300"
+      }
+    ],
+    
+  }
+}
+
+    
+)
+
+
+
+$josn=new jsonobject()
+$positions=new jsonarray()
+
+foreach($position,$backendpositions) {
+    $positionobject=new jsonobject()
+    $positionobject["Name"]=$position["Name"]
+    $positionobject["Amount"]=$position["Amount"]
+    $positions.add($positionobject)
+}
+
+$json["Positions"]=$positions
+
+setResultVariables({
+    Contact: {
+        Name: 'C000005'
+    },
+    Product: {
+        Id: 'f9a78936-5955-4e08-bac2-116f8ae3ab4e'
+    },
+    Job: {
+        Name: 'J000001',
+        CuttingMachine: {
+            Id: '6100'
+        },
+        PrintingMachine: {
+            Id: '4100'
+        }
+    }
+})
+
+*/

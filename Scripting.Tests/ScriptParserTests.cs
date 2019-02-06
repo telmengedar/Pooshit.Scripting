@@ -12,7 +12,7 @@ namespace Scripting.Tests {
 
     [TestFixture]
     public class ScriptParserTests {
-        IScriptParser parser=new ScriptParser();
+        readonly IScriptParser parser=new ScriptParser();
 
         public static IEnumerable<string> IncompleteScripts {
             get {
@@ -47,7 +47,6 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void AssignVariable() {
-            ScriptParser parser = new ScriptParser();
             IScript script = parser.Parse(
                 "$number=7\n" +
                 "$number"
@@ -57,7 +56,6 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void CallVariableMember() {
-            ScriptParser parser = new ScriptParser();
             IScript script = parser.Parse(
                 "$number=7\n"+
                 "$number.tostring()"
@@ -68,7 +66,6 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void ReadVariableMember()
         {
-            ScriptParser parser = new ScriptParser();
             IScript script = parser.Parse(
                 "$number=\"longstring\"\n" +
                 "$number.length"
@@ -79,7 +76,6 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void ReadMemberChain()
         {
-            ScriptParser parser = new ScriptParser();
             IScript script = parser.Parse(
                 "$number=\"longstring\"\n" +
                 "$number.length.tostring()"
@@ -89,7 +85,6 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void ExtensionMethods() {
-            ScriptParser parser = new ScriptParser();
             parser.Extensions.AddExtensions<TestExtensions>();
             Assert.AreEqual("longstring", parser.Parse("\"long\".append(string)").Execute());
         }
@@ -121,20 +116,17 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void CallIndexerOnString()
         {
-            ScriptParser parser = new ScriptParser();
             Assert.AreEqual('s', parser.Parse("testedstuff[6]").Execute());
         }
 
         [Test, Parallelizable]
         public void CallIndexerOnArray()
         {
-            ScriptParser parser = new ScriptParser();
             Assert.AreEqual(9, parser.Parse("[9,7,3,3,2,9,0][5]").Execute());
         }
 
         [Test, Parallelizable]
         public void SetArrayValue() {
-            ScriptParser parser=new ScriptParser();
             IScript script=parser.Parse(
                 "$array=[0,1,2,3,4,5]\n" +
                 "$array[2]=7\n" +
@@ -171,8 +163,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         [Description("Provides some incomplete scripts and ensures that the parser doesn't freeze.")]
         public async Task ParseIncompleteScript([ValueSource(nameof(IncompleteScripts))]string scriptdata) {
-            IScriptParser parser = new ScriptParser();
-
+            ScriptParser parser = new ScriptParser(new Variable("test", this));
             Task parsetask = Task.Run(() => parser.Parse(scriptdata));
             if (await Task.WhenAny(parsetask, Task.Delay(200)) != parsetask) {
                 Assert.Fail("Parser did not succeed in time");
@@ -184,7 +175,6 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void EmptyLineAtEnd()
         {
-            IScriptParser parser = new ScriptParser();
             Assert.DoesNotThrow(() => parser.Parse(
                 "for ($variable=3,$variable<7,++$variable)\n" +
                 "{\n" +
@@ -196,7 +186,6 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void CommentAtEnd()
         {
-            IScriptParser parser = new ScriptParser();
             Assert.DoesNotThrow(() => parser.Parse(
                 "for ($variable=3,$variable<7,++$variable)\n" +
                 "{\n" +

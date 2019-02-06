@@ -9,10 +9,14 @@
   <ItemGroup>
     <None Remove="Scripts\Incomplete\incomplete1.ns" />
     <None Remove="Scripts\Incomplete\incomplete2.ns" />
+    <None Remove="Scripts\Incomplete\incomplete3.ns" />
+    <None Remove="Scripts\Incomplete\incomplete4.ns" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Scripts\Incomplete\incomplete1.ns" />
+    <EmbeddedResource Include="Scripts\Incomplete\incomplete4.ns" />
+    <EmbeddedResource Include="Scripts\Incomplete\incomplete3.ns" />
     <EmbeddedResource Include="Scripts\Incomplete\incomplete2.ns" />
   </ItemGroup>
 
