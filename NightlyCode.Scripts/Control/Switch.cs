@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
@@ -8,7 +10,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// evaluates a value and jumps to matching cases
     /// </summary>
-    public class Switch : ScriptToken {
+    public class Switch : ControlToken {
         readonly IScriptToken condition;
         readonly List<Case> cases=new List<Case>();
 
@@ -38,10 +40,10 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken()
+        protected override object ExecuteToken(IVariableProvider arguments)
         {
-            object value = condition.Execute();
-            Case @case = cases.FirstOrDefault(c => c.Matches(value));
+            object value = condition.Execute(arguments);
+            Case @case = cases.FirstOrDefault(c => c.Matches(value, arguments));
             if (@case == null)
                 return Default?.Execute();
             return @case.Execute();
@@ -52,6 +54,14 @@ namespace NightlyCode.Scripting.Control {
             if (Default != null)
                 return $"switch({condition}) {string.Join(" ", cases)} default {Default.Body}";
             return $"switch({condition}) {string.Join(" ", cases)}";
+        }
+
+        /// <summary>
+        /// a body is not used for switch statements
+        /// </summary>
+        public override IScriptToken Body {
+            get => throw new NotSupportedException();
+            internal set => throw new NotSupportedException();
         }
     }
 }

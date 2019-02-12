@@ -1,4 +1,5 @@
 ﻿using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Operations.Assign {
 
@@ -11,8 +12,8 @@ namespace NightlyCode.Scripting.Operations.Assign {
         }
 
         /// <inheritdoc />
-        protected override object Compute() {
-            return (dynamic) Lhs.Execute() ^ (dynamic) Rhs.Execute();
+        protected override object Compute(IVariableProvider arguments) {
+            return (dynamic) Lhs.Execute(arguments) ^ (dynamic) Rhs.Execute(arguments);
         }
 
         /// <inheritdoc />

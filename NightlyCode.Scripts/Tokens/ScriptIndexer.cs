@@ -5,6 +5,7 @@ using System.Reflection;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extern;
 using NightlyCode.Scripting.Operations;
+using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Tokens {
 
@@ -26,23 +27,23 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken() {
-            object host = hosttoken.Execute();
+        protected override object ExecuteToken(IVariableProvider arguments) {
+            object host = hosttoken.Execute(arguments);
 
             PropertyInfo[] indexer = host.GetType().GetProperties().Where(p => p.GetIndexParameters().Length == parameters.Length).ToArray();
             if (indexer.Length == 0) {
                 if (parameters.Length == 1)
                 {
                     if (host is Array array)
-                        return array.GetValue(Converter.Convert<int>(parameters[0].Execute()));
+                        return array.GetValue(Converter.Convert<int>(parameters[0].Execute(arguments)));
                     if (host is IEnumerable enumerable)
-                        return enumerable.Cast<object>().Skip(Converter.Convert<int>(parameters[0].Execute())).First();
+                        return enumerable.Cast<object>().Skip(Converter.Convert<int>(parameters[0].Execute(arguments))).First();
                 }
 
                 throw new ScriptRuntimeException($"No indexer methods found on {host}");
             }
 
-            object[] parametervalues = parameters.Select(p => p.Execute()).ToArray();
+            object[] parametervalues = parameters.Select(p => p.Execute(arguments)).ToArray();
             Tuple<MethodInfo, int>[] evaluated = indexer.Select(i => MethodOperations.GetMethodMatchValue(i.GetMethod, parametervalues)).Where(e=>e.Item2>=0).ToArray();
 
             if (evaluated.Length == 0)
@@ -52,19 +53,19 @@ namespace NightlyCode.Scripting.Tokens {
             return MethodOperations.CallMethod(host, method, parametervalues);
         }
 
-        protected override object AssignToken(IScriptToken token) {
-            object host = hosttoken.Execute();
+        protected override object AssignToken(IScriptToken token, IVariableProvider arguments) {
+            object host = hosttoken.Execute(arguments);
             if (parameters.Length == 1) {
                 if (host is Array array) {
-                    object value = token.Execute();
-                    array.SetValue(value, Converter.Convert<int>(parameters[0].Execute()));
+                    object value = token.Execute(arguments);
+                    array.SetValue(value, Converter.Convert<int>(parameters[0].Execute(arguments)));
                     return value;
                 }
             }
 
             PropertyInfo[] indexer = host.GetType().GetProperties().Where(p => p.GetIndexParameters().Length == parameters.Length).ToArray();
 
-            object[] parametervalues = parameters.Select(p => p.Execute()).Concat(new[] {token.Execute()}).ToArray();
+            object[] parametervalues = parameters.Select(p => p.Execute(arguments)).Concat(new[] {token.Execute(arguments)}).ToArray();
             Tuple<MethodInfo, int>[] evaluated = indexer.Select(i => MethodOperations.GetMethodMatchValue(i.SetMethod, parametervalues)).Where(e=>e.Item2>=0).OrderBy(m=>m.Item2).ToArray();
 
             if (evaluated.Length == 0)

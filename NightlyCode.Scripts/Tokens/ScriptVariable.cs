@@ -26,7 +26,10 @@ namespace NightlyCode.Scripting.Tokens {
         public string Name { get; }
 
         /// <inheritdoc />
-        protected override object ExecuteToken() {
+        protected override object ExecuteToken(IVariableProvider arguments) {
+            if (arguments?.ContainsVariable(Name) ?? false)
+                return arguments.GetVariable(Name);
+
             IVariableProvider provider = variablehost.GetProvider(Name);
             if (provider == null)
                 throw new ScriptRuntimeException($"Variable {Name} not declared");
@@ -35,7 +38,7 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        protected override object AssignToken(IScriptToken token) {
+        protected override object AssignToken(IScriptToken token, IVariableProvider arguments) {
             IVariableProvider provider = variablehost.GetProvider(Name);
             if (provider == null)
                 // auto declare variable in current scope if variable is not found
@@ -44,7 +47,7 @@ namespace NightlyCode.Scripting.Tokens {
             if (!(provider is IVariableContext context))
                 throw new ScriptRuntimeException($"Variable {Name} not writable");
 
-            object value = token.Execute();
+            object value = token.Execute(arguments);
             context.SetVariable(Name, value);
             return value;
         }

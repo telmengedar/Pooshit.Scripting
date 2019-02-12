@@ -1,6 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Operations.Comparision {
 
@@ -12,12 +13,12 @@ namespace NightlyCode.Scripting.Operations.Comparision {
         }
 
         /// <inheritdoc />
-        protected override object Compare() {
-            string pattern = Rhs.Execute() as string;
+        protected override object Compare(IVariableProvider arguments) {
+            string pattern = Rhs.Execute(arguments) as string;
             if (pattern == null)
                 throw new ScriptRuntimeException("Matching pattern must be a regex string");
 
-            string value = Lhs.Execute()?.ToString();
+            string value = Lhs.Execute(arguments)?.ToString();
             if (value == null)
                 return false;
 

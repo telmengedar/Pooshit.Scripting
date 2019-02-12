@@ -5,7 +5,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// creates a new instance of a type
     /// </summary>
-    public class NewInstance : IScriptToken {
+    public class NewInstance : ScriptToken {
         readonly ITypeInstanceProvider provider;
         readonly IScriptToken[] parameters;
 
@@ -15,8 +15,8 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        public object Execute() {
-            return provider.Create(parameters);
+        protected override object ExecuteToken(IVariableProvider arguments) {
+            return provider.Create(parameters, arguments);
         }
 
         /// <inheritdoc />

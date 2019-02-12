@@ -1,4 +1,5 @@
-﻿using NightlyCode.Scripting.Tokens;
+﻿using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting {
 
@@ -12,7 +13,7 @@ namespace NightlyCode.Scripting {
         /// executes the script and returns the result
         /// </summary>
         /// <returns></returns>
-        object Execute();
+        object Execute(params Variable[] variables);
 
         /// <summary>
         /// executes the script and returns a typed result
@@ -22,6 +23,6 @@ namespace NightlyCode.Scripting {
         /// </remarks>
         /// <typeparam name="T">type of result to return</typeparam>
         /// <returns>result of script execution</returns>
-        T Execute<T>();
+        T Execute<T>(params Variable[] variables);
     }
 }

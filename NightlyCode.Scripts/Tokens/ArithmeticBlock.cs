@@ -1,15 +1,23 @@
-﻿namespace NightlyCode.Scripting.Tokens {
-    class ArithmeticBlock : IScriptToken {
+﻿using NightlyCode.Scripting.Parser;
+
+namespace NightlyCode.Scripting.Tokens {
+
+    /// <summary>
+    /// block containing an arithmetic evaluation
+    /// </summary>
+    public class ArithmeticBlock : ScriptToken {
         readonly IScriptToken inner;
 
-        public ArithmeticBlock(IScriptToken inner) {
+        internal ArithmeticBlock(IScriptToken inner) {
             this.inner = inner;
         }
 
-        public object Execute() {
-            return inner.Execute();
+        /// <inheritdoc />
+        protected override object ExecuteToken(IVariableProvider arguments) {
+            return inner.Execute(arguments);
         }
 
+        /// <inheritdoc />
         public override string ToString() {
             return $"({inner})";
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Operations {
@@ -10,9 +11,9 @@ namespace NightlyCode.Scripting.Operations {
     public abstract class AssignableToken : ScriptToken, IAssignableToken {
 
         /// <inheritdoc />
-        public object Assign(IScriptToken token) {
+        public object Assign(IScriptToken token, IVariableProvider arguments) {
             try {
-                return AssignToken(token);
+                return AssignToken(token, arguments);
             }
             catch (ScriptException) {
                 throw;
@@ -27,6 +28,6 @@ namespace NightlyCode.Scripting.Operations {
         /// </summary>
         /// <param name="token">token with value to assign</param>
         /// <returns>result of assignment</returns>
-        protected abstract object AssignToken(IScriptToken token);
+        protected abstract object AssignToken(IScriptToken token, IVariableProvider arguments);
     }
 }

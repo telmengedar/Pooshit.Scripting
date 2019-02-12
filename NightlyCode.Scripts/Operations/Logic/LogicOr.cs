@@ -1,5 +1,6 @@
 ﻿using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Extensions;
+using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Operations.Logic {
 
@@ -11,8 +12,8 @@ namespace NightlyCode.Scripting.Operations.Logic {
         }
 
         /// <inheritdoc />
-        protected override object Operate() {
-            return Lhs.Execute().ToBoolean() || Rhs.Execute().ToBoolean();
+        protected override object Operate(IVariableProvider arguments) {
+            return Lhs.Execute(arguments).ToBoolean() || Rhs.Execute(arguments).ToBoolean();
         }
 
         /// <inheritdoc />

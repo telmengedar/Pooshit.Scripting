@@ -1,4 +1,5 @@
-﻿using NightlyCode.Scripting.Tokens;
+﻿using NightlyCode.Scripting.Parser;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Operations {
 
@@ -12,6 +13,6 @@ namespace NightlyCode.Scripting.Operations {
         /// </summary>
         /// <param name="token">token resulting in value to assign to this token</param>
         /// <returns>resulting value after assignment</returns>
-        object Assign(IScriptToken token);
+        object Assign(IScriptToken token, IVariableProvider arguments);
     }
 }

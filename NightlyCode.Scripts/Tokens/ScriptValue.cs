@@ -5,7 +5,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// value in a script command
     /// </summary>
-    public class ScriptValue : IScriptToken {
+    public class ScriptValue : ScriptToken {
         readonly object value;
 
         /// <summary>
@@ -22,7 +22,7 @@ namespace NightlyCode.Scripting.Tokens {
         public object Value => value;
 
         /// <inheritdoc />
-        public object Execute() {
+        protected override object ExecuteToken(IVariableProvider arguments) {
             return value;
         }
 

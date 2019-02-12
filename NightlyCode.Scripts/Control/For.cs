@@ -1,5 +1,6 @@
 ﻿using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extensions;
+using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
@@ -25,30 +26,32 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken()
+        protected override object ExecuteToken(IVariableProvider arguments)
         {
-            initializer?.Execute();
+            initializer?.Execute(arguments);
 
-            while (condition.Execute().ToBoolean()) {
-                object value=Body?.Execute();
+            while (condition.Execute(arguments).ToBoolean()) {
+                object value=Body?.Execute(arguments);
                 if (value is Return)
                     return value;
                 if (value is Break breaktoken) {
-                    if(breaktoken.Depth<=1)
+                    int depth = breaktoken.Depth.Execute<int>(arguments);
+                    if(depth<=1)
                         return null;
-                    return new Break(new ScriptValue(breaktoken.Depth - 1));
+                    return new Break(new ScriptValue(depth - 1));
                 }
 
                 if (value is Continue continuetoken) {
-                    if (continuetoken.Depth <= 1) {
-                        step?.Execute();
+                    int depth = continuetoken.Depth.Execute<int>(arguments);
+                    if (depth <= 1) {
+                        step?.Execute(arguments);
                         continue;
                     }
 
-                    return new Continue(new ScriptValue(continuetoken.Depth - 1));
+                    return new Continue(new ScriptValue(depth - 1));
                 }
 
-                step?.Execute();
+                step?.Execute(arguments);
             }
 
             return null;

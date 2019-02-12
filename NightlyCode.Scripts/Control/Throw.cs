@@ -1,5 +1,6 @@
 ﻿using System;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
@@ -7,7 +8,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// throws an exception from currently executed code
     /// </summary>
-    public class Throw : IScriptToken {
+    public class Throw : ScriptToken {
         readonly IScriptToken message;
         readonly IScriptToken context;
 
@@ -26,8 +27,8 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        public object Execute() {
-            throw new ScriptExecutionException(message.Execute()?.ToString(), context?.Execute());
+        protected override object ExecuteToken(IVariableProvider arguments) {
+            throw new ScriptExecutionException(message.Execute(arguments)?.ToString(), context?.Execute(arguments));
         }
 
         /// <inheritdoc />

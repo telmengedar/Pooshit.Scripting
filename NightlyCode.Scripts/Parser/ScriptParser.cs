@@ -102,6 +102,10 @@ namespace NightlyCode.Scripting.Parser {
                 ++index;
         }
 
+        IScriptToken TryParseSingleParameter(string data, ref int index, IVariableProvider variables) {
+            return TryParseControlParameters(data, ref index, variables).SingleOrDefault();
+        }
+
         IScriptToken[] TryParseControlParameters(string data, ref int index, IVariableProvider variables) {
             SkipWhitespaces(data, ref index);
             if (index >= data.Length || data[index] != '(')
@@ -163,16 +167,16 @@ namespace NightlyCode.Scripting.Parser {
                     return new Case();
                 case "return":
                     TokenParsed?.Invoke(TokenType.Control, start, index);
-                    return new Return(Parse(data, ref index, variables));
+                    return new Return(TryParseSingleParameter(data, ref index, variables));
                 case "throw":
                     TokenParsed?.Invoke(TokenType.Control, start, index);
                     return new Throw(ParseControlParameters(data, ref index, variables));
                 case "break":
                     TokenParsed?.Invoke(TokenType.Control, start, index);
-                    return new Break(TryParseControlParameters(data, ref index, variables));
+                    return new Break(TryParseSingleParameter(data, ref index, variables));
                 case "continue":
                     TokenParsed?.Invoke(TokenType.Control, start, index);
-                    return new Continue(TryParseControlParameters(data, ref index, variables));
+                    return new Continue(TryParseSingleParameter(data, ref index, variables));
                 case "using":
                     TokenParsed?.Invoke(TokenType.Control, start, index);
                     return new Using(ParseControlParameters(data, ref index, variables));
@@ -771,7 +775,7 @@ namespace NightlyCode.Scripting.Parser {
                         }
 
                         IScriptToken token = ParseToken(data, ref index, variables, startofstatement);
-                        if (token is IControlToken || token is ParserToken || token is Switch || token is Return)
+                        if (token is IControlToken || token is ParserToken || token is Return)
                             return token;
                         tokenlist.Add(token);
                         concat = false;
@@ -830,7 +834,7 @@ namespace NightlyCode.Scripting.Parser {
             return tokenlist.SingleOrDefault();
         }
 
-        IScriptToken ParseStatementBlock(string data, ref int index, IVariableProvider variables, bool methodblock=false) {
+        StatementBlock ParseStatementBlock(string data, ref int index, IVariableProvider variables, bool methodblock=false) {
             SkipWhitespaces(data, ref index);
 
             variables = new VariableContext(variables);
@@ -852,42 +856,49 @@ namespace NightlyCode.Scripting.Parser {
 
             if (statements.Count == 0)
                 return null;
-            if (statements.Count == 1) {
-                return statements.Single();
-            }
+
+            if (statements.Count == 1)
+                return new StatementBlock(statements.ToArray(), (IVariableContext)variables, methodblock);
 
 
-            for (int i = 0; i < statements.Count;++i)
-            {
+            for (int i = 0; i < statements.Count; ++i) {
                 // skip empty statements
-                if(statements[i]==null)
+                if (statements[i] == null)
                     continue;
-                
-                if (statements[i] is ControlToken control) {
-                    if (i + 1 >= statements.Count)
-                        throw new ScriptParserException("If statement without execution block detected");
-                    control.Body = statements[i + 1];
-                    statements.RemoveAt(i + 1);
 
-                    if (control is Case @case) {
-                        if (!(statements[i - 1] is Switch @switch))
-                            throw new ScriptParserException("Case without connected switch statement found");
-                        @switch.AddCase(@case);
-                        statements.RemoveAt(i);
-                        --i;
-                    }
-                    else if(control is Else @else)
-                    {
-                        if (!(statements[i - 1] is If @if))
-                            throw new ScriptParserException("Else without connected if statement found");
-                        @if.Else = @else.Body;
-                        statements.RemoveAt(i);
-                        --i;
-                    }
-                }
+                if (statements[i] is ControlToken control)
+                    FetchBlock(control, statements, i + 1);
             }
 
             return new StatementBlock(statements.ToArray(), (IVariableContext) variables, methodblock);
+        }
+
+        void FetchBlock(ControlToken control, List<IScriptToken> tokens, int index) {
+            if (index >= tokens.Count)
+                throw new ScriptParserException("Statement block expected");
+
+            if (control is Switch @switch) {
+                while (index < tokens.Count && tokens[index] is Case @case) {
+                    FetchBlock(@case, tokens, index + 1);
+                    @switch.AddCase(@case);
+                    tokens.RemoveAt(index);
+                }
+                return;
+            }
+
+            IScriptToken block = tokens[index];
+            if (block is ControlToken subcontrol)
+                FetchBlock(subcontrol, tokens, index + 1);
+            control.Body = block;
+            tokens.RemoveAt(index);
+
+            if (control is If @if) {
+                if (index < tokens.Count && tokens[index] is Else @else) {
+                    FetchBlock(@else, tokens, index + 1);
+                    @if.Else = @else.Body;
+                    tokens.RemoveAt(index);
+                }
+            }
         }
 
         /// <summary>

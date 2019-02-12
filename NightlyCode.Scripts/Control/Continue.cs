@@ -1,5 +1,4 @@
-﻿using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Extensions;
+﻿using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
@@ -7,17 +6,16 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// breaks execution of a loop
     /// </summary>
-    public class Continue : IScriptToken {
+    public class Continue : ScriptToken {
 
         /// <summary>
         /// creates a new <see cref="Break"/>
         /// </summary>
-        /// <param name="parameters"></param>
-        internal Continue(params IScriptToken[] parameters) {
-            if (parameters.Length > 1)
-                throw new ScriptParserException("Too many parameters for continue token");
-            if (parameters.Length == 1)
-                Depth = parameters[0].Execute().Convert<int>();
+        /// <param name="depth">loop depth to continue</param>
+        internal Continue(IScriptToken depth = null) {
+            if (depth == null)
+                depth = new ScriptValue(1);
+            Depth = depth;
         }
 
         /// <summary>
@@ -26,10 +24,10 @@ namespace NightlyCode.Scripting.Control {
         /// <remarks>
         /// a depth of 2 means that the current loop ended the the outer loop is continued instead
         /// </remarks>
-        public int Depth { get; } = 1;
+        public IScriptToken Depth { get; }
 
         /// <inheritdoc />
-        public object Execute() {
+        protected override object ExecuteToken(IVariableProvider arguments) {
             return this;
         }
 

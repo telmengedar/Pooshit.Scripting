@@ -1,11 +1,12 @@
 ﻿using System.Linq;
+using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Tokens {
 
     /// <summary>
     /// token which represents multiple values
     /// </summary>
-    class ScriptArray : IScriptToken {
+    class ScriptArray : ScriptToken {
         readonly IScriptToken[] values;
 
         /// <summary>
@@ -17,8 +18,8 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        public object Execute() {
-            return values.Select(v => v.Execute()).ToArray();
+        protected override object ExecuteToken(IVariableProvider arguments) {
+            return values.Select(v => v.Execute(arguments)).ToArray();
         }
 
         /// <inheritdoc />

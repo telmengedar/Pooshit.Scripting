@@ -1,11 +1,12 @@
-﻿using NightlyCode.Scripting.Tokens;
+﻿using NightlyCode.Scripting.Parser;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
 
     /// <summary>
     /// token containing meta information for parsing process
     /// </summary>
-    class ParserToken : IScriptToken {
+    class ParserToken : ScriptToken {
 
         /// <summary>
         /// creates a new <see cref="ParserToken"/>
@@ -17,7 +18,7 @@ namespace NightlyCode.Scripting.Control {
 
         public string Data { get; }
 
-        public object Execute() {
+        protected override object ExecuteToken(IVariableProvider arguments) {
             throw new System.NotImplementedException();
         }
 

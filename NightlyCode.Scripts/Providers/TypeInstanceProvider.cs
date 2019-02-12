@@ -24,18 +24,18 @@ namespace NightlyCode.Scripting.Providers {
         }
 
         /// <inheritdoc />
-        public object Create(params IScriptToken[] parameters) {
+        public object Create(IScriptToken[] parameters, IVariableProvider arguments) {
             ConstructorInfo[] constructors = type.GetConstructors().Where(c => MethodOperations.MatchesParameterCount(c, parameters)).ToArray();
 
             if (constructors.Length == 0)
                 throw new ScriptRuntimeException($"No matching constructors available for '{type.Name}({string.Join<IScriptToken>(",", parameters)})'");
 
-            object[] parametervalues = parameters.Select(p => p.Execute()).ToArray();
+            object[] parametervalues = parameters.Select(p => p.Execute(arguments)).ToArray();
             Tuple<ConstructorInfo, int>[] evaluated = constructors.Select(c => MethodOperations.GetMethodMatchValue(c, parametervalues)).Where(e => e.Item2 >= 0).ToArray();
             if (evaluated.Length == 0)
                 throw new ScriptRuntimeException($"No matching constructor found for '{type.Name}({string.Join(", ", parametervalues)})'");
 
-            return MethodOperations.CallConstructor(evaluated[0].Item1, parameters);
+            return MethodOperations.CallConstructor(evaluated[0].Item1, parameters, arguments);
         }
 
         /// <inheritdoc />

@@ -1,5 +1,6 @@
 ﻿using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Extensions;
+using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Operations.Unary {
 
@@ -11,9 +12,9 @@ namespace NightlyCode.Scripting.Operations.Unary {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken()
+        protected override object ExecuteToken(IVariableProvider arguments)
         {
-            return !Operand.Execute().ToBoolean();
+            return !Operand.Execute(arguments).ToBoolean();
         }
 
         /// <inheritdoc />

@@ -1,4 +1,5 @@
 ﻿using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Operations.Unary {
 
@@ -11,9 +12,9 @@ namespace NightlyCode.Scripting.Operations.Unary {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken()
+        protected override object ExecuteToken(IVariableProvider arguments)
         {
-            return -(dynamic) Operand.Execute();
+            return -(dynamic) Operand.Execute(arguments);
         }
 
         /// <inheritdoc />

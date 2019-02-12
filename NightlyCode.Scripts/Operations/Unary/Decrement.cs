@@ -1,5 +1,6 @@
 ﻿using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Operations.Unary {
@@ -19,16 +20,16 @@ namespace NightlyCode.Scripting.Operations.Unary {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken()
+        protected override object ExecuteToken(IVariableProvider arguments)
         {
             if (IsPostToken) {
-                object result = Operand.Execute();
-                token.Assign(new ScriptValue((dynamic) result - 1));
+                object result = Operand.Execute(arguments);
+                token.Assign(new ScriptValue((dynamic) result - 1), arguments);
                 return result;
             }
             else {
-                object result = (dynamic) Operand.Execute() - 1;
-                token.Assign(new ScriptValue(result));
+                object result = (dynamic) Operand.Execute(arguments) - 1;
+                token.Assign(new ScriptValue(result), arguments);
                 return result;
             }
         }

@@ -199,5 +199,17 @@ namespace Scripting.Tests {
             IScript script = parser.Parse("while(true) break");
             Assert.DoesNotThrow(() => script.Execute());
         }
+
+        [Test, Parallelizable]
+        public void VariableDeclarationAfterBlock() {
+            Assert.DoesNotThrow(() => parser.Parse("if($command.arguments.length<2) {\n" +
+                                                   "    channel.sendmessage(\"Syntax: command <name> [@permissions...] <code>\")\n" +
+                                                   "    return\n" +
+                                                   "}\n" +
+                                                   "\n"+
+                                                   "$permissions=\"\"\n" +
+                                                   "$codestarted=false\n" +
+                                                   "$code=\"\"\n"));
+        }
     }
 }

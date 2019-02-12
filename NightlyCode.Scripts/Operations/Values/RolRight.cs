@@ -1,6 +1,7 @@
 ﻿using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Extern;
 using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Operations.Values {
 
@@ -12,9 +13,9 @@ namespace NightlyCode.Scripting.Operations.Values {
         }
 
         /// <inheritdoc />
-        protected override object Operate() {
-            object value = Lhs.Execute();
-            int steps = Converter.Convert<int>(Rhs.Execute());
+        protected override object Operate(IVariableProvider arguments) {
+            object value = Lhs.Execute(arguments);
+            int steps = Converter.Convert<int>(Rhs.Execute(arguments));
 
             int numberofbits = value.GetNumberOfBits();
             steps = steps % numberofbits;

@@ -9,18 +9,18 @@
             breaks execution of a loop
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Control.Break.#ctor(NightlyCode.Scripting.Tokens.IScriptToken[])">
+        <member name="M:NightlyCode.Scripting.Control.Break.#ctor(NightlyCode.Scripting.Tokens.IScriptToken)">
             <summary>
             creates a new <see cref="T:NightlyCode.Scripting.Control.Break"/>
             </summary>
-            <param name="parameters"></param>
+            <param name="depth">depth to break</param>
         </member>
         <member name="P:NightlyCode.Scripting.Control.Break.Depth">
             <summary>
             number of loops to break with this statement
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Control.Break.Execute">
+        <member name="M:NightlyCode.Scripting.Control.Break.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Control.Break.ToString">
@@ -47,14 +47,15 @@
             determines whether this is the default case
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Control.Case.Matches(System.Object)">
+        <member name="M:NightlyCode.Scripting.Control.Case.Matches(System.Object,NightlyCode.Scripting.Parser.IVariableProvider)">
             <summary>
             determines whether case matches a value
             </summary>
             <param name="value">value to match</param>
+            <param name="arguments">script arguments</param>
             <returns>true if case matches value, false otherwise</returns>
         </member>
-        <member name="M:NightlyCode.Scripting.Control.Case.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Control.Case.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Control.Case.Body">
@@ -68,11 +69,11 @@
             breaks execution of a loop
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Control.Continue.#ctor(NightlyCode.Scripting.Tokens.IScriptToken[])">
+        <member name="M:NightlyCode.Scripting.Control.Continue.#ctor(NightlyCode.Scripting.Tokens.IScriptToken)">
             <summary>
             creates a new <see cref="T:NightlyCode.Scripting.Control.Break"/>
             </summary>
-            <param name="parameters"></param>
+            <param name="depth">loop depth to continue</param>
         </member>
         <member name="P:NightlyCode.Scripting.Control.Continue.Depth">
             <summary>
@@ -82,7 +83,7 @@
             a depth of 2 means that the current loop ended the the outer loop is continued instead
             </remarks>
         </member>
-        <member name="M:NightlyCode.Scripting.Control.Continue.Execute">
+        <member name="M:NightlyCode.Scripting.Control.Continue.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Control.Continue.ToString">
@@ -101,7 +102,7 @@
             token containing body for an <see cref="T:NightlyCode.Scripting.Control.If"/> statement of which condition is not met
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Control.Else.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Control.Else.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Control.Else.Body">
@@ -118,7 +119,7 @@
             </summary>
             <param name="loopparameters"></param>
         </member>
-        <member name="M:NightlyCode.Scripting.Control.For.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Control.For.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Control.For.Body">
@@ -138,7 +139,7 @@
             </summary>
             <param name="parameters">parameters containing iterator variable and collection to iterate over</param>
         </member>
-        <member name="M:NightlyCode.Scripting.Control.Foreach.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Control.Foreach.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Control.Foreach.Body">
@@ -168,7 +169,7 @@
             </summary>
             <param name="parameters">condition statement has to match to execute body</param>
         </member>
-        <member name="M:NightlyCode.Scripting.Control.If.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Control.If.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Control.If.Body">
@@ -211,7 +212,7 @@
             token resulting in value to return
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Control.Return.Execute">
+        <member name="M:NightlyCode.Scripting.Control.Return.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Control.Return.ToString">
@@ -230,7 +231,12 @@
             <param name="statements">statements in block</param>
             <param name="methodblock">determines whether this is the main block of a method</param>
         </member>
-        <member name="M:NightlyCode.Scripting.Control.StatementBlock.ExecuteToken">
+        <member name="P:NightlyCode.Scripting.Control.StatementBlock.Variables">
+            <summary>
+            variables for block
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.StatementBlock.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Control.StatementBlock.ToString">
@@ -258,11 +264,16 @@
             </summary>
             <param name="case">case to add</param>
         </member>
-        <member name="M:NightlyCode.Scripting.Control.Switch.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Control.Switch.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Control.Switch.ToString">
             <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.Switch.Body">
+            <summary>
+            a body is not used for switch statements
+            </summary>
         </member>
         <member name="T:NightlyCode.Scripting.Control.Throw">
             <summary>
@@ -275,7 +286,7 @@
             </summary>
             <param name="parameters">parameters for throw</param>
         </member>
-        <member name="M:NightlyCode.Scripting.Control.Throw.Execute">
+        <member name="M:NightlyCode.Scripting.Control.Throw.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Control.Throw.ToString">
@@ -286,7 +297,7 @@
             block which handles a disposable resource
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Control.Using.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Control.Using.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Control.Using.Body">
@@ -306,7 +317,7 @@
             </summary>
             <param name="parameters">parameters containing condition to check</param>
         </member>
-        <member name="M:NightlyCode.Scripting.Control.While.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Control.While.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Control.While.Body">
@@ -728,18 +739,18 @@
             </summary>
             <remarks>does the same as <see cref="T:NightlyCode.Scripting.Tokens.IScriptToken"/> but has a more clear name</remarks>
         </member>
-        <member name="M:NightlyCode.Scripting.IScript.Execute">
+        <member name="M:NightlyCode.Scripting.IScript.Execute(NightlyCode.Scripting.Data.Variable[])">
             <summary>
             executes the script and returns the result
             </summary>
             <returns></returns>
         </member>
-        <member name="M:NightlyCode.Scripting.IScript.Execute``1">
+        <member name="M:NightlyCode.Scripting.IScript.Execute``1(NightlyCode.Scripting.Data.Variable[])">
             <summary>
             executes the script and returns a typed result
             </summary>
             <remarks>
-            this just executes <see cref="M:NightlyCode.Scripting.IScript.Execute"/> and tries to convert the result
+            this just executes <see cref="M:NightlyCode.Scripting.IScript.Execute(NightlyCode.Scripting.Data.Variable[])"/> and tries to convert the result
             </remarks>
             <typeparam name="T">type of result to return</typeparam>
             <returns>result of script execution</returns>
@@ -749,10 +760,10 @@
             base implementation which handles errors
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.AssignableToken.Assign(NightlyCode.Scripting.Tokens.IScriptToken)">
+        <member name="M:NightlyCode.Scripting.Operations.AssignableToken.Assign(NightlyCode.Scripting.Tokens.IScriptToken,NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.AssignableToken.AssignToken(NightlyCode.Scripting.Tokens.IScriptToken)">
+        <member name="M:NightlyCode.Scripting.Operations.AssignableToken.AssignToken(NightlyCode.Scripting.Tokens.IScriptToken,NightlyCode.Scripting.Parser.IVariableProvider)">
             <summary>
             executes assignment
             </summary>
@@ -764,7 +775,7 @@
             adds a value to the result of a token and assigns it at the same time
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Assign.AddAssign.Compute">
+        <member name="M:NightlyCode.Scripting.Operations.Assign.AddAssign.Compute(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Assign.AddAssign.Operator">
@@ -778,7 +789,7 @@
             computes bitwise and of lhs and rhs and assigns the result to lhs
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Assign.AndAssign.Compute">
+        <member name="M:NightlyCode.Scripting.Operations.Assign.AndAssign.Compute(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Assign.AndAssign.Operator">
@@ -792,10 +803,10 @@
             assignment in a script
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Assign.Assignment.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Operations.Assign.Assignment.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Assign.Assignment.AssignToken(NightlyCode.Scripting.Tokens.IScriptToken)">
+        <member name="M:NightlyCode.Scripting.Operations.Assign.Assignment.AssignToken(NightlyCode.Scripting.Tokens.IScriptToken,NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Assign.Assignment.Lhs">
@@ -815,7 +826,7 @@
             divides a value by the result of a token and assigns it to the same token
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Assign.DivAssign.Compute">
+        <member name="M:NightlyCode.Scripting.Operations.Assign.DivAssign.Compute(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Assign.DivAssign.Operator">
@@ -829,7 +840,7 @@
             computes modulus of a value with the result of a token and assigns it to the same token
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Assign.ModAssign.Compute">
+        <member name="M:NightlyCode.Scripting.Operations.Assign.ModAssign.Compute(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Assign.ModAssign.Operator">
@@ -843,7 +854,7 @@
             multiplies a value from the result of a token and assigns it to the same token
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Assign.MulAssign.Compute">
+        <member name="M:NightlyCode.Scripting.Operations.Assign.MulAssign.Compute(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Assign.MulAssign.Operator">
@@ -857,13 +868,13 @@
             computes the result of a binary operation and assigns the result to lhs
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Assign.OperatorAssign.Compute">
+        <member name="M:NightlyCode.Scripting.Operations.Assign.OperatorAssign.Compute(NightlyCode.Scripting.Parser.IVariableProvider)">
             <summary>
             computes the result of the operation
             </summary>
             <returns></returns>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Assign.OperatorAssign.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Operations.Assign.OperatorAssign.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Assign.OperatorAssign.Lhs">
@@ -880,7 +891,7 @@
             computes bitwise and of lhs and rhs and assigns the result to lhs
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Assign.OrAssign.Compute">
+        <member name="M:NightlyCode.Scripting.Operations.Assign.OrAssign.Compute(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Assign.OrAssign.Operator">
@@ -894,7 +905,7 @@
             shifts bits of a value to the left by the result of a token and assigns it to the same token
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Assign.ShlAssign.Compute">
+        <member name="M:NightlyCode.Scripting.Operations.Assign.ShlAssign.Compute(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Assign.ShlAssign.Operator">
@@ -908,7 +919,7 @@
             shifts bits of a value to the right by the result of a token and assigns it to the same token
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Assign.ShrAssign.Compute">
+        <member name="M:NightlyCode.Scripting.Operations.Assign.ShrAssign.Compute(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Assign.ShrAssign.Operator">
@@ -922,7 +933,7 @@
             subtracts a value from the result of a token and assigns it to the same token
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Assign.SubAssign.Compute">
+        <member name="M:NightlyCode.Scripting.Operations.Assign.SubAssign.Compute(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Assign.SubAssign.Operator">
@@ -936,7 +947,7 @@
             computes bitwise and of lhs and rhs and assigns the result to lhs
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Assign.XorAssign.Compute">
+        <member name="M:NightlyCode.Scripting.Operations.Assign.XorAssign.Compute(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Assign.XorAssign.Operator">
@@ -950,13 +961,13 @@
             operator used to compare two values resulting in a boolean
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Comparision.Comparator.Compare">
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Comparator.Compare(NightlyCode.Scripting.Parser.IVariableProvider)">
             <summary>
             compares lhs and rhs and returns value of comparision
             </summary>
             <returns>comparision value</returns>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Comparision.Comparator.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Comparator.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Comparision.Comparator.Lhs">
@@ -973,7 +984,7 @@
             compares two values for equality
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Comparision.Equal.Compare">
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Equal.Compare(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Comparision.Equal.Operator">
@@ -987,7 +998,7 @@
             compares whether lhs is less than rhs
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Comparision.Greater.Compare">
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Greater.Compare(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Comparision.Greater.Operator">
@@ -1001,7 +1012,7 @@
             compares whether lhs is less than rhs
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Comparision.GreaterOrEqual.Compare">
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.GreaterOrEqual.Compare(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Comparision.GreaterOrEqual.Operator">
@@ -1015,7 +1026,7 @@
             compares whether lhs is less than rhs
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Comparision.Less.Compare">
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Less.Compare(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Comparision.Less.Operator">
@@ -1029,7 +1040,7 @@
             compares whether lhs is less than rhs
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Comparision.LessOrEqual.Compare">
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.LessOrEqual.Compare(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Comparision.LessOrEqual.Operator">
@@ -1043,7 +1054,7 @@
             determines whether a string matches a regex
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Comparision.Matches.Compare">
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Matches.Compare(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Comparision.Matches.Operator">
@@ -1057,7 +1068,7 @@
             determines whether a string matches a regex
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Comparision.MatchesNot.Compare">
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.MatchesNot.Compare(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Comparision.MatchesNot.Operator">
@@ -1071,7 +1082,7 @@
             compares two values whether they are not equal
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Comparision.NotEqual.Compare">
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.NotEqual.Compare(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Comparision.NotEqual.Operator">
@@ -1085,7 +1096,7 @@
             token to which a value can be assigned
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.IAssignableToken.Assign(NightlyCode.Scripting.Tokens.IScriptToken)">
+        <member name="M:NightlyCode.Scripting.Operations.IAssignableToken.Assign(NightlyCode.Scripting.Tokens.IScriptToken,NightlyCode.Scripting.Parser.IVariableProvider)">
             <summary>
             assigns a value to this token
             </summary>
@@ -1137,7 +1148,7 @@
             computes logical AND of lhs and rhs
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Logic.LogicAnd.Operate">
+        <member name="M:NightlyCode.Scripting.Operations.Logic.LogicAnd.Operate(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Logic.LogicAnd.Operator">
@@ -1151,13 +1162,13 @@
             logic operation on boolean operands
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Logic.LogicOperation.Operate">
+        <member name="M:NightlyCode.Scripting.Operations.Logic.LogicOperation.Operate(NightlyCode.Scripting.Parser.IVariableProvider)">
             <summary>
             executes the logic operation
             </summary>
             <returns>result of logic operation</returns>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Logic.LogicOperation.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Operations.Logic.LogicOperation.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Logic.LogicOperation.Lhs">
@@ -1174,7 +1185,7 @@
             computes logical OR of lhs and rhs
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Logic.LogicOr.Operate">
+        <member name="M:NightlyCode.Scripting.Operations.Logic.LogicOr.Operate(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Logic.LogicOr.Operator">
@@ -1188,7 +1199,7 @@
             computes logical XOR of lhs and rhs
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Logic.LogicXor.Operate">
+        <member name="M:NightlyCode.Scripting.Operations.Logic.LogicXor.Operate(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Logic.LogicXor.Operator">
@@ -1214,7 +1225,7 @@
             <param name="isextension">determines whether the method is an extension method</param>
             <returns>true if method count matches, false otherwise</returns>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.MethodOperations.CallConstructor(System.Reflection.ConstructorInfo,NightlyCode.Scripting.Tokens.IScriptToken[])">
+        <member name="M:NightlyCode.Scripting.Operations.MethodOperations.CallConstructor(System.Reflection.ConstructorInfo,NightlyCode.Scripting.Tokens.IScriptToken[],NightlyCode.Scripting.Parser.IVariableProvider)">
             <summary>
             calls a constructor using the specified parameters
             </summary>
@@ -1227,7 +1238,7 @@
             computes the bit-complement of the result of a token
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Unary.Complement.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Operations.Unary.Complement.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Unary.Complement.Operator">
@@ -1247,7 +1258,7 @@
             </summary>
             <param name="post">determines whether this is a post-increment or a pre-increment</param>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Unary.Decrement.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Operations.Unary.Decrement.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Unary.Decrement.IsPostToken">
@@ -1273,7 +1284,7 @@
             </summary>
             <param name="post">determines whether this is a post-increment or a pre-increment</param>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Unary.Increment.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Operations.Unary.Increment.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Unary.Increment.IsPostToken">
@@ -1293,7 +1304,7 @@
             negates the value of a token
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Unary.Negate.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Operations.Unary.Negate.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Unary.Negate.Operator">
@@ -1307,7 +1318,7 @@
             logical negation of boolean values
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Unary.Not.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Operations.Unary.Not.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Unary.Not.Operator">
@@ -1335,7 +1346,7 @@
             adds two values or concatenates two strings
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Values.Addition.Operate">
+        <member name="M:NightlyCode.Scripting.Operations.Values.Addition.Operate(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Values.Addition.Operator">
@@ -1349,7 +1360,7 @@
             executes a bitwise and on two integer values
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Values.BitwiseAnd.Operate">
+        <member name="M:NightlyCode.Scripting.Operations.Values.BitwiseAnd.Operate(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Values.BitwiseAnd.Operator">
@@ -1363,7 +1374,7 @@
             executes a bitwise OR on two integer values
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Values.BitwiseOr.Operate">
+        <member name="M:NightlyCode.Scripting.Operations.Values.BitwiseOr.Operate(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Values.BitwiseOr.Operator">
@@ -1377,7 +1388,7 @@
             executes a bitwise XOR on two integer values
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Values.BitwiseXor.Operate">
+        <member name="M:NightlyCode.Scripting.Operations.Values.BitwiseXor.Operate(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Values.BitwiseXor.Operator">
@@ -1391,7 +1402,7 @@
             divides LHS by RHS
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Values.Division.Operate">
+        <member name="M:NightlyCode.Scripting.Operations.Values.Division.Operate(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Values.Division.Operator">
@@ -1405,7 +1416,7 @@
             computes the modulus when dividing LHS by RHS
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Values.Modulo.Operate">
+        <member name="M:NightlyCode.Scripting.Operations.Values.Modulo.Operate(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Values.Modulo.Operator">
@@ -1419,7 +1430,7 @@
             multiplies two values
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Values.Multiplication.Operate">
+        <member name="M:NightlyCode.Scripting.Operations.Values.Multiplication.Operate(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Values.Multiplication.Operator">
@@ -1433,7 +1444,7 @@
             rolls bits of lhs to the left by rhs steps
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Values.RolLeft.Operate">
+        <member name="M:NightlyCode.Scripting.Operations.Values.RolLeft.Operate(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Values.RolLeft.Operator">
@@ -1444,7 +1455,7 @@
             rolls bits of lhs to the left by rhs steps
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Values.RolRight.Operate">
+        <member name="M:NightlyCode.Scripting.Operations.Values.RolRight.Operate(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Values.RolRight.Operator">
@@ -1455,7 +1466,7 @@
             shifts the bits of LHS by RHS to the left
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Values.ShiftLeft.Operate">
+        <member name="M:NightlyCode.Scripting.Operations.Values.ShiftLeft.Operate(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Values.ShiftLeft.Operator">
@@ -1469,7 +1480,7 @@
             shifts the bits of LHS by RHS to the right
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Values.ShiftRight.Operate">
+        <member name="M:NightlyCode.Scripting.Operations.Values.ShiftRight.Operate(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Values.ShiftRight.Operator">
@@ -1483,7 +1494,7 @@
             subtracts a RHS from LHS
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Values.Subtraction.Operate">
+        <member name="M:NightlyCode.Scripting.Operations.Values.Subtraction.Operate(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Values.Subtraction.Operator">
@@ -1497,13 +1508,13 @@
             arithmetic operation to apply to two operands
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Values.ValueOperation.Operate">
+        <member name="M:NightlyCode.Scripting.Operations.Values.ValueOperation.Operate(NightlyCode.Scripting.Parser.IVariableProvider)">
             <summary>
             executes the value operation
             </summary>
             <returns>result of operation</returns>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Values.ValueOperation.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Operations.Values.ValueOperation.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Values.ValueOperation.Operator">
@@ -1606,7 +1617,7 @@
             interface for a provider of type-instances
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Parser.ITypeInstanceProvider.Create(NightlyCode.Scripting.Tokens.IScriptToken[])">
+        <member name="M:NightlyCode.Scripting.Parser.ITypeInstanceProvider.Create(NightlyCode.Scripting.Tokens.IScriptToken[],NightlyCode.Scripting.Parser.IVariableProvider)">
             <summary>
             creates an instance using the specified parameters
             </summary>
@@ -1924,7 +1935,7 @@
             </summary>
             <param name="type">type to create</param>
         </member>
-        <member name="M:NightlyCode.Scripting.Providers.TypeInstanceProvider.Create(NightlyCode.Scripting.Tokens.IScriptToken[])">
+        <member name="M:NightlyCode.Scripting.Providers.TypeInstanceProvider.Create(NightlyCode.Scripting.Tokens.IScriptToken[],NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Providers.TypeInstanceProvider.ToString">
@@ -1935,16 +1946,27 @@
             script parsed by <see cref="T:NightlyCode.Scripting.Parser.ScriptParser"/>
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Script.#ctor(NightlyCode.Scripting.Tokens.IScriptToken)">
+        <member name="M:NightlyCode.Scripting.Script.#ctor(NightlyCode.Scripting.Control.StatementBlock)">
             <summary>
             creates a new <see cref="T:NightlyCode.Scripting.Script"/>
             </summary>
             <param name="script">root token of script to be executed</param>
         </member>
-        <member name="M:NightlyCode.Scripting.Script.Execute">
+        <member name="M:NightlyCode.Scripting.Script.Execute(NightlyCode.Scripting.Data.Variable[])">
             <inheritdoc />
         </member>
-        <member name="M:NightlyCode.Scripting.Script.Execute``1">
+        <member name="M:NightlyCode.Scripting.Script.Execute``1(NightlyCode.Scripting.Data.Variable[])">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Tokens.ArithmeticBlock">
+            <summary>
+            block containing an arithmetic evaluation
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ArithmeticBlock.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ArithmeticBlock.ToString">
             <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.Tokens.IScriptToken">
@@ -1952,7 +1974,13 @@
             token of a script which can get executed
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Tokens.IScriptToken.Execute">
+        <member name="M:NightlyCode.Scripting.Tokens.IScriptToken.Execute(NightlyCode.Scripting.Parser.IVariableProvider)">
+            <summary>
+            executes the token returning a result
+            </summary>
+            <returns>result of token call</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.IScriptToken.Execute``1(NightlyCode.Scripting.Parser.IVariableProvider)">
             <summary>
             executes the token returning a result
             </summary>
@@ -1963,7 +1991,7 @@
             creates a new instance of a type
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Tokens.NewInstance.Execute">
+        <member name="M:NightlyCode.Scripting.Tokens.NewInstance.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Tokens.NewInstance.ToString">
@@ -1980,7 +2008,7 @@
             </summary>
             <param name="values">values in array</param>
         </member>
-        <member name="M:NightlyCode.Scripting.Tokens.ScriptArray.Execute">
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptArray.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Tokens.ScriptArray.ToString">
@@ -1998,7 +2026,7 @@
             <param name="hosttoken">token representing host</param>
             <param name="parameters">parameters for indexer call</param>
         </member>
-        <member name="M:NightlyCode.Scripting.Tokens.ScriptIndexer.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptIndexer.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.Tokens.ScriptMember">
@@ -2013,7 +2041,7 @@
             <param name="host">host of member</param>
             <param name="membername">name of member to read</param>
         </member>
-        <member name="M:NightlyCode.Scripting.Tokens.ScriptMember.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptMember.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Tokens.ScriptMember.ToString">
@@ -2033,7 +2061,7 @@
             <param name="methodname">name of method to call</param>
             <param name="parameters">parameters for method call</param>
         </member>
-        <member name="M:NightlyCode.Scripting.Tokens.ScriptMethod.Execute">
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptMethod.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.Tokens.ScriptToken">
@@ -2041,10 +2069,13 @@
             base implementation of a script token with basic error handling
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Tokens.ScriptToken.Execute">
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptToken.Execute(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
-        <member name="M:NightlyCode.Scripting.Tokens.ScriptToken.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptToken.Execute``1(NightlyCode.Scripting.Parser.IVariableProvider)">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptToken.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <summary>
             evaluates the result of the token
             </summary>
@@ -2066,7 +2097,7 @@
             contained value
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Tokens.ScriptValue.Execute">
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptValue.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Tokens.ScriptValue.ToString">
@@ -2089,10 +2120,10 @@
             name of variable
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Tokens.ScriptVariable.ExecuteToken">
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptVariable.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
-        <member name="M:NightlyCode.Scripting.Tokens.ScriptVariable.AssignToken(NightlyCode.Scripting.Tokens.IScriptToken)">
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptVariable.AssignToken(NightlyCode.Scripting.Tokens.IScriptToken,NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Tokens.ScriptVariable.ToString">

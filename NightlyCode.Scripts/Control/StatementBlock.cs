@@ -25,27 +25,35 @@ namespace NightlyCode.Scripting.Control {
             this.methodblock = methodblock;
         }
 
+        /// <summary>
+        /// variables for block
+        /// </summary>
+        public IVariableContext Variables => variablecontext;
+
         /// <inheritdoc />
-        protected override object ExecuteToken()
+        protected override object ExecuteToken(IVariableProvider arguments)
         {
             object result;
             if (variablecontext != null) {
                 
                 using (variablecontext) {
-                    result=ExecuteBlock();
+                    result=ExecuteBlock(arguments);
                 }
                 variablecontext.Clear();
             }
-            else result=ExecuteBlock();
+            else result=ExecuteBlock(arguments);
             return result;
         }
 
-        object ExecuteBlock() {
+        object ExecuteBlock(IVariableProvider arguments) {
             object result = null;
             foreach (IScriptToken statement in statements)
             {
                 try {
-                    result = statement.Execute();
+                    result = statement.Execute(arguments);
+                }
+                catch (ScriptException) {
+                    throw;
                 }
                 catch (Exception e) {
                     throw new ScriptExecutionException($"Unable to execute '{statement}': {e.Message}", e);
@@ -54,7 +62,7 @@ namespace NightlyCode.Scripting.Control {
                 if (result is Return @return)
                 {
                     if (methodblock)
-                        return @return.Value?.Execute();
+                        return @return.Value?.Execute(arguments);
                     return @return;
                 }
 

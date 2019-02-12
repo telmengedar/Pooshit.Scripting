@@ -1,4 +1,5 @@
-﻿using NightlyCode.Scripting.Tokens;
+﻿using NightlyCode.Scripting.Parser;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
 
@@ -8,7 +9,7 @@ namespace NightlyCode.Scripting.Control {
     class Else : ControlToken {
 
         /// <inheritdoc />
-        protected override object ExecuteToken() {
+        protected override object ExecuteToken(IVariableProvider arguments) {
             throw new System.NotImplementedException();
         }
 

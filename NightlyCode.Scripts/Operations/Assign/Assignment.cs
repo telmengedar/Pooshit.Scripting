@@ -1,5 +1,6 @@
 ﻿using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Operations.Assign {
@@ -14,14 +15,14 @@ namespace NightlyCode.Scripting.Operations.Assign {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken() {
-            return lhs.Assign(Rhs);
+        protected override object ExecuteToken(IVariableProvider arguments) {
+            return lhs.Assign(Rhs, arguments);
         }
 
         /// <inheritdoc />
-        protected override object AssignToken(IScriptToken token) {
+        protected override object AssignToken(IScriptToken token, IVariableProvider arguments) {
             if (Rhs is IAssignableToken assignable)
-                return assignable.Assign(token);
+                return assignable.Assign(token, arguments);
             throw new ScriptRuntimeException("Can't assign value to non assignable token");
         }
 

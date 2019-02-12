@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extern;
+using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Operations {
@@ -198,9 +199,9 @@ namespace NightlyCode.Scripting.Operations {
         /// <param name="constructor">constructor to call</param>
         /// <param name="parameters">parameters for constructor</param>
         /// <returns></returns>
-        public static object CallConstructor(ConstructorInfo constructor, IScriptToken[] parameters) {
+        public static object CallConstructor(ConstructorInfo constructor, IScriptToken[] parameters, IVariableProvider arguments) {
             ParameterInfo[] targetparameters = constructor.GetParameters();
-            object[] callparameters = parameters.Select(p => p.Execute()).ToArray();
+            object[] callparameters = parameters.Select(p => p.Execute(arguments)).ToArray();
 
             try {
                 callparameters = CreateParameters(targetparameters, callparameters).ToArray();

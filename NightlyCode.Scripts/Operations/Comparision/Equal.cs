@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Operations.Comparision {
 
@@ -11,9 +12,9 @@ namespace NightlyCode.Scripting.Operations.Comparision {
         }
 
         /// <inheritdoc />
-        protected override object Compare()
+        protected override object Compare(IVariableProvider arguments)
         {
-            return (dynamic) Lhs.Execute() == (dynamic) Rhs.Execute();
+            return (dynamic) Lhs.Execute(arguments) == (dynamic) Rhs.Execute(arguments);
         }
 
         /// <inheritdoc />

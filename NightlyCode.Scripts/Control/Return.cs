@@ -1,11 +1,12 @@
-﻿using NightlyCode.Scripting.Tokens;
+﻿using NightlyCode.Scripting.Parser;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
 
     /// <summary>
     /// returns a value and end execution of current method
     /// </summary>
-    public class Return : IScriptToken {
+    public class Return : ScriptToken {
         readonly IScriptToken value;
 
         /// <summary>
@@ -22,7 +23,7 @@ namespace NightlyCode.Scripting.Control {
         public IScriptToken Value => value;
 
         /// <inheritdoc />
-        public object Execute() {
+        protected override object ExecuteToken(IVariableProvider arguments) {
             return this;
         }
 

@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
@@ -31,15 +32,16 @@ namespace NightlyCode.Scripting.Control {
         /// determines whether case matches a value
         /// </summary>
         /// <param name="value">value to match</param>
+        /// <param name="arguments">script arguments</param>
         /// <returns>true if case matches value, false otherwise</returns>
-        public bool Matches(object value) {
-            return conditions.Any(c => c.Execute().Equals(value));
+        public bool Matches(object value, IVariableProvider arguments) {
+            return conditions.Any(c => c.Execute(arguments).Equals(value));
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken()
+        protected override object ExecuteToken(IVariableProvider arguments)
         {
-            return Body.Execute();
+            return Body.Execute(arguments);
         }
 
         /// <inheritdoc />

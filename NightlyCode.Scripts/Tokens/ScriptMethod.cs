@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Operations;
 using NightlyCode.Scripting.Parser;
@@ -11,7 +10,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// calls a method in a script
     /// </summary>
-    class ScriptMethod : IScriptToken {
+    class ScriptMethod : ScriptToken {
         readonly IExtensionProvider extensions;
         readonly IScriptToken hosttoken;
         readonly string methodname;
@@ -32,14 +31,14 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        public object Execute() {
-            object host = hosttoken.Execute();
+        protected override object ExecuteToken(IVariableProvider arguments) {
+            object host = hosttoken.Execute(arguments);
             if (host == null)
                 throw new ScriptExecutionException($"'{hosttoken}' results in null");
 
             MethodInfo[] methods = host.GetType().GetMethods().Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters)).ToArray();
 
-            object[] parametervalues = parameters.Select(p => p.Execute()).ToArray();
+            object[] parametervalues = parameters.Select(p => p.Execute(arguments)).ToArray();
             Tuple<MethodInfo, int>[] evaluation = methods.Select(m => MethodOperations.GetMethodMatchValue(m, parametervalues)).Where(e=>e.Item2>=0).OrderBy(m => m.Item2).ToArray();
             if (evaluation.Length > 0) {
                 return MethodOperations.CallMethod(host, evaluation[0].Item1, parametervalues);

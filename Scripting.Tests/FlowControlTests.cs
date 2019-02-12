@@ -174,6 +174,19 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
+        public void ElseIf() {
+            Assert.DoesNotThrow(() => parser.Parse(
+                "$result=0\n" +
+                "if($result>0)\n" +
+                "  $result=1\n" +
+                "else if($result<0)\n" +
+                "  $result=-1\n" +
+                "else $result=0\n" +
+                "$result"
+            ));
+        }
+
+        [Test, Parallelizable]
         public void WhileWithNestedIf() {
             IScript script= parser.Parse(
                 "$result=0;"+
@@ -213,11 +226,24 @@ namespace Scripting.Tests {
             IScript script = parser.Parse(
                 "$result=0;" +
                 "$result=15;" +
-                "return $result;" +
+                "return($result);" +
                 "$result=7;" +
                 "$result"
             );
             Assert.AreEqual(15, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void ReturnVoid()
+        {
+            IScript script = parser.Parse(
+                "$result=0\n" +
+                "$result=15\n" +
+                "return\n" +
+                "$result=7\n" +
+                "$result"
+            );
+            Assert.AreEqual(null, script.Execute());
         }
 
         [Test, Parallelizable]
@@ -227,7 +253,7 @@ namespace Scripting.Tests {
                 "$result=0;" +
                 "foreach($i,[1,2,3,4,5,6,7,8,9]) {" +
                 "  if($result>=10)"+
-                "    return $result;"+
+                "    return($result)\n"+
                 "  $result=$result+$i;" +
                 "}"+
                 "$result"

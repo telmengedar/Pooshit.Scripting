@@ -5,7 +5,7 @@
     <AssemblyName>NightlyCode.Scripting</AssemblyName>
     <RootNamespace>NightlyCode.Scripting</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.9.36-preview</Version>
+    <Version>0.9.40-preview</Version>
     <Description>Provides an environment to parse and execute scripts</Description>
     <Copyright>Toni Gottschall</Copyright>
     <PackageLicenseUrl>http://unlicense.org/</PackageLicenseUrl>
