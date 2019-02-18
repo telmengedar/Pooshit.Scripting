@@ -11,9 +11,9 @@ namespace NightlyCode.Scripting.Operations.Comparision {
         }
 
         /// <inheritdoc />
-        protected override object Compare(IVariableProvider arguments)
+        protected override object Compare(object lhs, object rhs, IVariableProvider arguments)
         {
-            return (dynamic)Lhs.Execute(arguments) > (dynamic)Rhs.Execute(arguments);
+            return (dynamic)lhs > (dynamic)rhs;
         }
 
         /// <inheritdoc />

@@ -28,6 +28,8 @@ namespace NightlyCode.Scripting.Tokens {
 
         /// <inheritdoc />
         public override string ToString() {
+            if (value is string)
+                return $"\"{value}\"";
             return value?.ToString() ?? "null";
         }
     }

@@ -961,7 +961,7 @@
             operator used to compare two values resulting in a boolean
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Comparision.Comparator.Compare(NightlyCode.Scripting.Parser.IVariableProvider)">
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Comparator.Compare(System.Object,System.Object,NightlyCode.Scripting.Parser.IVariableProvider)">
             <summary>
             compares lhs and rhs and returns value of comparision
             </summary>
@@ -984,7 +984,7 @@
             compares two values for equality
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Comparision.Equal.Compare(NightlyCode.Scripting.Parser.IVariableProvider)">
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Equal.Compare(System.Object,System.Object,NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Comparision.Equal.Operator">
@@ -998,7 +998,7 @@
             compares whether lhs is less than rhs
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Comparision.Greater.Compare(NightlyCode.Scripting.Parser.IVariableProvider)">
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Greater.Compare(System.Object,System.Object,NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Comparision.Greater.Operator">
@@ -1012,7 +1012,7 @@
             compares whether lhs is less than rhs
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Comparision.GreaterOrEqual.Compare(NightlyCode.Scripting.Parser.IVariableProvider)">
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.GreaterOrEqual.Compare(System.Object,System.Object,NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Comparision.GreaterOrEqual.Operator">
@@ -1026,7 +1026,7 @@
             compares whether lhs is less than rhs
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Comparision.Less.Compare(NightlyCode.Scripting.Parser.IVariableProvider)">
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Less.Compare(System.Object,System.Object,NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Comparision.Less.Operator">
@@ -1040,7 +1040,7 @@
             compares whether lhs is less than rhs
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Comparision.LessOrEqual.Compare(NightlyCode.Scripting.Parser.IVariableProvider)">
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.LessOrEqual.Compare(System.Object,System.Object,NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Comparision.LessOrEqual.Operator">
@@ -1054,7 +1054,7 @@
             determines whether a string matches a regex
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Comparision.Matches.Compare(NightlyCode.Scripting.Parser.IVariableProvider)">
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.Matches.Compare(System.Object,System.Object,NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Comparision.Matches.Operator">
@@ -1068,7 +1068,7 @@
             determines whether a string matches a regex
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Comparision.MatchesNot.Compare(NightlyCode.Scripting.Parser.IVariableProvider)">
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.MatchesNot.Compare(System.Object,System.Object,NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Comparision.MatchesNot.Operator">
@@ -1082,7 +1082,7 @@
             compares two values whether they are not equal
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.Comparision.NotEqual.Compare(NightlyCode.Scripting.Parser.IVariableProvider)">
+        <member name="M:NightlyCode.Scripting.Operations.Comparision.NotEqual.Compare(System.Object,System.Object,NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Operations.Comparision.NotEqual.Operator">
