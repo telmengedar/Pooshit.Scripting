@@ -24,6 +24,7 @@ namespace NightlyCode.Scripting.Parser {
     public class ScriptParser : IScriptParser {
         readonly OperatorTree operatortree = new OperatorTree();
         readonly IVariableProvider globalvariables;
+        readonly Dictionary<string, Type> supportedcasts=new Dictionary<string, Type>();
 
         /// <summary>
         /// creates a new <see cref="ScriptParser"/>
@@ -33,6 +34,20 @@ namespace NightlyCode.Scripting.Parser {
             InitializeOperators();
             this.globalvariables = globalvariables;
             Types.AddType<List<object>>("list");
+            supportedcasts["bool"] = typeof(bool);
+            supportedcasts["char"] = typeof(char);
+            supportedcasts["byte"] = typeof(byte);
+            supportedcasts["sbyte"] = typeof(sbyte);
+            supportedcasts["ushort"] = typeof(ushort);
+            supportedcasts["short"] = typeof(short);
+            supportedcasts["uint"] = typeof(uint);
+            supportedcasts["int"] = typeof(int);
+            supportedcasts["ulong"] = typeof(ulong);
+            supportedcasts["long"] = typeof(long);
+            supportedcasts["float"] = typeof(float);
+            supportedcasts["double"] = typeof(double);
+            supportedcasts["decimal"] = typeof(decimal);
+            supportedcasts["string"] = typeof(string);
         }
 
         /// <summary>
@@ -182,6 +197,9 @@ namespace NightlyCode.Scripting.Parser {
                     return new Using(ParseControlParameters(data, ref index, variables));
                 }
             }
+
+            if(supportedcasts.ContainsKey(token))
+                return new TypeCast(supportedcasts[token], ParseControlParameters(data, ref index, variables).Single());
 
             switch (token) {
                 case "true":

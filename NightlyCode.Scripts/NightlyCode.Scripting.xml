@@ -2129,5 +2129,20 @@
         <member name="M:NightlyCode.Scripting.Tokens.ScriptVariable.ToString">
             <inheritdoc />
         </member>
+        <member name="T:NightlyCode.Scripting.Tokens.TypeCast">
+            <summary>
+            changes the type of an expression result
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.TypeCast.#ctor(System.Type,NightlyCode.Scripting.Tokens.IScriptToken)">
+            <summary>
+            creates a new <see cref="!:TypeCast&lt;T&gt;"/>
+            </summary>
+            <param name="targettype">target type</param>
+            <param name="token">token resulting in value to cast</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.TypeCast.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
+            <inheritdoc />
+        </member>
     </members>
 </doc>
