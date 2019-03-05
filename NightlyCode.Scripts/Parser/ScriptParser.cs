@@ -14,6 +14,7 @@ using NightlyCode.Scripting.Operations.Logic;
 using NightlyCode.Scripting.Operations.Unary;
 using NightlyCode.Scripting.Operations.Values;
 using NightlyCode.Scripting.Parser.Operators;
+using NightlyCode.Scripting.Providers;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Parser {
@@ -68,6 +69,11 @@ namespace NightlyCode.Scripting.Parser {
         /// </summary>
         public ITypeProvider Types { get; } = new TypeProvider();
 
+        /// <summary>
+        /// resolver which is used by 'import' statement to import methods
+        /// </summary>
+        public IExternalMethodProvider MethodResolver { get; set; }
+
         void InitializeOperators() {
             operatortree.Add("~", Operator.Complement);
             operatortree.Add("!", Operator.Not);
@@ -115,6 +121,10 @@ namespace NightlyCode.Scripting.Parser {
         void SkipWhitespaces(string data, ref int index) {
             while (index < data.Length && char.IsWhiteSpace(data[index]))
                 ++index;
+        }
+
+        IScriptToken ParseSingleControlParameter(string data, ref int index, IVariableProvider variables) {
+            return ParseControlParameters(data, ref index, variables).Single();
         }
 
         IScriptToken TryParseSingleParameter(string data, ref int index, IVariableProvider variables) {
@@ -195,11 +205,25 @@ namespace NightlyCode.Scripting.Parser {
                 case "using":
                     TokenParsed?.Invoke(TokenType.Control, start, index);
                     return new Using(ParseControlParameters(data, ref index, variables));
+                case "try":
+                    TokenParsed?.Invoke(TokenType.Control, start, index);
+                    return new Try();
+                case "catch":
+                    TokenParsed?.Invoke(TokenType.Control, start, index);
+                    return new Catch();
+                case "import":
+                    TokenParsed?.Invoke(TokenType.Control, start, index);
+                    if (MethodResolver == null)
+                        throw new ScriptParserException("Import statement is unavailable since no method resolver is set.");
+                    return new Import(MethodResolver, ParseSingleControlParameter(data, ref index, variables));
                 }
             }
 
-            if(supportedcasts.ContainsKey(token))
+            SkipWhitespaces(data, ref index);
+            if (supportedcasts.ContainsKey(token) && index < data.Length && data[index] == '(') {
+                TokenParsed?.Invoke(TokenType.Control, start, index);
                 return new TypeCast(supportedcasts[token], ParseControlParameters(data, ref index, variables).Single());
+            }
 
             switch (token) {
                 case "true":
@@ -218,6 +242,11 @@ namespace NightlyCode.Scripting.Parser {
                     TokenParsed?.Invoke(TokenType.Type, start, index);
                     ITypeInstanceProvider typeprovider = Types.GetType(type.ToLower());
                     return new NewInstance(typeprovider, ParseControlParameters(data, ref index, variables));
+                case "ref":
+                    IAssignableToken reference = ParseSingleControlParameter(data, ref index, variables) as IAssignableToken;
+                    if(reference==null)
+                        throw new ScriptParserException($"ref can only be used with an {nameof(IAssignableToken)}");
+                    return new Reference(reference);
                 default:
                     IVariableProvider provider = variables.GetProvider(token);
                     if (provider == null) {
@@ -777,7 +806,7 @@ namespace NightlyCode.Scripting.Parser {
                     case '{':
                         ++index;
                         return ParseStatementBlock(data, ref index, variables);
-                    case ')':
+                    //case ')':
                     case ',':
                     case ']':
                         done = true;
@@ -914,6 +943,14 @@ namespace NightlyCode.Scripting.Parser {
                 if (index < tokens.Count && tokens[index] is Else @else) {
                     FetchBlock(@else, tokens, index + 1);
                     @if.Else = @else.Body;
+                    tokens.RemoveAt(index);
+                }
+            }
+
+            if (control is Try @try) {
+                if (index < tokens.Count && tokens[index] is Catch @catch) {
+                    FetchBlock(@catch, tokens, index + 1);
+                    @try.Catch = @catch.Body;
                     tokens.RemoveAt(index);
                 }
             }

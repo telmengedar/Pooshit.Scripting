@@ -41,7 +41,7 @@ namespace NightlyCode.Scripting.Operations {
             int index=0;
             for(int i=0;i<methodparameters.Length;++i) {
                 int multiplicator = 1;
-                Type methodparameter = i == methodparameters.Length - 1 && hasparams ? methodparameters[i].ParameterType.GetElementType() : methodparameters[i].ParameterType;
+                Type methodparameter = i == methodparameters.Length - 1 && (hasparams || methodparameters[i].ParameterType.IsByRef) ? methodparameters[i].ParameterType.GetElementType() : methodparameters[i].ParameterType;
 
                 if (index >= parameters.Length)
                     return new Tuple<T, int>(method, result);
@@ -218,7 +218,7 @@ namespace NightlyCode.Scripting.Operations {
             }
         }
 
-        public static object CallMethod(object host, MethodInfo method, object[] parameters, bool extension=false, ParameterInfo[] targetparameters=null) {
+        public static object CallMethod(object host, MethodInfo method, object[] parameters, IEnumerable<ReferenceParameter> refparameters=null, bool extension=false, ParameterInfo[] targetparameters=null) {
             if(targetparameters==null)
                 targetparameters = method.GetParameters();
 
@@ -236,7 +236,13 @@ namespace NightlyCode.Scripting.Operations {
             }
 
             try {
-                return method.Invoke(extension ? null : host, callparameters);
+                object result= method.Invoke(extension ? null : host, callparameters);
+                if (refparameters != null) {
+                    foreach (ReferenceParameter param in refparameters)
+                        param.Variable.Assign(new ScriptValue(callparameters[param.Index]), null);
+                }
+
+                return result;
             }
             catch (TargetInvocationException e) {
                 throw new ScriptRuntimeException($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)})", e.InnerException?.Message ?? e.Message, e);
@@ -361,7 +367,7 @@ namespace NightlyCode.Scripting.Operations {
                 }
 
                 try {
-                    value = ConvertParameter(value, targetparameter.ParameterType);
+                    value = ConvertParameter(value, targetparameter.ParameterType.IsByRef ? targetparameter.ParameterType.GetElementType() : targetparameter.ParameterType);
                 }
                 catch (Exception e) {
                     throw new ScriptRuntimeException($"Unable to convert parameter {i} ({value}) to {targetparameter.ParameterType}", null, e);

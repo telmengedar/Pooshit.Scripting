@@ -1,6 +1,8 @@
 ﻿
+using Newtonsoft.Json.Serialization;
 using NightlyCode.Scripting;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
 
@@ -354,6 +356,18 @@ namespace Scripting.Tests {
                 "$result"
             );
             Assert.AreEqual(20, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void TryWithoutCatch() {
+            IScript script = parser.Parse("try throw(\"error\") return(0)");
+            Assert.AreEqual(0, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void TryWithCatch() {
+            IScript script = parser.Parse("try throw(\"error\") catch return($exception.message) return(0)");
+            Assert.AreEqual("error", script.Execute());
         }
     }
 }

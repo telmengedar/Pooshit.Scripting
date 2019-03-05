@@ -64,6 +64,17 @@
         <member name="M:NightlyCode.Scripting.Control.Case.ToString">
             <inheritdoc />
         </member>
+        <member name="T:NightlyCode.Scripting.Control.Catch">
+            <summary>
+            token containing body for a <see cref="T:NightlyCode.Scripting.Control.Try"/> statement when an exception is catched
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Catch.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.Catch.Body">
+            <inheritdoc />
+        </member>
         <member name="T:NightlyCode.Scripting.Control.Continue">
             <summary>
             breaks execution of a loop
@@ -185,6 +196,18 @@
         <member name="M:NightlyCode.Scripting.Control.If.ToString">
             <inheritdoc />
         </member>
+        <member name="T:NightlyCode.Scripting.Control.Import">
+            <summary>
+            imports a script method using the <see cref="T:NightlyCode.Scripting.Providers.IExternalMethodProvider"/> of the parser
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Import.#ctor(NightlyCode.Scripting.Providers.IExternalMethodProvider,NightlyCode.Scripting.Tokens.IScriptToken)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Control.Import"/>
+            </summary>
+            <param name="methodprovider"></param>
+            <param name="key"></param>
+        </member>
         <member name="T:NightlyCode.Scripting.Control.ParserToken">
             <summary>
             token containing meta information for parsing process
@@ -292,6 +315,25 @@
         <member name="M:NightlyCode.Scripting.Control.Throw.ToString">
             <inheritdoc />
         </member>
+        <member name="T:NightlyCode.Scripting.Control.Try">
+            <summary>
+            statement wrapping a body for exception handling
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Try.ExecuteToken(NightlyCode.Scripting.Parser.IVariableProvider)">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.Try.Body">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.Try.Catch">
+            <summary>
+            body to execute when condition is not met
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Try.ToString">
+            <inheritdoc />
+        </member>
         <member name="T:NightlyCode.Scripting.Control.Using">
             <summary>
             block which handles a disposable resource
@@ -322,6 +364,36 @@
         </member>
         <member name="P:NightlyCode.Scripting.Control.While.Body">
             <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Data.ExternalScriptMethod">
+            <summary>
+            script method provided by resolver
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Data.ExternalScriptMethod.#ctor(NightlyCode.Scripting.IScript)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Data.ExternalScriptMethod"/>
+            </summary>
+            <param name="script"></param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Data.ExternalScriptMethod.Invoke(System.Object[])">
+            <summary>
+            invokes the method with the specified arguments
+            </summary>
+            <param name="arguments">arguments for script method</param>
+            <returns>result of script execution</returns>
+        </member>
+        <member name="T:NightlyCode.Scripting.Data.IExternalMethod">
+            <summary>
+            interface for an external method which can get called from a script
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Data.IExternalMethod.Invoke(System.Object[])">
+            <summary>
+            invokes the method with the specified arguments
+            </summary>
+            <param name="arguments">arguments for script method</param>
+            <returns>result of script execution</returns>
         </member>
         <member name="T:NightlyCode.Scripting.Data.Operator">
             <summary>
@@ -670,6 +742,18 @@
             </summary>
             <param name="operator">operator to sort</param>
             <returns>number used in sorting algorithm</returns>
+        </member>
+        <member name="T:NightlyCode.Scripting.Extensions.ScriptCode">
+            <summary>
+            helper method for script code
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Extensions.ScriptCode.Create(System.String[])">
+            <summary>
+            creates scriptcode by joining the lines to a single script
+            </summary>
+            <param name="lines">script code lines</param>
+            <returns>script code</returns>
         </member>
         <member name="T:NightlyCode.Scripting.Extensions.ValueExtensions">
             <summary>
@@ -1790,6 +1874,11 @@
             access to types which can be created using 'new' keyword
             </summary>
         </member>
+        <member name="P:NightlyCode.Scripting.Parser.ScriptParser.MethodResolver">
+            <summary>
+            resolver which is used by 'import' statement to import methods
+            </summary>
+        </member>
         <member name="M:NightlyCode.Scripting.Parser.ScriptParser.Parse(System.String,NightlyCode.Scripting.Data.Variable[])">
             <summary>
             parses a script for execution
@@ -1924,6 +2013,55 @@
             <param name="variable">name of variable to check for</param>
             <returns>this if this provider contains this variable, null otherwise</returns>
         </member>
+        <member name="T:NightlyCode.Scripting.Providers.FileMethodProvider">
+            <summary>
+            provides external methods from a file path
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Providers.FileMethodProvider.#ctor(NightlyCode.Scripting.Parser.IScriptParser)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Providers.FileMethodProvider"/>
+            </summary>
+            <param name="scriptparser">parser used to parse and compile script code</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Providers.FileMethodProvider.Import(System.String)">
+            <summary>
+            loads a script from a file to provide an external method
+            </summary>
+            <param name="key">path to scriptfile to load and compile</param>
+            <returns>compiled script as a external method</returns>
+        </member>
+        <member name="T:NightlyCode.Scripting.Providers.IExternalMethodProvider">
+            <summary>
+            interface for an external method provider
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Providers.IExternalMethodProvider.Import(System.String)">
+            <summary>
+            imports a script method using the specified argument
+            </summary>
+            <param name="key">key used to identify the method to import</param>
+            <returns>loaded from key</returns>
+        </member>
+        <member name="T:NightlyCode.Scripting.Providers.ResourceScriptMethodProvider">
+            <summary>
+            provides script methods from assembly resources
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Providers.ResourceScriptMethodProvider.#ctor(System.Reflection.Assembly,NightlyCode.Scripting.Parser.IScriptParser)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Providers.ResourceScriptMethodProvider"/>
+            </summary>
+            <param name="assembly">assembly from which to get script resources</param>
+            <param name="parser">parser used to parse and compile scripts</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Providers.ResourceScriptMethodProvider.Import(System.String)">
+            <summary>
+            imports an external script method assembly resources
+            </summary>
+            <param name="key">resource name</param>
+            <returns>script method stored in resource</returns>
+        </member>
         <member name="T:NightlyCode.Scripting.Providers.TypeInstanceProvider">
             <summary>
             provides instances of arbitrary types
@@ -1996,6 +2134,48 @@
         </member>
         <member name="M:NightlyCode.Scripting.Tokens.NewInstance.ToString">
             <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Tokens.Reference">
+            <summary>
+            a reference to an assignable token
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.Reference.#ctor(NightlyCode.Scripting.Operations.IAssignableToken)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Tokens.Reference"/>
+            </summary>
+            <param name="argument">argument to use as reference parameter</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.Reference.Execute(NightlyCode.Scripting.Parser.IVariableProvider)">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.Reference.Execute``1(NightlyCode.Scripting.Parser.IVariableProvider)">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.Reference.Assign(NightlyCode.Scripting.Tokens.IScriptToken,NightlyCode.Scripting.Parser.IVariableProvider)">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Tokens.ReferenceParameter">
+            <summary>
+            parameter to use in a reference call
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ReferenceParameter.#ctor(System.Int32,NightlyCode.Scripting.Operations.IAssignableToken)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Tokens.ReferenceParameter"/>
+            </summary>
+            <param name="index">index of parameter</param>
+            <param name="variable">variable to write parameter value to after call</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.ReferenceParameter.Index">
+            <summary>
+            index of parameter
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.ReferenceParameter.Variable">
+            <summary>
+            variable to write parameter value to after call
+            </summary>
         </member>
         <member name="T:NightlyCode.Scripting.Tokens.ScriptArray">
             <summary>

@@ -86,7 +86,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void ExtensionMethods() {
             parser.Extensions.AddExtensions<TestExtensions>();
-            Assert.AreEqual("longstring", parser.Parse("\"long\".append(string)").Execute());
+            Assert.AreEqual("longstring", parser.Parse("\"long\".append(\"string\")").Execute());
         }
 
         [Test, Parallelizable]

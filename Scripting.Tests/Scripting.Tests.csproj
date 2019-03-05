@@ -7,10 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Scripts\External\increasedbyone.ns" />
     <None Remove="Scripts\Incomplete\incomplete1.ns" />
     <None Remove="Scripts\Incomplete\incomplete2.ns" />
     <None Remove="Scripts\Incomplete\incomplete3.ns" />
     <None Remove="Scripts\Incomplete\incomplete4.ns" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Scripts\External\increasedbyone.ns">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

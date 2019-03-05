@@ -1,5 +1,6 @@
 ﻿using NightlyCode.Scripting;
 using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
 using Scripting.Tests.Data;
@@ -38,6 +39,14 @@ namespace Scripting.Tests {
 
         public string EnumParameter(TestEnum @enum) {
             return "enum";
+        }
+
+        public void RefParameter(ref int parameter) {
+            parameter = 42;
+        }
+
+        public void OutParameter(out int parameter) {
+            parameter = 42;
         }
 
         public Parameter Parameter(string name, string value) {
@@ -129,6 +138,29 @@ namespace Scripting.Tests {
         public void CallAmbigiousMethodByteArray() {
             IScript script = parser.Parse($"$test.ambigious([1,2,3,4,5])", new Variable("test", this));
             Assert.AreEqual("bytearray", script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void CallMethodWithRefParameter() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$variable=0",
+                "$test.refparameter(ref($variable))",
+                "return($variable)"
+            ), new Variable("test", this));
+
+            Assert.AreEqual(42, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void CallMethodWithOutParameter()
+        {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$variable=0",
+                "$test.outparameter(ref($variable))",
+                "return($variable)"
+            ), new Variable("test", this));
+
+            Assert.AreEqual(42, script.Execute());
         }
     }
 }

@@ -24,7 +24,7 @@ namespace NightlyCode.Scripting.Control {
 
         /// <inheritdoc />
         protected override object ExecuteToken(IVariableProvider arguments) {
-            return this;
+            return new Return(new ScriptValue(Value?.Execute(arguments)));
         }
 
         /// <inheritdoc />
