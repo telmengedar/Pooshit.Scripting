@@ -20,16 +20,16 @@ namespace NightlyCode.Scripting.Operations.Unary {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableProvider arguments)
+        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments)
         {
             if (IsPostToken) {
-                object result = Operand.Execute(arguments);
-                token.Assign(new ScriptValue((dynamic) result - 1), arguments);
+                object result = Operand.Execute(variables, arguments);
+                token.Assign(new ScriptValue((dynamic) result - 1), variables, arguments);
                 return result;
             }
             else {
-                object result = (dynamic) Operand.Execute(arguments) - 1;
-                token.Assign(new ScriptValue(result), arguments);
+                object result = (dynamic) Operand.Execute(variables, arguments) - 1;
+                token.Assign(new ScriptValue(result), variables, arguments);
                 return result;
             }
         }

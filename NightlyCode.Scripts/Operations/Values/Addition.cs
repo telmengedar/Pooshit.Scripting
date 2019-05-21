@@ -11,8 +11,8 @@ namespace NightlyCode.Scripting.Operations.Values {
         }
 
         /// <inheritdoc />
-        protected override object Operate(IVariableProvider arguments) {
-            return (dynamic) Lhs.Execute(arguments) + (dynamic) Rhs.Execute(arguments);
+        protected override object Operate(object lhs, object rhs, IVariableContext variables, IVariableProvider arguments) {
+            return (dynamic) lhs + (dynamic) rhs;
         }
 
         /// <inheritdoc />

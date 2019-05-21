@@ -18,8 +18,8 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableProvider arguments) {
-            return values.Select(v => v.Execute(arguments)).ToArray();
+        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
+            return values.Select(v => v.Execute(variables, arguments)).ToArray();
         }
 
         /// <inheritdoc />

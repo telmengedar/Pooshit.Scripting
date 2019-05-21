@@ -15,14 +15,14 @@ namespace NightlyCode.Scripting.Operations.Assign {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableProvider arguments) {
-            return lhs.Assign(Rhs, arguments);
+        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
+            return lhs.Assign(Rhs, variables, arguments);
         }
 
         /// <inheritdoc />
-        protected override object AssignToken(IScriptToken token, IVariableProvider arguments) {
+        protected override object AssignToken(IScriptToken token, IVariableContext variables, IVariableProvider arguments) {
             if (Rhs is IAssignableToken assignable)
-                return assignable.Assign(token, arguments);
+                return assignable.Assign(token, variables, arguments);
             throw new ScriptRuntimeException("Can't assign value to non assignable token");
         }
 

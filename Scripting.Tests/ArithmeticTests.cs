@@ -1,4 +1,6 @@
-﻿using NightlyCode.Scripting;
+﻿using System;
+using NightlyCode.Scripting;
+using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
 
@@ -6,7 +8,7 @@ namespace Scripting.Tests {
 
     [TestFixture, Parallelizable]
     public class ArithmeticTests {
-        ScriptParser parser = new ScriptParser();
+        readonly ScriptParser parser = new ScriptParser();
 
         [Test, Parallelizable]
         public void Addition() {
@@ -165,6 +167,22 @@ namespace Scripting.Tests {
                 "$value"
             );
             Assert.AreEqual(10^80, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void AddDoubleToDecimal() {
+            IScript script = parser.Parse(
+                "10.0d+10.0"
+            );
+            Assert.AreEqual(20.0m, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void AddTimespanToDatetime() {
+            IScript script = parser.Parse(
+                "$date+$time", new Variable("date", DateTime.Now), new Variable("time", TimeSpan.FromHours(1.0))
+            );
+            Assert.DoesNotThrow(()=>script.Execute());
         }
     }
 }

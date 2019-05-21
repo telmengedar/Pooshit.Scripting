@@ -27,8 +27,8 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableProvider arguments) {
-            throw new ScriptExecutionException(message.Execute(arguments)?.ToString(), context?.Execute(arguments));
+        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
+            throw new ScriptExecutionException(message.Execute(variables, arguments)?.ToString(), context?.Execute(variables, arguments));
         }
 
         /// <inheritdoc />

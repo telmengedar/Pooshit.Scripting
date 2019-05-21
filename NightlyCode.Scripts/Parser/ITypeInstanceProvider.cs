@@ -12,6 +12,6 @@ namespace NightlyCode.Scripting.Parser {
         /// </summary>
         /// <param name="parameters">parameters to use to create the instance</param>
         /// <returns>created instance</returns>
-        object Create(IScriptToken[] parameters, IVariableProvider arguments);
+        object Create(IScriptToken[] parameters, IVariableContext variables, IVariableProvider arguments);
     }
 }

@@ -13,6 +13,6 @@ namespace NightlyCode.Scripting.Operations {
         /// </summary>
         /// <param name="token">token resulting in value to assign to this token</param>
         /// <returns>resulting value after assignment</returns>
-        object Assign(IScriptToken token, IVariableProvider arguments);
+        object Assign(IScriptToken token, IVariableContext variables, IVariableProvider arguments);
     }
 }

@@ -30,24 +30,25 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableProvider arguments) {
-            object collectionvalue = collection.Execute(arguments);
+        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
+            VariableContext loopvariables = new VariableContext(variables);
+            object collectionvalue = collection.Execute(loopvariables, arguments);
             if (collectionvalue is IEnumerable enumeration) {
                 foreach (object value in enumeration.Cast<object>()) {
-                    variable.Assign(new ScriptValue(value), arguments);
-                    object bodyvalue=Body?.Execute(arguments);
+                    variable.Assign(new ScriptValue(value), loopvariables, arguments);
+                    object bodyvalue=Body?.Execute(loopvariables, arguments);
                     if (bodyvalue is Return)
                         return bodyvalue;
                     if (bodyvalue is Break breaktoken)
                     {
-                        int depth = breaktoken.Depth.Execute<int>(arguments);
+                        int depth = breaktoken.Depth.Execute<int>(loopvariables, arguments);
                         if (depth <= 1)
                             return null;
                         return new Break(new ScriptValue(depth - 1));
                     }
                     if (value is Continue continuetoken)
                     {
-                        int depth = continuetoken.Depth.Execute<int>(arguments);
+                        int depth = continuetoken.Depth.Execute<int>(loopvariables, arguments);
                         if (depth <= 1)
                             continue;
 

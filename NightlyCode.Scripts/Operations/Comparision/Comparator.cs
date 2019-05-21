@@ -16,17 +16,17 @@ namespace NightlyCode.Scripting.Operations.Comparision {
         /// compares lhs and rhs and returns value of comparision
         /// </summary>
         /// <returns>comparision value</returns>
-        protected abstract object Compare(object lhs, object rhs, IVariableProvider arguments);
+        protected abstract object Compare(object lhs, object rhs, IVariableContext variables, IVariableProvider arguments);
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableProvider arguments)
+        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments)
         {
             try {
-                object lhs = Lhs.Execute(arguments);
-                object rhs = Rhs.Execute(arguments);
+                object lhs = Lhs.Execute(variables, arguments);
+                object rhs = Rhs.Execute(variables, arguments);
                 if (lhs != null && rhs != null)
                     rhs = Converter.Convert(rhs, lhs.GetType());
-                return Compare(lhs, rhs, arguments);
+                return Compare(lhs, rhs, variables, arguments);
             }
             catch (RuntimeBinderException e)
             {

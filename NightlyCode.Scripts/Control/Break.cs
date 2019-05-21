@@ -24,7 +24,7 @@ namespace NightlyCode.Scripting.Control {
         public IScriptToken Depth { get; }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableProvider arguments) {
+        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
             return this;
         }
 

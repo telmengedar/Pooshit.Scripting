@@ -21,8 +21,8 @@ namespace NightlyCode.Scripting.Control {
             this.key = key;
         }
 
-        protected override object ExecuteToken(IVariableProvider arguments) {
-            return methodprovider.Import(key.Execute<string>(arguments));
+        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
+            return methodprovider.Import(key.Execute<string>(variables, arguments));
         }
     }
 }

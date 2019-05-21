@@ -22,22 +22,22 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableProvider arguments)
-        {
-            while (condition.Execute(arguments).ToBoolean()) {
-                object value=Body.Execute(arguments);
+        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
+            VariableContext loopvariables = new VariableContext(variables);
+            while (condition.Execute(loopvariables, arguments).ToBoolean()) {
+                object value=Body.Execute(loopvariables, arguments);
                 if (value is Return)
                     return value;
                 if (value is Break breaktoken)
                 {
-                    int depth = breaktoken.Depth.Execute<int>(arguments);
+                    int depth = breaktoken.Depth.Execute<int>(loopvariables, arguments);
                     if (depth <= 1)
                         return null;
                     return new Break(new ScriptValue(depth - 1));
                 }
                 if (value is Continue continuetoken)
                 {
-                    int depth = continuetoken.Depth.Execute<int>(arguments);
+                    int depth = continuetoken.Depth.Execute<int>(loopvariables, arguments);
                     if (depth <= 1)
                         continue;
 

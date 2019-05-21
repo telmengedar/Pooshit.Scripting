@@ -34,14 +34,14 @@ namespace NightlyCode.Scripting.Control {
         /// <param name="value">value to match</param>
         /// <param name="arguments">script arguments</param>
         /// <returns>true if case matches value, false otherwise</returns>
-        public bool Matches(object value, IVariableProvider arguments) {
-            return conditions.Any(c => c.Execute(arguments).Equals(value));
+        public bool Matches(object value, IVariableContext variables, IVariableProvider arguments) {
+            return conditions.Any(c => c.Execute(variables, arguments).Equals(value));
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableProvider arguments)
+        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments)
         {
-            return Body.Execute(arguments);
+            return Body.Execute(variables, arguments);
         }
 
         /// <inheritdoc />

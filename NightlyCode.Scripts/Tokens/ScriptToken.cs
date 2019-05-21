@@ -10,9 +10,9 @@ namespace NightlyCode.Scripting.Tokens {
     public abstract class ScriptToken : IScriptToken {
 
         /// <inheritdoc />
-        public object Execute(IVariableProvider arguments = null) {
+        public object Execute(IVariableContext variables, IVariableProvider arguments = null) {
             try {
-                return ExecuteToken(arguments);
+                return ExecuteToken(variables, arguments);
             }
             catch (ScriptException) {
                 throw;
@@ -23,14 +23,14 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        public T Execute<T>(IVariableProvider arguments) {
-            return Converter.Convert<T>(Execute(arguments));
+        public T Execute<T>(IVariableContext variables, IVariableProvider arguments) {
+            return Converter.Convert<T>(Execute(variables, arguments));
         }
 
         /// <summary>
         /// evaluates the result of the token
         /// </summary>
         /// <returns>result of statement</returns>
-        protected abstract object ExecuteToken(IVariableProvider arguments);
+        protected abstract object ExecuteToken(IVariableContext variables, IVariableProvider arguments);
     }
 }

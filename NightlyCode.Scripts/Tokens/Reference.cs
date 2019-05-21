@@ -18,18 +18,18 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        public object Execute(IVariableProvider arguments) {
-            return argument.Execute(arguments);
+        public object Execute(IVariableContext variables, IVariableProvider arguments) {
+            return argument.Execute(variables, arguments);
         }
 
         /// <inheritdoc />
-        public T Execute<T>(IVariableProvider arguments) {
-            return argument.Execute<T>(arguments);
+        public T Execute<T>(IVariableContext variables, IVariableProvider arguments) {
+            return argument.Execute<T>(variables, arguments);
         }
 
         /// <inheritdoc />
-        public object Assign(IScriptToken token, IVariableProvider arguments) {
-            return argument.Assign(token, arguments);
+        public object Assign(IScriptToken token, IVariableContext variables, IVariableProvider arguments) {
+            return argument.Assign(token, variables, arguments);
         }
     }
 }

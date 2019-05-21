@@ -11,7 +11,7 @@ namespace NightlyCode.Scripting.Operations.Comparision {
         }
 
         /// <inheritdoc />
-        protected override object Compare(object lhs, object rhs, IVariableProvider arguments)
+        protected override object Compare(object lhs, object rhs, IVariableContext variables, IVariableProvider arguments)
         {
             return (dynamic) lhs != (dynamic) rhs;
         }

@@ -11,22 +11,24 @@ namespace NightlyCode.Scripting {
     /// script parsed by <see cref="ScriptParser"/>
     /// </summary>
     class Script : IScript {
+        readonly IVariableProvider scriptvariables;
         readonly StatementBlock script;
 
         /// <summary>
         /// creates a new <see cref="Script"/>
         /// </summary>
         /// <param name="script">root token of script to be executed</param>
-        internal Script(StatementBlock script) {
+        internal Script(StatementBlock script, IVariableProvider scriptvariables) {
             this.script = script;
+            this.scriptvariables = scriptvariables;
         }
 
         /// <inheritdoc />
         public object Execute(params Variable[] variables) {
             if (variables?.Length > 0)
-                return script.Execute(new VariableProvider(null, variables));
+                return script.Execute(new VariableContext(scriptvariables), new VariableProvider(null, variables));
 
-            return script.Execute();
+            return script.Execute(new VariableContext(scriptvariables));
         }
 
         /// <inheritdoc />

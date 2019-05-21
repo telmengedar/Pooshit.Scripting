@@ -1,5 +1,6 @@
 ﻿using NightlyCode.Scripting;
 using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
 using Scripting.Tests.Data;
@@ -9,6 +10,8 @@ namespace Scripting.Tests {
     [TestFixture, Parallelizable]
     public class ComparatorTests {
         readonly IScriptParser parser = new ScriptParser();
+
+        public string[] Property { get; } = new string[0];
 
         [TestCase("3==3")]
         [TestCase("8.2==8.2")]
@@ -82,6 +85,16 @@ namespace Scripting.Tests {
         public void MatchesNot(string data)
         {
             Assert.AreEqual(true, parser.Parse(data).Execute());
+        }
+
+        [Test, Parallelizable]
+        public void CompareIntWithSubProperty() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$test=0",
+                "$test>this.property.length"
+            ), new Variable("this", this));
+
+            Assert.DoesNotThrow(() => script.Execute());
         }
     }
 }

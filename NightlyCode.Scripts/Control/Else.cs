@@ -9,7 +9,7 @@ namespace NightlyCode.Scripting.Control {
     class Else : ControlToken {
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableProvider arguments) {
+        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
             throw new System.NotImplementedException();
         }
 

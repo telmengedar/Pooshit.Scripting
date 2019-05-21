@@ -15,14 +15,14 @@ namespace NightlyCode.Scripting.Operations.Logic {
         /// executes the logic operation
         /// </summary>
         /// <returns>result of logic operation</returns>
-        protected abstract object Operate(IVariableProvider arguments);
+        protected abstract object Operate(IVariableContext variables, IVariableProvider arguments);
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableProvider arguments)
+        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments)
         {
             try
             {
-                return Operate(arguments);
+                return Operate(variables, arguments);
             }
             catch (RuntimeBinderException e)
             {

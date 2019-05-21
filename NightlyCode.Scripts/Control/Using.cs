@@ -18,17 +18,17 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableProvider arguments) {
+        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
             List<IDisposable> values=new List<IDisposable>();
             try {
                 foreach (IScriptToken token in disposables) {
-                    object value = token.Execute(arguments);
+                    object value = token.Execute(variables, arguments);
                     if (!(value is IDisposable disposablevalue))
                         throw new ScriptRuntimeException($"'{token}' does not evaluate to an idisposable");
                     values.Add(disposablevalue);
                 }
 
-                return Body.Execute(arguments);
+                return Body.Execute(variables, arguments);
             }
             finally {
                 StringBuilder log=new StringBuilder();

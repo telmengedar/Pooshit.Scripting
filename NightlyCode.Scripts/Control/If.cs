@@ -22,11 +22,11 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableProvider arguments)
+        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments)
         {
-            if (condition.Execute(arguments).ToBoolean())
-                return Body.Execute(arguments);
-            return Else?.Execute(arguments);
+            if (condition.Execute(variables, arguments).ToBoolean())
+                return Body.Execute(variables, arguments);
+            return Else?.Execute(variables, arguments);
         }
 
         /// <summary>

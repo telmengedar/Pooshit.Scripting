@@ -199,9 +199,9 @@ namespace NightlyCode.Scripting.Operations {
         /// <param name="constructor">constructor to call</param>
         /// <param name="parameters">parameters for constructor</param>
         /// <returns></returns>
-        public static object CallConstructor(ConstructorInfo constructor, IScriptToken[] parameters, IVariableProvider arguments) {
+        public static object CallConstructor(ConstructorInfo constructor, IScriptToken[] parameters, IVariableContext variables, IVariableProvider arguments) {
             ParameterInfo[] targetparameters = constructor.GetParameters();
-            object[] callparameters = parameters.Select(p => p.Execute(arguments)).ToArray();
+            object[] callparameters = parameters.Select(p => p.Execute(variables, arguments)).ToArray();
 
             try {
                 callparameters = CreateParameters(targetparameters, callparameters).ToArray();
@@ -218,7 +218,7 @@ namespace NightlyCode.Scripting.Operations {
             }
         }
 
-        public static object CallMethod(object host, MethodInfo method, object[] parameters, IEnumerable<ReferenceParameter> refparameters=null, bool extension=false, ParameterInfo[] targetparameters=null) {
+        public static object CallMethod(object host, MethodInfo method, object[] parameters, IVariableContext variables, IVariableProvider arguments, IEnumerable<ReferenceParameter> refparameters=null, bool extension=false, ParameterInfo[] targetparameters=null) {
             if(targetparameters==null)
                 targetparameters = method.GetParameters();
 
@@ -239,13 +239,13 @@ namespace NightlyCode.Scripting.Operations {
                 object result= method.Invoke(extension ? null : host, callparameters);
                 if (refparameters != null) {
                     foreach (ReferenceParameter param in refparameters)
-                        param.Variable.Assign(new ScriptValue(callparameters[param.Index]), null);
+                        param.Variable.Assign(new ScriptValue(callparameters[param.Index+(extension?1:0)]), variables, arguments);
                 }
 
                 return result;
             }
             catch (TargetInvocationException e) {
-                throw new ScriptRuntimeException($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)})", e.InnerException?.Message ?? e.Message, e);
+                throw new ScriptRuntimeException($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)})", e.InnerException?.Message ?? e.Message, e.InnerException ?? e);
             }
             catch (Exception e) {
                 throw new ScriptRuntimeException($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)})", e.Message, e);

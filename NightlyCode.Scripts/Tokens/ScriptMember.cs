@@ -26,8 +26,8 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableProvider arguments) {
-            object host = hosttoken.Execute(arguments);
+        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
+            object host = hosttoken.Execute(variables, arguments);
             PropertyInfo property = host.GetType().GetProperties().FirstOrDefault(p => p.Name.ToLower() == membername);
             if(property != null) {
                 try {
@@ -51,9 +51,9 @@ namespace NightlyCode.Scripting.Tokens {
             }
         }
 
-        object SetProperty(object host, PropertyInfo property, IScriptToken valuetoken, IVariableProvider arguments)
+        object SetProperty(object host, PropertyInfo property, IScriptToken valuetoken, IVariableContext variables, IVariableProvider arguments)
         {
-            object targetvalue = Converter.Convert(valuetoken.Execute(arguments), property.PropertyType);
+            object targetvalue = Converter.Convert(valuetoken.Execute(variables, arguments), property.PropertyType);
             try
             {
                 property.SetValue(host, targetvalue, null);
@@ -66,9 +66,9 @@ namespace NightlyCode.Scripting.Tokens {
             return targetvalue;
         }
 
-        object SetField(object host, FieldInfo fieldinfo, IScriptToken valuetoken, IVariableProvider arguments)
+        object SetField(object host, FieldInfo fieldinfo, IScriptToken valuetoken, IVariableContext variables, IVariableProvider arguments)
         {
-            object targetvalue = Converter.Convert(valuetoken.Execute(arguments), fieldinfo.FieldType);
+            object targetvalue = Converter.Convert(valuetoken.Execute(variables, arguments), fieldinfo.FieldType);
             try
             {
                 fieldinfo.SetValue(host, targetvalue);
@@ -81,17 +81,17 @@ namespace NightlyCode.Scripting.Tokens {
             return targetvalue;
         }
 
-        protected override object AssignToken(IScriptToken token, IVariableProvider arguments) {
-            object host = hosttoken.Execute(arguments);
+        protected override object AssignToken(IScriptToken token, IVariableContext variables, IVariableProvider arguments) {
+            object host = hosttoken.Execute(variables, arguments);
             PropertyInfo property = host.GetType().GetProperties().FirstOrDefault(p => p.Name.ToLower() == membername);
             if (property != null)
-                return SetProperty(host, property, token, arguments);
+                return SetProperty(host, property, token, variables, arguments);
 
             FieldInfo fieldinfo = host.GetType().GetFields().FirstOrDefault(f => f.Name.ToLower() == membername);
             if (fieldinfo == null)
                 throw new ScriptRuntimeException($"A member with the name of {membername} was not found in type {host.GetType().Name}");
 
-            return SetField(host, fieldinfo, token, arguments);
+            return SetField(host, fieldinfo, token, variables, arguments);
         }
 
         /// <inheritdoc />

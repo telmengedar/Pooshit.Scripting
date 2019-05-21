@@ -11,9 +11,9 @@ namespace NightlyCode.Scripting.Operations {
     public abstract class AssignableToken : ScriptToken, IAssignableToken {
 
         /// <inheritdoc />
-        public object Assign(IScriptToken token, IVariableProvider arguments) {
+        public object Assign(IScriptToken token, IVariableContext variables, IVariableProvider arguments) {
             try {
-                return AssignToken(token, arguments);
+                return AssignToken(token, variables, arguments);
             }
             catch (ScriptException) {
                 throw;
@@ -28,6 +28,6 @@ namespace NightlyCode.Scripting.Operations {
         /// </summary>
         /// <param name="token">token with value to assign</param>
         /// <returns>result of assignment</returns>
-        protected abstract object AssignToken(IScriptToken token, IVariableProvider arguments);
+        protected abstract object AssignToken(IScriptToken token, IVariableContext variables, IVariableProvider arguments);
     }
 }

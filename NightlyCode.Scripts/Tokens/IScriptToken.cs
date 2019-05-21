@@ -11,12 +11,12 @@ namespace NightlyCode.Scripting.Tokens {
         /// executes the token returning a result
         /// </summary>
         /// <returns>result of token call</returns>
-        object Execute(IVariableProvider arguments);
+        object Execute(IVariableContext variables, IVariableProvider arguments);
 
         /// <summary>
         /// executes the token returning a result
         /// </summary>
         /// <returns>result of token call</returns>
-        T Execute<T>(IVariableProvider arguments);
+        T Execute<T>(IVariableContext variables, IVariableProvider arguments);
     }
 }

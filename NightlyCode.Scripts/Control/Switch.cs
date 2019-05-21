@@ -40,13 +40,13 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableProvider arguments)
+        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments)
         {
-            object value = condition.Execute(arguments);
-            Case @case = cases.FirstOrDefault(c => c.Matches(value, arguments));
+            object value = condition.Execute(variables, arguments);
+            Case @case = cases.FirstOrDefault(c => c.Matches(value, variables, arguments));
             if (@case == null)
-                return Default?.Execute();
-            return @case.Execute();
+                return Default?.Execute(variables, arguments);
+            return @case.Execute(variables, arguments);
         }
 
         /// <inheritdoc />

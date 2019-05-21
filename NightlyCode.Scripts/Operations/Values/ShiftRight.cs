@@ -13,9 +13,9 @@ namespace NightlyCode.Scripting.Operations.Values {
         }
 
         /// <inheritdoc />
-        protected override object Operate(IVariableProvider arguments) {
-            object value = Lhs.Execute(arguments);
-            int steps = Rhs.Execute(arguments).Convert<int>();
+        protected override object Operate(object lhs, object rhs, IVariableContext variables, IVariableProvider arguments) {
+            object value = lhs;
+            int steps = rhs.Convert<int>();
 
             int numberofbits = value.GetNumberOfBits();
             if (steps >= numberofbits)

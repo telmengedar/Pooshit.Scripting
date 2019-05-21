@@ -35,6 +35,7 @@ namespace NightlyCode.Scripting.Parser {
             InitializeOperators();
             this.globalvariables = globalvariables;
             Types.AddType<List<object>>("list");
+            Types.AddType("task", new TaskProvider());
             supportedcasts["bool"] = typeof(bool);
             supportedcasts["char"] = typeof(char);
             supportedcasts["byte"] = typeof(byte);
@@ -56,7 +57,7 @@ namespace NightlyCode.Scripting.Parser {
         /// </summary>
         /// <param name="variables">global variables of script parser</param>
         public ScriptParser(params Variable[] variables)
-            : this(new VariableProvider(null, variables)) {
+            : this(new VariableProvider(null, variables.Concat(new[] {new Variable("task", new TaskMethodProvider())}).ToArray())) {
         }
 
         /// <summary>
@@ -255,7 +256,7 @@ namespace NightlyCode.Scripting.Parser {
                     }
 
                     TokenParsed?.Invoke(TokenType.Variable, start, index);
-                    return new ScriptVariable(provider, token);
+                    return new ScriptVariable(token);
             }
         }
 
@@ -787,7 +788,7 @@ namespace NightlyCode.Scripting.Parser {
                         }
                         
                         ++index;
-                        tokenlist.Add(new ScriptVariable(variables, ParseName(data, ref index)));
+                        tokenlist.Add(new ScriptVariable(ParseName(data, ref index)));
                         TokenParsed?.Invoke(TokenType.Variable, starttoken, index);
                         concat = false;
                         break;
@@ -905,7 +906,7 @@ namespace NightlyCode.Scripting.Parser {
                 return null;
 
             if (statements.Count == 1)
-                return new StatementBlock(statements.ToArray(), (IVariableContext)variables, methodblock);
+                return new StatementBlock(statements.ToArray(), methodblock);
 
 
             for (int i = 0; i < statements.Count; ++i) {
@@ -917,7 +918,7 @@ namespace NightlyCode.Scripting.Parser {
                     FetchBlock(control, statements, i + 1);
             }
 
-            return new StatementBlock(statements.ToArray(), (IVariableContext) variables, methodblock);
+            return new StatementBlock(statements.ToArray(), methodblock);
         }
 
         void FetchBlock(ControlToken control, List<IScriptToken> tokens, int index) {
@@ -966,7 +967,7 @@ namespace NightlyCode.Scripting.Parser {
             VariableProvider variablecontext = new VariableProvider(globalvariables, variables);
 
             int index = 0;
-            return new Script(ParseStatementBlock(data, ref index, variablecontext, true));
+            return new Script(ParseStatementBlock(data, ref index, variablecontext, true), variablecontext);
         }
 
         /// <inheritdoc />

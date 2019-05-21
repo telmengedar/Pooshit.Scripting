@@ -13,7 +13,7 @@ namespace NightlyCode.Scripting.Operations.Comparision {
         }
 
         /// <inheritdoc />
-        protected override object Compare(object lhs, object rhs, IVariableProvider arguments) {
+        protected override object Compare(object lhs, object rhs, IVariableContext variables, IVariableProvider arguments) {
             string pattern = rhs as string;
             if (pattern == null)
                 throw new ScriptRuntimeException("Matching pattern must be a regex string");

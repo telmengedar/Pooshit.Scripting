@@ -16,12 +16,12 @@ namespace NightlyCode.Scripting.Operations.Assign {
         /// computes the result of the operation
         /// </summary>
         /// <returns></returns>
-        protected abstract object Compute(IVariableProvider arguments);
+        protected abstract object Compute(IVariableContext variables, IVariableProvider arguments);
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableProvider arguments)
+        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments)
         {
-            return lhs.Assign(new ScriptValue(Compute(arguments)), arguments);
+            return lhs.Assign(new ScriptValue(Compute(variables, arguments)), variables, arguments);
         }
 
         /// <inheritdoc />
