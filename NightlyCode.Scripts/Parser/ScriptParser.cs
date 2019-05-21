@@ -248,6 +248,8 @@ namespace NightlyCode.Scripting.Parser {
                     if(reference==null)
                         throw new ScriptParserException($"ref can only be used with an {nameof(IAssignableToken)}");
                     return new Reference(reference);
+                case "await":
+                    return new Await(ParseSingleControlParameter(data, ref index, variables));
                 default:
                     IVariableProvider provider = variables.GetProvider(token);
                     if (provider == null) {

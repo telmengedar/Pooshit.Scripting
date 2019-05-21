@@ -42,5 +42,17 @@ namespace Scripting.Tests {
             int result = script.Execute<int>();
             Assert.Less(100, result);
         }
+
+        [Test, Parallelizable]
+        public void AwaitTask() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$t=new task({",
+                "  3+8",
+                "})",
+                "await($t)"
+            ));
+            int result = script.Execute<int>();
+            Assert.AreEqual(11, result);
+        }
     }
 }

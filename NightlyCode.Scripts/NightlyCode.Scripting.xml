@@ -2120,6 +2120,23 @@
         <member name="M:NightlyCode.Scripting.Tokens.ArithmeticBlock.ToString">
             <inheritdoc />
         </member>
+        <member name="T:NightlyCode.Scripting.Tokens.Await">
+            <summary>
+            await token used to await async tasks
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.Await.#ctor(NightlyCode.Scripting.Tokens.IScriptToken)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Tokens.Await"/> token
+            </summary>
+            <param name="token">token resulting in task to be awaited</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.Await.Execute(NightlyCode.Scripting.Parser.IVariableContext,NightlyCode.Scripting.Parser.IVariableProvider)">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.Await.Execute``1(NightlyCode.Scripting.Parser.IVariableContext,NightlyCode.Scripting.Parser.IVariableProvider)">
+            <inheritdoc />
+        </member>
         <member name="T:NightlyCode.Scripting.Tokens.IScriptToken">
             <summary>
             token of a script which can get executed
