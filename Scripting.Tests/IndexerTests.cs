@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
 using NightlyCode.Scripting;
 using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
+using Scripting.Tests.Extensions;
 
 namespace Scripting.Tests {
 
@@ -22,6 +24,24 @@ namespace Scripting.Tests {
             );
 
             Assert.AreEqual("value1,value2,value3,", script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void IndexerToOrderedArray() {
+            IScriptParser parser = new ScriptParser();
+            parser.Extensions.AddExtensions<EnumerableExtensions>();
+
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$var1=6",
+                "$var2=8",
+                "$var3=1",
+                "$orderedarray=[$var1,$var2,$var3].order()",
+                "$o1=$orderedarray[0]",
+                "$o2=$orderedarray[1]",
+                "$o3=$orderedarray[2]"
+            ));
+
+            Assert.DoesNotThrow(() => script.Execute());
         }
     }
 }

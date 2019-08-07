@@ -342,6 +342,17 @@
         <member name="M:NightlyCode.Scripting.Control.Using.ToString">
             <inheritdoc />
         </member>
+        <member name="T:NightlyCode.Scripting.Control.Wait">
+            <summary>
+            token which waits a specified timespan
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Wait.#ctor(NightlyCode.Scripting.Tokens.IScriptToken[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Control.Wait"/>
+            </summary>
+            <param name="parameters">parameters for wait call (should be one parameter indicating the time to wait)</param>
+        </member>
         <member name="T:NightlyCode.Scripting.Control.While">
             <summary>
             executes a statement block while a condition is met

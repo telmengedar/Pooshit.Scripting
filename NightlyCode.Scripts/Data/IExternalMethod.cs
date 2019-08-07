@@ -1,4 +1,5 @@
 ﻿namespace NightlyCode.Scripting.Data {
+
     /// <summary>
     /// interface for an external method which can get called from a script
     /// </summary>

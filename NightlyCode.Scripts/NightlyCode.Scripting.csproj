@@ -5,7 +5,7 @@
     <AssemblyName>NightlyCode.Scripting</AssemblyName>
     <RootNamespace>NightlyCode.Scripting</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.9.58-preview</Version>
+    <Version>0.10.0-preview</Version>
     <Description>Provides an environment to parse and execute scripts</Description>
     <Copyright>Toni Gottschall</Copyright>
     <PackageLicenseUrl></PackageLicenseUrl>
@@ -15,6 +15,7 @@
     <Company>NightlyCode</Company>
     <Authors>Toni Gottschall</Authors>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <AssemblyVersion>0.10.0.0</AssemblyVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
@@ -37,10 +38,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\Vertical\cloudflow-api\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
     <None Include="LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>

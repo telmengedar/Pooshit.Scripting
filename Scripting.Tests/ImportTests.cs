@@ -21,5 +21,19 @@ namespace Scripting.Tests {
 
             Assert.AreEqual(11, script.Execute());
         }
+
+        [Test, Parallelizable]
+        public void ImplicitExecute() {
+            ScriptParser parser=new ScriptParser();
+            parser.MethodResolver = new ResourceScriptMethodProvider(typeof(ImportTests).Assembly, parser);
+            IScript script = parser.Parse(
+                ScriptCode.Create(
+                    "$method=import(\"Scripting.Tests.Scripts.External.increasedbyone.ns\")",
+                    "return($method(10))"
+                ));
+
+            Assert.AreEqual(11, script.Execute());
+        }
+
     }
 }

@@ -217,6 +217,9 @@ namespace NightlyCode.Scripting.Parser {
                     if (MethodResolver == null)
                         throw new ScriptParserException("Import statement is unavailable since no method resolver is set.");
                     return new Import(MethodResolver, ParseSingleControlParameter(data, ref index, variables));
+                case "wait":
+                    TokenParsed?.Invoke(TokenType.Control, start, index);
+                    return new Wait(ParseControlParameters(data, ref index, variables));
                 }
             }
 
@@ -466,6 +469,11 @@ namespace NightlyCode.Scripting.Parser {
             throw new ScriptParserException("Literal not terminated");
         }
 
+        IScriptToken ParseMethodCall(IScriptToken host, string methodname, string data, int start, ref int index, IVariableProvider variables) {
+            TokenParsed?.Invoke(TokenType.Method, start, index);
+            return new ScriptMethod(Extensions, host, methodname, ParseParameters(data, ref index, variables));
+        }
+
         IScriptToken ParseMember(IScriptToken host, string data, ref int index, IVariableProvider variables) {
             int start = index;
             StringBuilder membername = new StringBuilder();
@@ -484,8 +492,7 @@ namespace NightlyCode.Scripting.Parser {
                 switch (data[index]) {
                 case '(':
                     ++index;
-                    TokenParsed?.Invoke(TokenType.Method, start, index);
-                    return new ScriptMethod(Extensions, host, membername.ToString(), ParseParameters(data, ref index, variables));
+                    return ParseMethodCall(host, membername.ToString(), data, start, ref index, variables);
                 }
             }
 
@@ -796,8 +803,15 @@ namespace NightlyCode.Scripting.Parser {
                         break;
                     case '(':
                         ++index;
-                        tokenlist.Add(ParseBlock(data, ref index, variables));
-                        concat = false;
+                        if (tokenlist.Count > 0 && tokenlist.Last() is ScriptVariable variable) {
+                            tokenlist[tokenlist.Count - 1] = ParseMethodCall(variable, "invoke", data, starttoken, ref index, variables);
+                        }
+                        else {
+                            //asd
+                            tokenlist.Add(ParseBlock(data, ref index, variables));
+                            concat = false;
+                        }
+
                         break;
                     case '[':
                         ++index;
