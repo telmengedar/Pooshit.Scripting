@@ -42,5 +42,14 @@ namespace Scripting.Tests {
             IScript script = parser.Parse("$operator!=0", new Variable("operator", Operator.Not));
             Assert.DoesNotThrow(() => script.Execute());
         }
+
+        [TestCase("2", "\"3\"", "23")]
+        [TestCase("\"7\"", "2", "72")]
+        [TestCase("2", "3.6", 5.6)]
+        [Parallelizable]
+        public void ConvertOperantsToHighestPrecision(string lhs, string rhs, object expectation) {
+            IScript script = parser.Parse($"{lhs}+{rhs}");
+            Assert.AreEqual(expectation, script.Execute());
+        }
     }
 }

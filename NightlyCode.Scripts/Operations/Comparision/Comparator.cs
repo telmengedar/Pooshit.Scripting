@@ -24,8 +24,7 @@ namespace NightlyCode.Scripting.Operations.Comparision {
             try {
                 object lhs = Lhs.Execute(variables, arguments);
                 object rhs = Rhs.Execute(variables, arguments);
-                if (lhs != null && rhs != null)
-                    rhs = Converter.Convert(rhs, lhs.GetType());
+                TypeInformation.ConvertOperands(ref lhs, ref rhs);
                 return Compare(lhs, rhs, variables, arguments);
             }
             catch (RuntimeBinderException e)

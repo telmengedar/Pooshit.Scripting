@@ -28,14 +28,14 @@ namespace NightlyCode.Scripting.Operations.Values {
 
             return true;
         }
+
         /// <inheritdoc />
         protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments)
         {
             try {
                 object lhs = Lhs.Execute(variables, arguments);
                 object rhs = Rhs.Execute(variables, arguments);
-                if (lhs != null && rhs != null && CanConvert(lhs.GetType()) && CanConvert(rhs.GetType()))
-                    rhs = Converter.Convert(rhs, lhs.GetType());
+                TypeInformation.ConvertOperands(ref lhs, ref rhs);
                 return Operate(lhs, rhs, variables, arguments);
             }
             catch (RuntimeBinderException e) {

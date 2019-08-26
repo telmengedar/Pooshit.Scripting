@@ -635,6 +635,33 @@
             operator token
             </summary>
         </member>
+        <member name="T:NightlyCode.Scripting.Data.TypeInformation">
+            <summary>
+            type related information methods
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Data.TypeInformation.GetTypeValue(System.Type)">
+            <summary>
+            get precision value of a type
+            </summary>
+            <param name="type">type to analyse</param>
+            <returns>precision value used to determine conversion target</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Data.TypeInformation.DetermineTargetType(System.Type,System.Type)">
+            <summary>
+            determines the type to use for operations
+            </summary>
+            <param name="lhs">left hand type</param>
+            <param name="rhs">right hand type</param>
+            <returns>type to use for operations</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Data.TypeInformation.ConvertOperands(System.Object@,System.Object@)">
+            <summary>
+            converts operators for an operation
+            </summary>
+            <param name="lhs">left hand side operand</param>
+            <param name="rhs">right hand side operands</param>
+        </member>
         <member name="T:NightlyCode.Scripting.Data.Variable">
             <summary>
             variable data
