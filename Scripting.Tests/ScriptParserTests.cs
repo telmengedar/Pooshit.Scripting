@@ -25,14 +25,14 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void TestMethodCallWithArray() {
             ScriptParser parser = new ScriptParser(new Variable("test", new TestHost()));
-            IScript token = parser.Parse("test.testmethod(fuck,[you])");
+            IScript token = parser.Parse("test.testmethod(\"fuck\",[\"you\"])");
             Assert.DoesNotThrow(() => token.Execute());
         }
 
         [Test, Parallelizable]
         public void TestMethodCallWithSpaces() {
             ScriptParser parser = new ScriptParser(new Variable("test", new TestHost()));
-            IScript token = parser.Parse("test.testmethod( fuck ,[ you , \"for\",real ])");
+            IScript token = parser.Parse("test.testmethod( \"fuck\" ,[ \"you\" , \"for\",\"real\" ])");
             string result = token.Execute() as string;
             Assert.AreEqual("fuck_you,for,real", result);
         }
@@ -40,7 +40,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void TestTabInParameter() {
             ScriptParser parser = new ScriptParser(new Variable("test", new TestHost()));
-            IScript token = parser.Parse("test.testmethod( \\\" ,[   \"\\t\"])");
+            IScript token = parser.Parse("test.testmethod( \"\\\"\" ,[   \"\\t\"])");
             string result = token.Execute() as string;
             Assert.AreEqual("\"_\t", result);
         }
@@ -101,7 +101,7 @@ namespace Scripting.Tests {
         public void MethodParametersWithMethodCalls()
         {
             ScriptParser parser = new ScriptParser(new Variable("test", new TestHost()));
-            IScript token = parser.Parse("test.testmethod(test.testmethod(a,[b]),test.testmethod(c,[d,e]))");
+            IScript token = parser.Parse("test.testmethod(test.testmethod(\"a\",[\"b\"]),test.testmethod(\"c\",[\"d\",\"e\"]))");
             Assert.AreEqual("a_b_c_d,e", token.Execute());
         }
 
@@ -109,14 +109,14 @@ namespace Scripting.Tests {
         public void CallIndexer()
         {
             ScriptParser parser = new ScriptParser(new Variable("test", new TestHost()));
-            parser.Parse("test[data]=8").Execute();
-            Assert.AreEqual(8, parser.Parse("test[data]").Execute());
+            parser.Parse("test[\"data\"]=8").Execute();
+            Assert.AreEqual(8, parser.Parse("test[\"data\"]").Execute());
         }
 
         [Test, Parallelizable]
         public void CallIndexerOnString()
         {
-            Assert.AreEqual('s', parser.Parse("testedstuff[6]").Execute());
+            Assert.AreEqual('s', parser.Parse("\"testedstuff\"[6]").Execute());
         }
 
         [Test, Parallelizable]
@@ -139,8 +139,8 @@ namespace Scripting.Tests {
         public void MethodCallWithParameter() {
             ScriptParser parser = new ScriptParser(new Variable("test", new TestHost()));
             IScript script = parser.Parse(
-                "$parameter1=test1\n" +
-                "$parameter2=test2\n" +
+                "$parameter1=\"test1\"\n" +
+                "$parameter2=\"test2\"\n" +
                 "test.testmethod($parameter1,[$parameter2])"
             );
             Assert.AreEqual("test1_test2",script.Execute());
@@ -152,8 +152,8 @@ namespace Scripting.Tests {
             ScriptParser parser = new ScriptParser(new Variable("test", testhost));
             IScript script = parser.Parse(
                 "$parameter=test\n" +
-                "test.addtesthost(host,$parameter)\n" +
-                "test[host]"
+                "test.addtesthost(\"host\",$parameter)\n" +
+                "test[\"host\"]"
             );
 
             object result = script.Execute();
@@ -203,7 +203,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void VariableDeclarationAfterBlock() {
             Assert.DoesNotThrow(() => parser.Parse("if($command.arguments.length<2) {\n" +
-                                                   "    channel.sendmessage(\"Syntax: command <name> [@permissions...] <code>\")\n" +
+                                                   "    $channel.sendmessage(\"Syntax: command <name> [@permissions...] <code>\")\n" +
                                                    "    return\n" +
                                                    "}\n" +
                                                    "\n"+

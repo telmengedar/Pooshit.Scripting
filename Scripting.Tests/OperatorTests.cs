@@ -51,5 +51,16 @@ namespace Scripting.Tests {
             IScript script = parser.Parse($"{lhs}+{rhs}");
             Assert.AreEqual(expectation, script.Execute());
         }
+
+        [Test, Parallelizable]
+        public void ChangeOperators() {
+            ScriptParser changedparser=new ScriptParser();
+            changedparser.OperatorTree.Clear();
+
+            changedparser.OperatorTree.Add("=", Operator.Equal);
+
+            IScript script = changedparser.Parse("1=1");
+            Assert.AreEqual(true, script.Execute());
+        }
     }
 }

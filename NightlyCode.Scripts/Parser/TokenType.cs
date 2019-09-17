@@ -48,6 +48,11 @@
         /// <summary>
         /// code comment
         /// </summary>
-        Comment
+        Comment,
+
+        /// <summary>
+        /// variable which has to get provided to the script
+        /// </summary>
+        Parameter
     }
 }

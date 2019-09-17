@@ -12,6 +12,11 @@ namespace NightlyCode.Scripting.Tokens {
             this.inner = inner;
         }
 
+        /// <summary>
+        /// inner statement block
+        /// </summary>
+        public IScriptToken InnerBlock => inner;
+
         /// <inheritdoc />
         protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
             return inner.Execute(variables, arguments);

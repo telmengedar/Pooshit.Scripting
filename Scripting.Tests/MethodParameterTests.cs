@@ -1,5 +1,4 @@
 ﻿
-using System.Collections;
 using System.Collections.Generic;
 using NightlyCode.Scripting;
 using NightlyCode.Scripting.Data;
@@ -9,7 +8,7 @@ using NUnit.Framework;
 namespace Scripting.Tests {
 
     [TestFixture, Parallelizable]
-    public class ParameterTests {
+    public class MethodParameterTests {
         IScriptParser parser;
 
         [SetUp]

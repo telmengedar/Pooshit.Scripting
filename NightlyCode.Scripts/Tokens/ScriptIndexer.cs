@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NightlyCode.Scripting.Errors;
@@ -12,7 +13,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// indexer call on an object
     /// </summary>
-    class ScriptIndexer : AssignableToken {
+    public class ScriptIndexer : AssignableToken, IParameterizedToken {
         readonly IScriptToken hosttoken;
         readonly IScriptToken[] parameters;
 
@@ -25,6 +26,11 @@ namespace NightlyCode.Scripting.Tokens {
             this.hosttoken = hosttoken;
             this.parameters = parameters;
         }
+
+        public IScriptToken Host => hosttoken;
+
+        /// <inheritdoc />
+        public IEnumerable<IScriptToken> Parameters => parameters;
 
         /// <inheritdoc />
         protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {

@@ -1,4 +1,6 @@
-﻿namespace NightlyCode.Scripting.Data {
+﻿using NightlyCode.Scripting.Parser;
+
+namespace NightlyCode.Scripting.Data {
 
     /// <summary>
     /// script method provided by resolver
@@ -14,12 +16,8 @@
             this.script = script;
         }
 
-        /// <summary>
-        /// invokes the method with the specified arguments
-        /// </summary>
-        /// <param name="arguments">arguments for script method</param>
-        /// <returns>result of script execution</returns>
-        public object Invoke(params object[] arguments) {
+        /// <inheritdoc />
+        public object Invoke(IVariableProvider parentvariables, params object[] arguments) {
             return script.Execute(new Variable("arguments", arguments));
         }
     }

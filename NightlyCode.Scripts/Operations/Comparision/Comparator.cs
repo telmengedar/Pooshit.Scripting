@@ -1,7 +1,6 @@
 ﻿using Microsoft.CSharp.RuntimeBinder;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Extern;
 using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 

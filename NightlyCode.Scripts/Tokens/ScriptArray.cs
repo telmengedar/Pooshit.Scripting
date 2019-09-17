@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Tokens {
@@ -16,6 +17,11 @@ namespace NightlyCode.Scripting.Tokens {
         public ScriptArray(IScriptToken[] values) {
             this.values = values;
         }
+
+        /// <summary>
+        /// values contained in array
+        /// </summary>
+        public IEnumerable<IScriptToken> Values => values;
 
         /// <inheritdoc />
         protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {

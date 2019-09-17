@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using NightlyCode.Scripting.Control.Internal;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
@@ -14,6 +15,8 @@ namespace NightlyCode.Scripting.Control {
         readonly IScriptToken condition;
         readonly List<Case> cases=new List<Case>();
 
+        readonly FuncStatementBlock body;
+
         /// <summary>
         /// creates a new <see cref="Switch"/> statement
         /// </summary>
@@ -22,6 +25,15 @@ namespace NightlyCode.Scripting.Control {
             if (parameters.Length != 1)
                 throw new ScriptParserException("Switch statement needs exactly one value parameter");
             condition = parameters[0];
+
+            body = new FuncStatementBlock(BodyFunc);
+        }
+
+        IEnumerable<IScriptToken> BodyFunc() {
+            foreach (Case @case in cases)
+                yield return @case;
+            if (Default != null)
+                yield return Default;
         }
 
         /// <summary>
@@ -60,7 +72,7 @@ namespace NightlyCode.Scripting.Control {
         /// a body is not used for switch statements
         /// </summary>
         public override IScriptToken Body {
-            get => throw new NotSupportedException();
+            get => body;
             internal set => throw new NotSupportedException();
         }
     }

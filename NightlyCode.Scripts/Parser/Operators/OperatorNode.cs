@@ -26,6 +26,7 @@ namespace NightlyCode.Scripting.Parser.Operators {
             get => GetChildOrDefault(character);
             set => children[character] = value;
         }
+
         /// <summary>
         /// character defining the leaf
         /// </summary>
@@ -41,6 +42,12 @@ namespace NightlyCode.Scripting.Parser.Operators {
         /// </summary>
         public bool HasChildren => children.Count > 0;
 
+        /// <summary>
+        /// clears all children of this node
+        /// </summary>
+        public void Clear() {
+            children.Clear();
+        }
 
         /// <summary>
         /// get child if it exists in node or null if no child is found for character

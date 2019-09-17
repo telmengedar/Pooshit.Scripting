@@ -24,5 +24,10 @@ namespace NightlyCode.Scripting {
         /// <typeparam name="T">type of result to return</typeparam>
         /// <returns>result of script execution</returns>
         T Execute<T>(params Variable[] variables);
+
+        /// <summary>
+        /// script body
+        /// </summary>
+        IScriptToken Body { get; }
     }
 }

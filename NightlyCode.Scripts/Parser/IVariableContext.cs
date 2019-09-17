@@ -1,6 +1,7 @@
 ﻿using System;
 
 namespace NightlyCode.Scripting.Parser {
+
     /// <summary>
     /// provides a context which contains writable variables
     /// </summary>

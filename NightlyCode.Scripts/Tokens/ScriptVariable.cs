@@ -18,6 +18,11 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <summary>
+        /// determines whether the variable was resolved by the parser
+        /// </summary>
+        public bool IsResolved { get; set; } = true;
+
+        /// <summary>
         /// name of variable
         /// </summary>
         public string Name { get; }

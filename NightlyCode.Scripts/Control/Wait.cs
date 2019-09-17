@@ -27,6 +27,11 @@ namespace NightlyCode.Scripting.Control {
             timetoken = parameters[0];
         }
 
+        /// <summary>
+        /// time to wait
+        /// </summary>
+        public IScriptToken Time => timetoken;
+
         protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
             object timeargument = timetoken.Execute(variables, arguments);
             if (timeargument == null)

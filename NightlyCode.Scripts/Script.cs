@@ -4,6 +4,7 @@ using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extern;
 using NightlyCode.Scripting.Parser;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting {
 
@@ -18,10 +19,16 @@ namespace NightlyCode.Scripting {
         /// creates a new <see cref="Script"/>
         /// </summary>
         /// <param name="script">root token of script to be executed</param>
+        /// <param name="scriptvariables">access to script variables</param>
         internal Script(StatementBlock script, IVariableProvider scriptvariables) {
             this.script = script;
             this.scriptvariables = scriptvariables;
         }
+
+        /// <summary>
+        /// script body
+        /// </summary>
+        public IScriptToken Body => script;
 
         /// <inheritdoc />
         public object Execute(params Variable[] variables) {

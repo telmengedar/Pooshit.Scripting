@@ -150,6 +150,16 @@
             </summary>
             <param name="parameters">parameters containing iterator variable and collection to iterate over</param>
         </member>
+        <member name="P:NightlyCode.Scripting.Control.Foreach.Iterator">
+            <summary>
+            iterator variable
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.Foreach.Collection">
+            <summary>
+            collection to be iterated
+            </summary>
+        </member>
         <member name="M:NightlyCode.Scripting.Control.Foreach.ExecuteToken(NightlyCode.Scripting.Parser.IVariableContext,NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
@@ -208,6 +218,38 @@
             <param name="methodprovider"></param>
             <param name="key"></param>
         </member>
+        <member name="P:NightlyCode.Scripting.Control.Import.Reference">
+            <summary>
+            reference to import
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Import.ExecuteToken(NightlyCode.Scripting.Parser.IVariableContext,NightlyCode.Scripting.Parser.IVariableProvider)">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Control.Internal.FuncStatementBlock">
+            <summary>
+            statement block which serves the body from a func
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Internal.FuncStatementBlock.#ctor(System.Func{System.Collections.Generic.IEnumerable{NightlyCode.Scripting.Tokens.IScriptToken}})">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Control.Internal.FuncStatementBlock"/>
+            </summary>
+            <param name="body">func serving body tokens</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.Internal.FuncStatementBlock.Body">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Control.IStatementBlock">
+            <summary>
+            block containing several statement tokens
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.IStatementBlock.Body">
+            <summary>
+            statements making up body
+            </summary>
+        </member>
         <member name="T:NightlyCode.Scripting.Control.ParserToken">
             <summary>
             token containing meta information for parsing process
@@ -252,6 +294,9 @@
             </summary>
             <param name="statements">statements in block</param>
             <param name="methodblock">determines whether this is the main block of a method</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.StatementBlock.Body">
+            <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Control.StatementBlock.ExecuteToken(NightlyCode.Scripting.Parser.IVariableContext,NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
@@ -353,6 +398,11 @@
             </summary>
             <param name="parameters">parameters for wait call (should be one parameter indicating the time to wait)</param>
         </member>
+        <member name="P:NightlyCode.Scripting.Control.Wait.Time">
+            <summary>
+            time to wait
+            </summary>
+        </member>
         <member name="T:NightlyCode.Scripting.Control.While">
             <summary>
             executes a statement block while a condition is met
@@ -381,22 +431,19 @@
             </summary>
             <param name="script"></param>
         </member>
-        <member name="M:NightlyCode.Scripting.Data.ExternalScriptMethod.Invoke(System.Object[])">
-            <summary>
-            invokes the method with the specified arguments
-            </summary>
-            <param name="arguments">arguments for script method</param>
-            <returns>result of script execution</returns>
+        <member name="M:NightlyCode.Scripting.Data.ExternalScriptMethod.Invoke(NightlyCode.Scripting.Parser.IVariableProvider,System.Object[])">
+            <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.Data.IExternalMethod">
             <summary>
             interface for an external method which can get called from a script
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Data.IExternalMethod.Invoke(System.Object[])">
+        <member name="M:NightlyCode.Scripting.Data.IExternalMethod.Invoke(NightlyCode.Scripting.Parser.IVariableProvider,System.Object[])">
             <summary>
             invokes the method with the specified arguments
             </summary>
+            <param name="variables">variables of calling script</param>
             <param name="arguments">arguments for script method</param>
             <returns>result of script execution</returns>
         </member>
@@ -870,6 +917,11 @@
             </remarks>
             <typeparam name="T">type of result to return</typeparam>
             <returns>result of script execution</returns>
+        </member>
+        <member name="P:NightlyCode.Scripting.IScript.Body">
+            <summary>
+            script body
+            </summary>
         </member>
         <member name="T:NightlyCode.Scripting.Operations.AssignableToken">
             <summary>
@@ -1848,6 +1900,11 @@
             determines whether the operator node has children
             </summary>
         </member>
+        <member name="M:NightlyCode.Scripting.Parser.Operators.OperatorNode.Clear">
+            <summary>
+            clears all children of this node
+            </summary>
+        </member>
         <member name="M:NightlyCode.Scripting.Parser.Operators.OperatorNode.GetChildOrDefault(System.Char)">
             <summary>
             get child if it exists in node or null if no child is found for character
@@ -1863,6 +1920,11 @@
         <member name="P:NightlyCode.Scripting.Parser.Operators.OperatorTree.Root">
             <summary>
             tree trunk
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.Operators.OperatorTree.Clear">
+            <summary>
+            clears all entries of the tree
             </summary>
         </member>
         <member name="M:NightlyCode.Scripting.Parser.Operators.OperatorTree.Add(System.String,NightlyCode.Scripting.Data.Operator)">
@@ -1896,6 +1958,26 @@
             </summary>
             <param name="variables">global variables of script parser</param>
         </member>
+        <member name="P:NightlyCode.Scripting.Parser.ScriptParser.TypeInstanceProvidersEnabled">
+            <summary>
+            enables usage of new in scripts
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.ScriptParser.ControlTokensEnabled">
+            <summary>
+            enables usage of control tokens in scripts (if,for,while)
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.ScriptParser.TypeCastsEnabled">
+            <summary>
+            enables type casts
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.ScriptParser.ImportsEnabled">
+            <summary>
+            enables external method imports
+            </summary>
+        </member>
         <member name="P:NightlyCode.Scripting.Parser.ScriptParser.Extensions">
             <summary>
             access to extensions available to script environment
@@ -1909,6 +1991,11 @@
         <member name="P:NightlyCode.Scripting.Parser.ScriptParser.MethodResolver">
             <summary>
             resolver which is used by 'import' statement to import methods
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.ScriptParser.OperatorTree">
+            <summary>
+            tree containing all supported operators
             </summary>
         </member>
         <member name="M:NightlyCode.Scripting.Parser.ScriptParser.Parse(System.String,NightlyCode.Scripting.Data.Variable[])">
@@ -1970,6 +2057,11 @@
         <member name="F:NightlyCode.Scripting.Parser.TokenType.Comment">
             <summary>
             code comment
+            </summary>
+        </member>
+        <member name="F:NightlyCode.Scripting.Parser.TokenType.Parameter">
+            <summary>
+            variable which has to get provided to the script
             </summary>
         </member>
         <member name="T:NightlyCode.Scripting.Parser.TypeProvider">
@@ -2140,6 +2232,12 @@
             creates a new <see cref="T:NightlyCode.Scripting.Script"/>
             </summary>
             <param name="script">root token of script to be executed</param>
+            <param name="scriptvariables">access to script variables</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Script.Body">
+            <summary>
+            script body
+            </summary>
         </member>
         <member name="M:NightlyCode.Scripting.Script.Execute(NightlyCode.Scripting.Data.Variable[])">
             <inheritdoc />
@@ -2150,6 +2248,11 @@
         <member name="T:NightlyCode.Scripting.Tokens.ArithmeticBlock">
             <summary>
             block containing an arithmetic evaluation
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.ArithmeticBlock.InnerBlock">
+            <summary>
+            inner statement block
             </summary>
         </member>
         <member name="M:NightlyCode.Scripting.Tokens.ArithmeticBlock.ExecuteToken(NightlyCode.Scripting.Parser.IVariableContext,NightlyCode.Scripting.Parser.IVariableProvider)">
@@ -2174,6 +2277,31 @@
         </member>
         <member name="M:NightlyCode.Scripting.Tokens.Await.Execute``1(NightlyCode.Scripting.Parser.IVariableContext,NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Tokens.ExternalMethodCall">
+            <summary>
+            calls a method provided by <see cref="T:NightlyCode.Scripting.Providers.IExternalMethodProvider"/>
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ExternalMethodCall.#ctor(NightlyCode.Scripting.Data.IExternalMethod,NightlyCode.Scripting.Tokens.IScriptToken[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Tokens.ExternalMethodCall"/>
+            </summary>
+            <param name="method">method to call</param>
+            <param name="arguments">arguments for method to call</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.ExternalMethodCall.ExecuteToken(NightlyCode.Scripting.Parser.IVariableContext,NightlyCode.Scripting.Parser.IVariableProvider)">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Tokens.IParameterizedToken">
+            <summary>
+            token which takes parameters
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.IParameterizedToken.Parameters">
+            <summary>
+            parameters for token
+            </summary>
         </member>
         <member name="T:NightlyCode.Scripting.Tokens.IScriptToken">
             <summary>
@@ -2201,6 +2329,9 @@
             <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Tokens.NewInstance.ToString">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.NewInstance.Parameters">
             <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.Tokens.Reference">
@@ -2256,6 +2387,11 @@
             </summary>
             <param name="values">values in array</param>
         </member>
+        <member name="P:NightlyCode.Scripting.Tokens.ScriptArray.Values">
+            <summary>
+            values contained in array
+            </summary>
+        </member>
         <member name="M:NightlyCode.Scripting.Tokens.ScriptArray.ExecuteToken(NightlyCode.Scripting.Parser.IVariableContext,NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
@@ -2273,6 +2409,9 @@
             </summary>
             <param name="hosttoken">token representing host</param>
             <param name="parameters">parameters for indexer call</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.ScriptIndexer.Parameters">
+            <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Tokens.ScriptIndexer.ExecuteToken(NightlyCode.Scripting.Parser.IVariableContext,NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
@@ -2362,6 +2501,11 @@
             </summary>
             <param name="name">name of variable</param>
         </member>
+        <member name="P:NightlyCode.Scripting.Tokens.ScriptVariable.IsResolved">
+            <summary>
+            determines whether the variable was resolved by the parser
+            </summary>
+        </member>
         <member name="P:NightlyCode.Scripting.Tokens.ScriptVariable.Name">
             <summary>
             name of variable
@@ -2383,13 +2527,163 @@
         </member>
         <member name="M:NightlyCode.Scripting.Tokens.TypeCast.#ctor(System.Type,NightlyCode.Scripting.Tokens.IScriptToken)">
             <summary>
-            creates a new <see cref="!:TypeCast&lt;T&gt;"/>
+            creates a new <see cref="T:NightlyCode.Scripting.Tokens.TypeCast"/>
             </summary>
             <param name="targettype">target type</param>
             <param name="token">token resulting in value to cast</param>
         </member>
+        <member name="P:NightlyCode.Scripting.Tokens.TypeCast.TargetType">
+            <summary>
+            type to cast argument to
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.TypeCast.Argument">
+            <summary>
+            argument to cast
+            </summary>
+        </member>
         <member name="M:NightlyCode.Scripting.Tokens.TypeCast.ExecuteToken(NightlyCode.Scripting.Parser.IVariableContext,NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Visitors.IScriptVisitor">
+            <summary>
+            visits every token of a script
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.IScriptVisitor.Visit(NightlyCode.Scripting.IScript)">
+            <summary>
+            traverses a script
+            </summary>
+            <param name="script"></param>
+        </member>
+        <member name="T:NightlyCode.Scripting.Visitors.MetricVisitor">
+            <summary>
+            visits a script to determine metrics
+            </summary>
+        </member>
+        <member name="T:NightlyCode.Scripting.Visitors.ParameterExtractor">
+            <summary>
+            extracts parameters from a script which are not provided by the script itself
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Visitors.ParameterExtractor.Parameters">
+            <summary>
+            detected parameters
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ParameterExtractor.Visit(NightlyCode.Scripting.IScript)">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ParameterExtractor.VisitVariable(NightlyCode.Scripting.Tokens.ScriptVariable)">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Visitors.ScriptVisitor">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ScriptVisitor.Visit(NightlyCode.Scripting.IScript)">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ScriptVisitor.VisitToken(NightlyCode.Scripting.Tokens.IScriptToken)">
+            <summary>
+            visits any token in a script
+            </summary>
+            <param name="token">token to visit</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ScriptVisitor.VisitArithmeticBlock(NightlyCode.Scripting.Tokens.ArithmeticBlock)">
+            <summary>
+            visits an arithmetic block
+            </summary>
+            <param name="arithmeticblock">token to visit</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ScriptVisitor.VisitMethod(NightlyCode.Scripting.Tokens.ScriptMethod)">
+            <summary>
+            visits a indexer token
+            </summary>
+            <param name="method">token to visit</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ScriptVisitor.VisitIndexer(NightlyCode.Scripting.Tokens.ScriptIndexer)">
+            <summary>
+            visits a indexer token
+            </summary>
+            <param name="indexer">token to visit</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ScriptVisitor.VisitBinaryToken(NightlyCode.Scripting.Operations.IBinaryToken)">
+            <summary>
+            visits a binary token
+            </summary>
+            <param name="binary">token to visit</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ScriptVisitor.VisitNew(NightlyCode.Scripting.Tokens.NewInstance)">
+            <summary>
+            visits a new token
+            </summary>
+            <param name="newinstance">token to visit</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ScriptVisitor.VisitImport(NightlyCode.Scripting.Control.Import)">
+            <summary>
+            visits a import token
+            </summary>
+            <param name="import">token to visit</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ScriptVisitor.VisitTypeCast(NightlyCode.Scripting.Tokens.TypeCast)">
+            <summary>
+            visits a type cast token
+            </summary>
+            <param name="typecast">token to visit</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ScriptVisitor.VisitWait(NightlyCode.Scripting.Control.Wait)">
+            <summary>
+            visits a wait token
+            </summary>
+            <param name="wait">token to visit</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ScriptVisitor.VisitThrow(NightlyCode.Scripting.Control.Throw)">
+            <summary>
+            visits a throw token
+            </summary>
+            <param name="throw">token to visit</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ScriptVisitor.VisitReturn(NightlyCode.Scripting.Control.Return)">
+            <summary>
+            visits a return token
+            </summary>
+            <param name="return">token to visit</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ScriptVisitor.VisitContinue(NightlyCode.Scripting.Control.Continue)">
+            <summary>
+            visits a continue token
+            </summary>
+            <param name="continue">token to visit</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ScriptVisitor.VisitBreak(NightlyCode.Scripting.Control.Break)">
+            <summary>
+            visits a break token
+            </summary>
+            <param name="break">token to visit</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ScriptVisitor.VisitBlock(NightlyCode.Scripting.Control.StatementBlock)">
+            <summary>
+            visits a statement block in a script
+            </summary>
+            <param name="block">block to visit</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ScriptVisitor.VisitVariable(NightlyCode.Scripting.Tokens.ScriptVariable)">
+            <summary>
+            visits a variable in a script
+            </summary>
+            <param name="variable">script variable</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ScriptVisitor.VisitControlToken(NightlyCode.Scripting.Control.IControlToken)">
+            <summary>
+            visits a control token
+            </summary>
+            <param name="controltoken">control token to visit</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Visitors.ScriptVisitor.VisitParameters(NightlyCode.Scripting.Tokens.IParameterizedToken)">
+            <summary>
+            visits parameters of a token
+            </summary>
+            <param name="token">control token to visit</param>
         </member>
     </members>
 </doc>

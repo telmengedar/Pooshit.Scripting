@@ -6,7 +6,7 @@ namespace NightlyCode.Scripting.Operations {
     /// <summary>
     /// token applying an operation to two operands
     /// </summary>
-    interface IBinaryToken : IScriptToken {
+    public interface IBinaryToken : IScriptToken {
         
         /// <summary>
         /// left hand side operand

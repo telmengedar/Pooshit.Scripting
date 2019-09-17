@@ -5,7 +5,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// token representing a flow control statement
     /// </summary>
-    interface IControlToken : IScriptToken {
+    public interface IControlToken : IScriptToken {
 
         /// <summary>
         /// body of control statement

@@ -11,7 +11,7 @@ namespace NightlyCode.Scripting.Control {
     /// loop which iterates over a collection
     /// </summary>
     public class Foreach : ControlToken {
-        readonly IAssignableToken variable;
+        readonly ScriptVariable variable;
         readonly IScriptToken collection;
 
         /// <summary>
@@ -22,12 +22,22 @@ namespace NightlyCode.Scripting.Control {
             if (parameters.Length != 2)
                 throw new ScriptParserException("Foreach needs a variable and a collection as parameters");
 
-            variable = parameters[0] as IAssignableToken;
+            variable = parameters[0] as ScriptVariable;
             if(variable==null)
-                throw new ScriptParserException("Foreach loop variable has to be a token to which a value can get assigned");
+                throw new ScriptParserException("Foreach iterator variable has to be a variable token");
             
             collection = parameters[1];
         }
+
+        /// <summary>
+        /// iterator variable
+        /// </summary>
+        public ScriptVariable Iterator => variable;
+
+        /// <summary>
+        /// collection to be iterated
+        /// </summary>
+        public IScriptToken Collection { get; set; }
 
         /// <inheritdoc />
         protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {

@@ -21,6 +21,12 @@ namespace NightlyCode.Scripting.Control {
             this.key = key;
         }
 
+        /// <summary>
+        /// reference to import
+        /// </summary>
+        public IScriptToken Reference => key;
+
+        /// <inheritdoc />
         protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
             return methodprovider.Import(key.Execute<string>(variables, arguments));
         }

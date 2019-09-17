@@ -15,6 +15,13 @@ namespace NightlyCode.Scripting.Parser.Operators {
         public OperatorNode Root => root;
 
         /// <summary>
+        /// clears all entries of the tree
+        /// </summary>
+        public void Clear() {
+            root.Clear();
+        }
+
+        /// <summary>
         /// adds an operator to the tree
         /// </summary>
         /// <param name="data">data identifying the operator</param>

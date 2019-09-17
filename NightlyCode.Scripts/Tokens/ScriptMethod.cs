@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Operations;
 using NightlyCode.Scripting.Parser;
@@ -11,7 +12,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// calls a method in a script
     /// </summary>
-    class ScriptMethod : ScriptToken {
+    public class ScriptMethod : ScriptToken, IParameterizedToken {
         readonly IExtensionProvider extensions;
         readonly IScriptToken hosttoken;
         readonly string methodname;
@@ -31,11 +32,23 @@ namespace NightlyCode.Scripting.Tokens {
             this.parameters = parameters;
         }
 
+        public IScriptToken Host => hosttoken;
+
+        /// <summary>
+        /// name of method to call
+        /// </summary>
+        public string MethodName => methodname;
+
+        public IEnumerable<IScriptToken> Parameters => parameters;
+
         /// <inheritdoc />
         protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
             object host = hosttoken.Execute(variables, arguments);
             if (host == null)
                 throw new ScriptExecutionException($"'{hosttoken}' results in null");
+
+            if (host is IExternalMethod externmethod && MethodName.ToLower()=="invoke")
+                return externmethod.Invoke(arguments, Parameters.Select(a => a.Execute(variables, arguments)).ToArray());
 
             MethodInfo[] methods = host.GetType().GetMethods().Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters)).ToArray();
 

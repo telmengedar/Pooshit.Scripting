@@ -26,6 +26,10 @@ namespace NightlyCode.Scripting.Control {
                 context = parameters[1];
         }
 
+        public IScriptToken Message { get; set; }
+
+        public IScriptToken Context { get; set; }
+
         /// <inheritdoc />
         protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
             throw new ScriptExecutionException(message.Execute(variables, arguments)?.ToString(), context?.Execute(variables, arguments));
