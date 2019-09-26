@@ -12,7 +12,7 @@ namespace Scripting.Tests {
 
     [TestFixture]
     public class ScriptParserTests {
-        readonly IScriptParser parser=new ScriptParser();
+        readonly IScriptParser globalparser=new ScriptParser();
 
         public static IEnumerable<string> IncompleteScripts {
             get {
@@ -47,7 +47,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void AssignVariable() {
-            IScript script = parser.Parse(
+            IScript script = globalparser.Parse(
                 "$number=7\n" +
                 "$number"
             );
@@ -56,7 +56,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void CallVariableMember() {
-            IScript script = parser.Parse(
+            IScript script = globalparser.Parse(
                 "$number=7\n"+
                 "$number.tostring()"
             );
@@ -66,7 +66,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void ReadVariableMember()
         {
-            IScript script = parser.Parse(
+            IScript script = globalparser.Parse(
                 "$number=\"longstring\"\n" +
                 "$number.length"
             );
@@ -76,7 +76,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void ReadMemberChain()
         {
-            IScript script = parser.Parse(
+            IScript script = globalparser.Parse(
                 "$number=\"longstring\"\n" +
                 "$number.length.tostring()"
             );
@@ -85,8 +85,8 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void ExtensionMethods() {
-            parser.Extensions.AddExtensions<TestExtensions>();
-            Assert.AreEqual("longstring", parser.Parse("\"long\".append(\"string\")").Execute());
+            globalparser.Extensions.AddExtensions<TestExtensions>();
+            Assert.AreEqual("longstring", globalparser.Parse("\"long\".append(\"string\")").Execute());
         }
 
         [Test, Parallelizable]
@@ -116,18 +116,18 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void CallIndexerOnString()
         {
-            Assert.AreEqual('s', parser.Parse("\"testedstuff\"[6]").Execute());
+            Assert.AreEqual('s', globalparser.Parse("\"testedstuff\"[6]").Execute());
         }
 
         [Test, Parallelizable]
         public void CallIndexerOnArray()
         {
-            Assert.AreEqual(9, parser.Parse("[9,7,3,3,2,9,0][5]").Execute());
+            Assert.AreEqual(9, globalparser.Parse("[9,7,3,3,2,9,0][5]").Execute());
         }
 
         [Test, Parallelizable]
         public void SetArrayValue() {
-            IScript script=parser.Parse(
+            IScript script=globalparser.Parse(
                 "$array=[0,1,2,3,4,5]\n" +
                 "$array[2]=7\n" +
                 "$array"
@@ -175,7 +175,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void EmptyLineAtEnd()
         {
-            Assert.DoesNotThrow(() => parser.Parse(
+            Assert.DoesNotThrow(() => globalparser.Parse(
                 "for ($variable=3,$variable<7,++$variable)\n" +
                 "{\n" +
                 "    $variable\n" +
@@ -186,7 +186,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void CommentAtEnd()
         {
-            Assert.DoesNotThrow(() => parser.Parse(
+            Assert.DoesNotThrow(() => globalparser.Parse(
                 "for ($variable=3,$variable<7,++$variable)\n" +
                 "{\n" +
                 "    $variable\n" +
@@ -196,13 +196,13 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void SingleBreakInWhile() {
-            IScript script = parser.Parse("while(true) break");
+            IScript script = globalparser.Parse("while(true) break");
             Assert.DoesNotThrow(() => script.Execute());
         }
 
         [Test, Parallelizable]
         public void VariableDeclarationAfterBlock() {
-            Assert.DoesNotThrow(() => parser.Parse("if($command.arguments.length<2) {\n" +
+            Assert.DoesNotThrow(() => globalparser.Parse("if($command.arguments.length<2) {\n" +
                                                    "    $channel.sendmessage(\"Syntax: command <name> [@permissions...] <code>\")\n" +
                                                    "    return\n" +
                                                    "}\n" +
@@ -210,6 +210,14 @@ namespace Scripting.Tests {
                                                    "$permissions=\"\"\n" +
                                                    "$codestarted=false\n" +
                                                    "$code=\"\"\n"));
+        }
+
+        [Test, Parallelizable]
+        public void ReadAvailableVariables() {
+            IScriptParser parser = new ScriptParser(new Variable("test"), new Variable("host"));
+
+            // task is automatically added by parser
+            Assert.That(new[] {"test", "host", "task"}.SequenceEqual(parser.GlobalVariables.Variables));
         }
     }
 }

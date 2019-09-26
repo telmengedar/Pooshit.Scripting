@@ -1,7 +1,6 @@
 ﻿using System;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extern;
-using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Tokens {
     /// <summary>
@@ -10,9 +9,9 @@ namespace NightlyCode.Scripting.Tokens {
     public abstract class ScriptToken : IScriptToken {
 
         /// <inheritdoc />
-        public object Execute(IVariableContext variables, IVariableProvider arguments = null) {
+        public object Execute(ScriptContext context) {
             try {
-                return ExecuteToken(variables, arguments);
+                return ExecuteToken(context);
             }
             catch (ScriptException) {
                 throw;
@@ -23,14 +22,14 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        public T Execute<T>(IVariableContext variables, IVariableProvider arguments) {
-            return Converter.Convert<T>(Execute(variables, arguments));
+        public T Execute<T>(ScriptContext context) {
+            return Converter.Convert<T>(Execute(context));
         }
 
         /// <summary>
         /// evaluates the result of the token
         /// </summary>
         /// <returns>result of statement</returns>
-        protected abstract object ExecuteToken(IVariableContext variables, IVariableProvider arguments);
+        protected abstract object ExecuteToken(ScriptContext context);
     }
 }

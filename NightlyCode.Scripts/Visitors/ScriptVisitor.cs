@@ -19,8 +19,8 @@ namespace NightlyCode.Scripting.Visitors {
         public virtual void VisitToken(IScriptToken token) {
             if (token is ScriptVariable variable)
                 VisitVariable(variable);
-            else if (token is StatementBlock block)
-                VisitBlock(block);
+            else if (token is ITokenContainer container)
+                VisitContainer(container);
             else if (token is IControlToken control)
                 VisitControlToken(control);
             else if (token is IBinaryToken binary)
@@ -45,13 +45,24 @@ namespace NightlyCode.Scripting.Visitors {
                 VisitIndexer(indexer);
             else if (token is ScriptMethod method)
                 VisitMethod(method);
+            else if (token is ScriptMember member)
+                VisitMember(member);
             else if (token is ArithmeticBlock arithmeticblock)
                 VisitArithmeticBlock(arithmeticblock);
             else if (token is ScriptArray array)
                 VisitArray(array);
         }
 
-        void VisitArray(ScriptArray array) {
+        public virtual void VisitMember(ScriptMember member) {
+            VisitToken(member.Host);
+        }
+
+        public virtual void VisitTryCatchBlock(Try @try) {
+            VisitToken(@try.Body);
+            VisitToken(@try.Catch);
+        }
+
+        public virtual void VisitArray(ScriptArray array) {
             foreach (IScriptToken value in array.Values)
                 VisitToken(value);
         }
@@ -60,7 +71,7 @@ namespace NightlyCode.Scripting.Visitors {
         /// visits an arithmetic block
         /// </summary>
         /// <param name="arithmeticblock">token to visit</param>
-        void VisitArithmeticBlock(ArithmeticBlock arithmeticblock) {
+        public virtual void VisitArithmeticBlock(ArithmeticBlock arithmeticblock) {
             VisitToken(arithmeticblock.InnerBlock);
         }
 
@@ -160,9 +171,9 @@ namespace NightlyCode.Scripting.Visitors {
         /// <summary>
         /// visits a statement block in a script
         /// </summary>
-        /// <param name="block">block to visit</param>
-        public virtual void VisitBlock(StatementBlock block) {
-            foreach (IScriptToken token in block.Body)
+        /// <param name="container">container to visit</param>
+        public virtual void VisitContainer(ITokenContainer container) {
+            foreach (IScriptToken token in container.Children)
                 VisitToken(token);
         }
 
@@ -178,7 +189,9 @@ namespace NightlyCode.Scripting.Visitors {
         /// </summary>
         /// <param name="controltoken">control token to visit</param>
         public virtual void VisitControlToken(IControlToken controltoken) {
-            VisitToken(controltoken.Body);
+            if (controltoken is Try @try)
+                VisitTryCatchBlock(@try);
+            else VisitToken(controltoken.Body);
         }
 
         /// <summary>

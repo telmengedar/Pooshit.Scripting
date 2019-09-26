@@ -14,14 +14,14 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
+        protected override object ExecuteToken(ScriptContext context) {
             try {
-                return Body.Execute(variables, arguments);
+                return Body.Execute(context);
             }
             catch (Exception e) {
                 if (Catch != null) {
-                    VariableProvider handlerarguments = new VariableProvider(arguments, new Variable("exception", e));
-                    return Catch?.Execute(variables, handlerarguments);
+                    VariableProvider handlerarguments = new VariableProvider(context.Arguments, new Variable("exception", e));
+                    return Catch?.Execute(new ScriptContext(context.Variables, handlerarguments, context.CancellationToken));
                 }
             }
 

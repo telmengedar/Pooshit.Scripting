@@ -1,7 +1,6 @@
 ﻿using Microsoft.CSharp.RuntimeBinder;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Operations.Comparision {
@@ -15,16 +14,16 @@ namespace NightlyCode.Scripting.Operations.Comparision {
         /// compares lhs and rhs and returns value of comparision
         /// </summary>
         /// <returns>comparision value</returns>
-        protected abstract object Compare(object lhs, object rhs, IVariableContext variables, IVariableProvider arguments);
+        protected abstract object Compare(object lhs, object rhs, ScriptContext context);
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments)
+        protected override object ExecuteToken(ScriptContext context)
         {
             try {
-                object lhs = Lhs.Execute(variables, arguments);
-                object rhs = Rhs.Execute(variables, arguments);
+                object lhs = Lhs.Execute(context);
+                object rhs = Rhs.Execute(context);
                 TypeInformation.ConvertOperands(ref lhs, ref rhs);
-                return Compare(lhs, rhs, variables, arguments);
+                return Compare(lhs, rhs, context);
             }
             catch (RuntimeBinderException e)
             {

@@ -22,7 +22,7 @@ namespace NightlyCode.Scripting.Tokens {
         public object Value => value;
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
+        protected override object ExecuteToken(ScriptContext context) {
             return value;
         }
 

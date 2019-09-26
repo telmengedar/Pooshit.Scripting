@@ -18,7 +18,7 @@ namespace NightlyCode.Scripting.Control {
 
         public string Data { get; }
 
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
+        protected override object ExecuteToken(ScriptContext context) {
             throw new System.NotImplementedException();
         }
 

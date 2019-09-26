@@ -39,6 +39,14 @@ namespace NightlyCode.Scripting.Parser {
             Values[name] = value;
         }
 
+        /// <summary>
+        /// removes a variable from this context
+        /// </summary>
+        /// <param name="name">name of variable to remove</param>
+        public void RemoveVariable(string name) {
+            Values.Remove(name);
+        }
+
         /// <inheritdoc />
         void IDisposable.Dispose() {
             foreach (IDisposable disposablevalue in Values.Values.OfType<IDisposable>())

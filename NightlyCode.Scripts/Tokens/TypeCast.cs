@@ -1,6 +1,5 @@
 ﻿using System;
 using NightlyCode.Scripting.Extern;
-using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Tokens {
 
@@ -32,8 +31,8 @@ namespace NightlyCode.Scripting.Tokens {
         public IScriptToken Argument => token;
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
-            return Converter.Convert(token.Execute(variables, arguments), targettype);
+        protected override object ExecuteToken(ScriptContext context) {
+            return Converter.Convert(token.Execute(context), targettype);
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace NightlyCode.Scripting.Parser {
+﻿using System.Collections.Generic;
+
+namespace NightlyCode.Scripting.Parser {
 
     /// <summary>
     /// provides named variables to script
@@ -25,5 +27,10 @@
         /// <param name="variable">name of variable to check for</param>
         /// <returns>next provider which contains this variable, null if the variable is not found</returns>
         IVariableProvider GetProvider(string variable);
+
+        /// <summary>
+        /// variables available to this provider
+        /// </summary>
+        IEnumerable<string> Variables { get; }
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace NightlyCode.Scripting.Parser {
+﻿using System.Collections.Generic;
+
+namespace NightlyCode.Scripting.Parser {
 
     /// <summary>
     /// provides types which can be created in script
@@ -31,5 +33,10 @@
         /// </summary>
         /// <param name="name">name of type to remove</param>
         void RemoveType(string name);
+
+        /// <summary>
+        /// types provdided
+        /// </summary>
+        IEnumerable<string> ProvidedTypes { get; }
     }
 }

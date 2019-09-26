@@ -8,7 +8,7 @@ namespace NightlyCode.Scripting.Control.Internal {
     /// <summary>
     /// statement block which serves the body from a func
     /// </summary>
-    class FuncStatementBlock : ScriptToken, IStatementBlock {
+    class FuncStatementBlock : ScriptToken, ITokenContainer {
         readonly Func<IEnumerable<IScriptToken>> body;
 
         /// <summary>
@@ -20,11 +20,11 @@ namespace NightlyCode.Scripting.Control.Internal {
         }
 
         /// <inheritdoc />
-        public IEnumerable<IScriptToken> Body => body();
+        public IEnumerable<IScriptToken> Children => body();
 
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
-            foreach (IScriptToken token in Body)
-                token.Execute(variables, arguments);
+        protected override object ExecuteToken(ScriptContext context) {
+            foreach (IScriptToken token in Children)
+                token.Execute(context);
             return null;
         }
     }

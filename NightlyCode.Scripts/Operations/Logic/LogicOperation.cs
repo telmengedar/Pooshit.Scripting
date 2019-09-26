@@ -1,7 +1,6 @@
 ﻿using Microsoft.CSharp.RuntimeBinder;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Operations.Logic {
@@ -15,14 +14,14 @@ namespace NightlyCode.Scripting.Operations.Logic {
         /// executes the logic operation
         /// </summary>
         /// <returns>result of logic operation</returns>
-        protected abstract object Operate(IVariableContext variables, IVariableProvider arguments);
+        protected abstract object Operate(ScriptContext context);
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments)
+        protected override object ExecuteToken(ScriptContext context)
         {
             try
             {
-                return Operate(variables, arguments);
+                return Operate(context);
             }
             catch (RuntimeBinderException e)
             {

@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Linq;
 using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Operations;
 using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
@@ -40,25 +39,28 @@ namespace NightlyCode.Scripting.Control {
         public IScriptToken Collection { get; set; }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
-            VariableContext loopvariables = new VariableContext(variables);
-            object collectionvalue = collection.Execute(loopvariables, arguments);
+        protected override object ExecuteToken(ScriptContext context) {
+            ScriptContext loopcontext=new ScriptContext(new VariableContext(context.Variables), context.Arguments, context.CancellationToken);
+
+            object collectionvalue = collection.Execute(loopcontext);
             if (collectionvalue is IEnumerable enumeration) {
                 foreach (object value in enumeration.Cast<object>()) {
-                    variable.Assign(new ScriptValue(value), loopvariables, arguments);
-                    object bodyvalue=Body?.Execute(loopvariables, arguments);
+                    context.CancellationToken.ThrowIfCancellationRequested();
+
+                    variable.Assign(new ScriptValue(value), loopcontext);
+                    object bodyvalue=Body?.Execute(loopcontext);
                     if (bodyvalue is Return)
                         return bodyvalue;
                     if (bodyvalue is Break breaktoken)
                     {
-                        int depth = breaktoken.Depth.Execute<int>(loopvariables, arguments);
+                        int depth = breaktoken.Depth.Execute<int>(loopcontext);
                         if (depth <= 1)
                             return null;
                         return new Break(new ScriptValue(depth - 1));
                     }
                     if (value is Continue continuetoken)
                     {
-                        int depth = continuetoken.Depth.Execute<int>(loopvariables, arguments);
+                        int depth = continuetoken.Depth.Execute<int>(loopcontext);
                         if (depth <= 1)
                             continue;
 

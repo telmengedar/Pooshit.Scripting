@@ -199,9 +199,9 @@ namespace NightlyCode.Scripting.Operations {
         /// <param name="constructor">constructor to call</param>
         /// <param name="parameters">parameters for constructor</param>
         /// <returns></returns>
-        public static object CallConstructor(ConstructorInfo constructor, IScriptToken[] parameters, IVariableContext variables, IVariableProvider arguments) {
+        public static object CallConstructor(ConstructorInfo constructor, IScriptToken[] parameters, ScriptContext context) {
             ParameterInfo[] targetparameters = constructor.GetParameters();
-            object[] callparameters = parameters.Select(p => p.Execute(variables, arguments)).ToArray();
+            object[] callparameters = parameters.Select(p => p.Execute(context)).ToArray();
 
             try {
                 callparameters = CreateParameters(targetparameters, callparameters).ToArray();
@@ -218,7 +218,7 @@ namespace NightlyCode.Scripting.Operations {
             }
         }
 
-        public static object CallMethod(object host, MethodInfo method, object[] parameters, IVariableContext variables, IVariableProvider arguments, IEnumerable<ReferenceParameter> refparameters=null, bool extension=false, ParameterInfo[] targetparameters=null) {
+        public static object CallMethod(object host, MethodInfo method, object[] parameters, ScriptContext context, IEnumerable<ReferenceParameter> refparameters=null, bool extension=false, ParameterInfo[] targetparameters=null) {
             if(targetparameters==null)
                 targetparameters = method.GetParameters();
 
@@ -239,7 +239,7 @@ namespace NightlyCode.Scripting.Operations {
                 object result= method.Invoke(extension ? null : host, callparameters);
                 if (refparameters != null) {
                     foreach (ReferenceParameter param in refparameters)
-                        param.Variable.Assign(new ScriptValue(callparameters[param.Index+(extension?1:0)]), variables, arguments);
+                        param.Variable.Assign(new ScriptValue(callparameters[param.Index+(extension?1:0)]), context);
                 }
 
                 return result;

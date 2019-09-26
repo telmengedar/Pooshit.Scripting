@@ -1,6 +1,5 @@
 ﻿using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extensions;
-using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
@@ -22,11 +21,11 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments)
+        protected override object ExecuteToken(ScriptContext context)
         {
-            if (condition.Execute(variables, arguments).ToBoolean())
-                return Body.Execute(variables, arguments);
-            return Else?.Execute(variables, arguments);
+            if (condition.Execute(context).ToBoolean())
+                return Body.Execute(context);
+            return Else?.Execute(context);
         }
 
         /// <summary>

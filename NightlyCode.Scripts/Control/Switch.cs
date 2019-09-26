@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NightlyCode.Scripting.Control.Internal;
 using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
@@ -52,13 +51,13 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments)
+        protected override object ExecuteToken(ScriptContext context)
         {
-            object value = condition.Execute(variables, arguments);
-            Case @case = cases.FirstOrDefault(c => c.Matches(value, variables, arguments));
+            object value = condition.Execute(context);
+            Case @case = cases.FirstOrDefault(c => c.Matches(value, context));
             if (@case == null)
-                return Default?.Execute(variables, arguments);
-            return @case.Execute(variables, arguments);
+                return Default?.Execute(context);
+            return @case.Execute(context);
         }
 
         /// <inheritdoc />

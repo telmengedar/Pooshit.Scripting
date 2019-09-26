@@ -1,7 +1,6 @@
 ﻿using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Extern;
 using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Operations.Values {
 
@@ -13,7 +12,7 @@ namespace NightlyCode.Scripting.Operations.Values {
         }
 
         /// <inheritdoc />
-        protected override object Operate(object lhs, object rhs, IVariableContext variables, IVariableProvider arguments) {
+        protected override object Operate(object lhs, object rhs, ScriptContext context) {
             object value = lhs;
             int steps = Converter.Convert<int>(rhs);
 

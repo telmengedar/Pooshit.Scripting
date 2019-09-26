@@ -2,7 +2,6 @@
 using System.Threading;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extern;
-using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
@@ -32,8 +31,8 @@ namespace NightlyCode.Scripting.Control {
         /// </summary>
         public IScriptToken Time => timetoken;
 
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
-            object timeargument = timetoken.Execute(variables, arguments);
+        protected override object ExecuteToken(ScriptContext context) {
+            object timeargument = timetoken.Execute(context);
             if (timeargument == null)
                 throw new ScriptRuntimeException("Specified waiting time was null");
             if (timeargument is TimeSpan timespan)

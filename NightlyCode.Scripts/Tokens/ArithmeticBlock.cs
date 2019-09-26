@@ -1,5 +1,4 @@
-﻿using NightlyCode.Scripting.Parser;
-
+﻿
 namespace NightlyCode.Scripting.Tokens {
 
     /// <summary>
@@ -18,8 +17,8 @@ namespace NightlyCode.Scripting.Tokens {
         public IScriptToken InnerBlock => inner;
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
-            return inner.Execute(variables, arguments);
+        protected override object ExecuteToken(ScriptContext context) {
+            return inner.Execute(context);
         }
 
         /// <inheritdoc />

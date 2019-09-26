@@ -1,4 +1,5 @@
 ﻿using NightlyCode.Scripting;
+using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Providers;
@@ -35,5 +36,18 @@ namespace Scripting.Tests {
             Assert.AreEqual(11, script.Execute());
         }
 
+        [TestCase("Scripting.Tests.Scripts.External.initialization.ns")]
+        [Parallelizable]
+        public void ImportAndExecuteExternal(string resource) {
+            ScriptParser parser=new ScriptParser();
+            parser.MethodResolver = new ResourceScriptMethodProvider(typeof(ImportTests).Assembly, parser);
+            IScript script = parser.Parse(
+                ScriptCode.Create(
+                    "$method=import($script)",
+                    "$method()"
+                ));
+
+            Assert.DoesNotThrow(() => script.Execute(new Variable("script", resource)));
+        }
     }
 }

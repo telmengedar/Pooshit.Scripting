@@ -31,5 +31,8 @@ namespace NightlyCode.Scripting.Parser {
         public void RemoveType(string name) {
             types.Remove(name);
         }
+
+        /// <inheritdoc />
+        public IEnumerable<string> ProvidedTypes => types.Keys;
     }
 }

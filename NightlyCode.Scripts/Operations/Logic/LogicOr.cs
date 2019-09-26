@@ -12,8 +12,8 @@ namespace NightlyCode.Scripting.Operations.Logic {
         }
 
         /// <inheritdoc />
-        protected override object Operate(IVariableContext variables, IVariableProvider arguments) {
-            return Lhs.Execute(variables, arguments).ToBoolean() || Rhs.Execute(variables, arguments).ToBoolean();
+        protected override object Operate(ScriptContext context) {
+            return Lhs.Execute(context).ToBoolean() || Rhs.Execute(context).ToBoolean();
         }
 
         /// <inheritdoc />

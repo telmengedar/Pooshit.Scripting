@@ -4,14 +4,13 @@ using System.Reflection;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extern;
 using NightlyCode.Scripting.Operations;
-using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Tokens {
 
     /// <summary>
     /// reads a value from a host member
     /// </summary>
-    class ScriptMember : AssignableToken {
+    public class ScriptMember : AssignableToken {
         readonly IScriptToken hosttoken;
         readonly string membername;
 
@@ -20,14 +19,24 @@ namespace NightlyCode.Scripting.Tokens {
         /// </summary>
         /// <param name="host">host of member</param>
         /// <param name="membername">name of member to read</param>
-        public ScriptMember(IScriptToken host, string membername) {
+        internal ScriptMember(IScriptToken host, string membername) {
             hosttoken = host;
             this.membername = membername.ToLower();
         }
 
+        /// <summary>
+        /// instance of which member is served
+        /// </summary>
+        public IScriptToken Host => hosttoken;
+
+        /// <summary>
+        /// name of member
+        /// </summary>
+        public string Member => membername;
+
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
-            object host = hosttoken.Execute(variables, arguments);
+        protected override object ExecuteToken(ScriptContext context) {
+            object host = hosttoken.Execute(context);
             PropertyInfo property = host.GetType().GetProperties().FirstOrDefault(p => p.Name.ToLower() == membername);
             if(property != null) {
                 try {
@@ -51,9 +60,9 @@ namespace NightlyCode.Scripting.Tokens {
             }
         }
 
-        object SetProperty(object host, PropertyInfo property, IScriptToken valuetoken, IVariableContext variables, IVariableProvider arguments)
+        object SetProperty(object host, PropertyInfo property, IScriptToken valuetoken, ScriptContext context)
         {
-            object targetvalue = Converter.Convert(valuetoken.Execute(variables, arguments), property.PropertyType);
+            object targetvalue = Converter.Convert(valuetoken.Execute(context), property.PropertyType);
             try
             {
                 property.SetValue(host, targetvalue, null);
@@ -66,9 +75,9 @@ namespace NightlyCode.Scripting.Tokens {
             return targetvalue;
         }
 
-        object SetField(object host, FieldInfo fieldinfo, IScriptToken valuetoken, IVariableContext variables, IVariableProvider arguments)
+        object SetField(object host, FieldInfo fieldinfo, IScriptToken valuetoken, ScriptContext context)
         {
-            object targetvalue = Converter.Convert(valuetoken.Execute(variables, arguments), fieldinfo.FieldType);
+            object targetvalue = Converter.Convert(valuetoken.Execute(context), fieldinfo.FieldType);
             try
             {
                 fieldinfo.SetValue(host, targetvalue);
@@ -81,17 +90,17 @@ namespace NightlyCode.Scripting.Tokens {
             return targetvalue;
         }
 
-        protected override object AssignToken(IScriptToken token, IVariableContext variables, IVariableProvider arguments) {
-            object host = hosttoken.Execute(variables, arguments);
+        protected override object AssignToken(IScriptToken token, ScriptContext context) {
+            object host = hosttoken.Execute(context);
             PropertyInfo property = host.GetType().GetProperties().FirstOrDefault(p => p.Name.ToLower() == membername);
             if (property != null)
-                return SetProperty(host, property, token, variables, arguments);
+                return SetProperty(host, property, token, context);
 
             FieldInfo fieldinfo = host.GetType().GetFields().FirstOrDefault(f => f.Name.ToLower() == membername);
             if (fieldinfo == null)
                 throw new ScriptRuntimeException($"A member with the name of {membername} was not found in type {host.GetType().Name}");
 
-            return SetField(host, fieldinfo, token, variables, arguments);
+            return SetField(host, fieldinfo, token, context);
         }
 
         /// <inheritdoc />

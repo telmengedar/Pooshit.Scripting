@@ -16,8 +16,8 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
-            return provider.Create(parameters, variables, arguments);
+        protected override object ExecuteToken(ScriptContext context) {
+            return provider.Create(parameters, context);
         }
 
         /// <inheritdoc />

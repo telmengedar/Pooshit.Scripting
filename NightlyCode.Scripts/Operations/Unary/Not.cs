@@ -12,9 +12,9 @@ namespace NightlyCode.Scripting.Operations.Unary {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments)
+        protected override object ExecuteToken(ScriptContext context)
         {
-            return !Operand.Execute(variables, arguments).ToBoolean();
+            return !Operand.Execute(context).ToBoolean();
         }
 
         /// <inheritdoc />

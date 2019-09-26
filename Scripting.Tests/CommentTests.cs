@@ -1,4 +1,5 @@
 ﻿using NightlyCode.Scripting;
+using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
 
@@ -27,6 +28,21 @@ namespace Scripting.Tests {
                 "$result+=4"
             );
             Assert.AreEqual(4, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void CommentAtEndOfBlock() {
+            Assert.DoesNotThrow(() => {
+                parser.Parse(ScriptCode.Create(
+                    "$count=5",
+                    "while(count-->0){",
+                    "  if(true) {",
+                    "    $result=0",
+                    "  }",
+                    "  // comment at end of block",
+                    "}"
+                ));
+            });
         }
     }
 }

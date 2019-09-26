@@ -19,8 +19,8 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        public object Execute(IVariableContext variables, IVariableProvider arguments) {
-            object result = token.Execute(variables, arguments);
+        public object Execute(ScriptContext context) {
+            object result = token.Execute(context);
             if (!(result is Task task))
                 throw new ScriptRuntimeException("Only tasks can get awaited");
 
@@ -35,8 +35,8 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        public T Execute<T>(IVariableContext variables, IVariableProvider arguments) {
-            return (T) Execute(variables, arguments);
+        public T Execute<T>(ScriptContext context) {
+            return (T) Execute(context);
         }
     }
 }

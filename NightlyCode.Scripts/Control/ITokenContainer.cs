@@ -6,11 +6,11 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// block containing several statement tokens
     /// </summary>
-    public interface IStatementBlock {
+    public interface ITokenContainer {
 
         /// <summary>
-        /// statements making up body
+        /// tokens contained in the container
         /// </summary>
-        IEnumerable<IScriptToken> Body { get; }
+        IEnumerable<IScriptToken> Children { get; }
     }
 }

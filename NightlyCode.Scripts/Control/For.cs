@@ -26,32 +26,35 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
-            VariableContext loopvariables = new VariableContext(variables);
-            initializer?.Execute(loopvariables, arguments);
+        protected override object ExecuteToken(ScriptContext context) {
+            VariableContext loopvariables = new VariableContext(context.Variables);
+            ScriptContext forcontext = new ScriptContext(loopvariables, context.Variables, context.CancellationToken);
+            initializer?.Execute(forcontext);
 
-            while (condition.Execute(loopvariables, arguments).ToBoolean()) {
-                object value=Body?.Execute(loopvariables, arguments);
+            while (condition.Execute(forcontext).ToBoolean()) {
+                forcontext.CancellationToken.ThrowIfCancellationRequested();
+
+                object value=Body?.Execute(forcontext);
                 if (value is Return)
                     return value;
                 if (value is Break breaktoken) {
-                    int depth = breaktoken.Depth.Execute<int>(loopvariables, arguments);
+                    int depth = breaktoken.Depth.Execute<int>(forcontext);
                     if(depth<=1)
                         return null;
                     return new Break(new ScriptValue(depth - 1));
                 }
 
                 if (value is Continue continuetoken) {
-                    int depth = continuetoken.Depth.Execute<int>(loopvariables, arguments);
+                    int depth = continuetoken.Depth.Execute<int>(forcontext);
                     if (depth <= 1) {
-                        step?.Execute(loopvariables, arguments);
+                        step?.Execute(forcontext);
                         continue;
                     }
 
                     return new Continue(new ScriptValue(depth - 1));
                 }
 
-                step?.Execute(loopvariables, arguments);
+                step?.Execute(forcontext);
             }
 
             return null;

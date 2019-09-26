@@ -1,5 +1,4 @@
-﻿using NightlyCode.Scripting.Parser;
-
+﻿
 namespace NightlyCode.Scripting.Tokens {
 
     /// <summary>
@@ -11,12 +10,12 @@ namespace NightlyCode.Scripting.Tokens {
         /// executes the token returning a result
         /// </summary>
         /// <returns>result of token call</returns>
-        object Execute(IVariableContext variables, IVariableProvider arguments);
+        object Execute(ScriptContext context);
 
         /// <summary>
         /// executes the token returning a result
         /// </summary>
         /// <returns>result of token call</returns>
-        T Execute<T>(IVariableContext variables, IVariableProvider arguments);
+        T Execute<T>(ScriptContext context);
     }
 }

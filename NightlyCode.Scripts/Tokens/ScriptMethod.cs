@@ -42,17 +42,17 @@ namespace NightlyCode.Scripting.Tokens {
         public IEnumerable<IScriptToken> Parameters => parameters;
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
-            object host = hosttoken.Execute(variables, arguments);
+        protected override object ExecuteToken(ScriptContext context) {
+            object host = hosttoken.Execute(context);
             if (host == null)
                 throw new ScriptExecutionException($"'{hosttoken}' results in null");
 
             if (host is IExternalMethod externmethod && MethodName.ToLower()=="invoke")
-                return externmethod.Invoke(arguments, Parameters.Select(a => a.Execute(variables, arguments)).ToArray());
+                return externmethod.Invoke(context.Arguments, Parameters.Select(a => a.Execute(context)).ToArray());
 
             MethodInfo[] methods = host.GetType().GetMethods().Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters)).ToArray();
 
-            object[] parametervalues = parameters.Select(p => p.Execute(variables, arguments)).ToArray();
+            object[] parametervalues = parameters.Select(p => p.Execute(context)).ToArray();
 
             List<ReferenceParameter> references=new List<ReferenceParameter>();
             for (int i = 0; i < parameters.Length; ++i) {
@@ -63,7 +63,7 @@ namespace NightlyCode.Scripting.Tokens {
 
             Tuple<MethodInfo, int>[] evaluation = methods.Select(m => MethodOperations.GetMethodMatchValue(m, parametervalues)).Where(e=>e.Item2>=0).OrderBy(m => m.Item2).ToArray();
             if (evaluation.Length > 0)
-                return MethodOperations.CallMethod(host, evaluation[0].Item1, parametervalues, variables, arguments, references);
+                return MethodOperations.CallMethod(host, evaluation[0].Item1, parametervalues, context, references);
 
             if (extensions != null) {
                 Type extensionbase = host.GetType();
@@ -71,7 +71,7 @@ namespace NightlyCode.Scripting.Tokens {
                     methods = extensions.GetExtensions(extensionbase).Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters, true)).ToArray();
                     evaluation = methods.Select(m => MethodOperations.GetMethodMatchValue(m, parametervalues, true)).OrderBy(m => m.Item2).ToArray();
                     if (evaluation.Length > 0)
-                        return MethodOperations.CallMethod(host, evaluation[0].Item1, parametervalues, variables, arguments, references, true);
+                        return MethodOperations.CallMethod(host, evaluation[0].Item1, parametervalues, context, references, true);
                     
 
                     if (extensionbase == typeof(object))
@@ -84,7 +84,7 @@ namespace NightlyCode.Scripting.Tokens {
                     methods = extensions.GetExtensions(interfacetype).Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters, true)).ToArray();
                     evaluation = methods.Select(m => MethodOperations.GetMethodMatchValue(m, parametervalues, true)).OrderBy(m => m.Item2).ToArray();
                     if (evaluation.Length > 0)
-                        return MethodOperations.CallMethod(host, evaluation[0].Item1, parametervalues, variables, arguments, references, true);
+                        return MethodOperations.CallMethod(host, evaluation[0].Item1, parametervalues, context, references, true);
                 }
             }
 

@@ -1,5 +1,4 @@
 ﻿using NightlyCode.Scripting.Operations;
-using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Tokens {
 
@@ -18,18 +17,18 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        public object Execute(IVariableContext variables, IVariableProvider arguments) {
-            return argument.Execute(variables, arguments);
+        public object Execute(ScriptContext context) {
+            return argument.Execute(context);
         }
 
         /// <inheritdoc />
-        public T Execute<T>(IVariableContext variables, IVariableProvider arguments) {
-            return argument.Execute<T>(variables, arguments);
+        public T Execute<T>(ScriptContext context) {
+            return argument.Execute<T>(context);
         }
 
         /// <inheritdoc />
-        public object Assign(IScriptToken token, IVariableContext variables, IVariableProvider arguments) {
-            return argument.Assign(token, variables, arguments);
+        public object Assign(IScriptToken token, ScriptContext context) {
+            return argument.Assign(token, context);
         }
     }
 }

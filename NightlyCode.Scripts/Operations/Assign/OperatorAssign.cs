@@ -1,6 +1,5 @@
 ﻿using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Operations.Assign {
@@ -16,12 +15,12 @@ namespace NightlyCode.Scripting.Operations.Assign {
         /// computes the result of the operation
         /// </summary>
         /// <returns></returns>
-        protected abstract object Compute(IVariableContext variables, IVariableProvider arguments);
+        protected abstract object Compute(ScriptContext context);
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments)
+        protected override object ExecuteToken(ScriptContext context)
         {
-            return lhs.Assign(new ScriptValue(Compute(variables, arguments)), variables, arguments);
+            return lhs.Assign(new ScriptValue(Compute(context)), context);
         }
 
         /// <inheritdoc />

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
@@ -18,17 +17,17 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
+        protected override object ExecuteToken(ScriptContext context) {
             List<IDisposable> values=new List<IDisposable>();
             try {
                 foreach (IScriptToken token in disposables) {
-                    object value = token.Execute(variables, arguments);
+                    object value = token.Execute(context);
                     if (!(value is IDisposable disposablevalue))
                         throw new ScriptRuntimeException($"'{token}' does not evaluate to an idisposable");
                     values.Add(disposablevalue);
                 }
 
-                return Body.Execute(variables, arguments);
+                return Body.Execute(context);
             }
             finally {
                 StringBuilder log=new StringBuilder();

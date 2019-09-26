@@ -43,5 +43,36 @@ namespace Scripting.Tests {
             extractor.Visit(script);
             Assert.That(new[] {"parameter"}.SequenceEqual(extractor.Parameters));
         }
+
+        [Test, Parallelizable]
+        public void ExceptionInCatchBlockIsResolved() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "try {",
+                "   method.call(3)",
+                "}",
+                "catch {",
+                "   return($exception.message)",
+                "}"
+            ), new Variable("method"));
+
+            ParameterExtractor extractor = new ParameterExtractor();
+            extractor.Visit(script);
+            Assert.That(!extractor.Parameters.Contains("exception"));
+        }
+
+        [Test, Parallelizable]
+        public void ExceptionInCatchStatementIsResolved() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "try",
+                "  method.call(3)",
+                "catch",
+                "  return($exception.message)"
+            ), new Variable("method"));
+
+            ParameterExtractor extractor = new ParameterExtractor();
+            extractor.Visit(script);
+            Assert.That(!extractor.Parameters.Contains("exception"));
+        }
+
     }
 }

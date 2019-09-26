@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
 
@@ -49,6 +50,15 @@ namespace NightlyCode.Scripting.Parser {
             if (ContainsVariable(variable))
                 return this;
             return parentprovider?.GetProvider(variable);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<string> Variables {
+            get {
+                if (parentprovider != null)
+                    return values.Keys.Concat(parentprovider.Variables);
+                return values.Keys;
+            }
         }
     }
 }

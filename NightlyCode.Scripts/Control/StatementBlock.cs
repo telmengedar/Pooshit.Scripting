@@ -8,7 +8,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// a block of statements executed in sequence
     /// </summary>
-    public class StatementBlock : ScriptToken, IStatementBlock {
+    public class StatementBlock : ScriptToken, ITokenContainer {
         readonly IScriptToken[] statements;
         readonly bool methodblock;
 
@@ -23,21 +23,23 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
-        public IEnumerable<IScriptToken> Body => statements;
+        public IEnumerable<IScriptToken> Children => statements;
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments)
+        protected override object ExecuteToken(ScriptContext context)
         {
-            return ExecuteBlock(variables, arguments);
+            return ExecuteBlock(context);
         }
 
-        object ExecuteBlock(IVariableContext variables, IVariableProvider arguments) {
-            VariableContext contextvariables = new VariableContext(variables);
+        object ExecuteBlock(ScriptContext context) {
+            ScriptContext blockcontext = new ScriptContext(new VariableContext(context.Variables), context.Arguments, context.CancellationToken);
             object result = null;
             foreach (IScriptToken statement in statements)
             {
+                blockcontext.CancellationToken.ThrowIfCancellationRequested();
+
                 try {
-                    result = statement.Execute(contextvariables, arguments);
+                    result = statement.Execute(blockcontext);
                 }
                 catch (ScriptException) {
                     throw;
@@ -49,7 +51,7 @@ namespace NightlyCode.Scripting.Control {
                 if (result is Return @return)
                 {
                     if (methodblock)
-                        return @return.Value?.Execute(contextvariables, arguments);
+                        return @return.Value?.Execute(blockcontext);
                     return @return;
                 }
 

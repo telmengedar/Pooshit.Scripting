@@ -12,8 +12,8 @@ namespace NightlyCode.Scripting.Operations.Assign {
         }
 
         /// <inheritdoc />
-        protected override object Compute(IVariableContext variables, IVariableProvider arguments) {
-            return (dynamic) Lhs.Execute(variables, arguments) << (dynamic) Rhs.Execute(variables, arguments);
+        protected override object Compute(ScriptContext context) {
+            return (dynamic) Lhs.Execute(context) << (dynamic) Rhs.Execute(context);
         }
 
         /// <inheritdoc />

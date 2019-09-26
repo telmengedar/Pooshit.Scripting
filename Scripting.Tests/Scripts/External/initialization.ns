@@ -1,0 +1,6 @@
+﻿$fullrevenue=0.0d
+$userrevenue={}
+$organizationrevenue={}
+$organizationorders={}
+$mindate="2019,04,01"
+$maxdate="2019,07,01"

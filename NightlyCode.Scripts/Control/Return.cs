@@ -23,8 +23,8 @@ namespace NightlyCode.Scripting.Control {
         public IScriptToken Value => value;
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
-            return new Return(new ScriptValue(Value?.Execute(variables, arguments)));
+        protected override object ExecuteToken(ScriptContext context) {
+            return new Return(new ScriptValue(Value?.Execute(context)));
         }
 
         /// <inheritdoc />

@@ -9,7 +9,7 @@ namespace NightlyCode.Scripting.Control {
     class Catch : ControlToken {
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
+        protected override object ExecuteToken(ScriptContext context) {
             throw new System.NotImplementedException();
         }
 

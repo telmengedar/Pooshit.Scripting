@@ -1,20 +1,19 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Tokens {
 
     /// <summary>
     /// token which represents multiple values
     /// </summary>
-    class ScriptArray : ScriptToken {
+    public class ScriptArray : ScriptToken {
         readonly IScriptToken[] values;
 
         /// <summary>
         /// creates a new <see cref="ScriptArray"/>
         /// </summary>
         /// <param name="values">values in array</param>
-        public ScriptArray(IScriptToken[] values) {
+        internal ScriptArray(IScriptToken[] values) {
             this.values = values;
         }
 
@@ -24,8 +23,8 @@ namespace NightlyCode.Scripting.Tokens {
         public IEnumerable<IScriptToken> Values => values;
 
         /// <inheritdoc />
-        protected override object ExecuteToken(IVariableContext variables, IVariableProvider arguments) {
-            return values.Select(v => v.Execute(variables, arguments)).ToArray();
+        protected override object ExecuteToken(ScriptContext context) {
+            return values.Select(v => v.Execute(context)).ToArray();
         }
 
         /// <inheritdoc />
