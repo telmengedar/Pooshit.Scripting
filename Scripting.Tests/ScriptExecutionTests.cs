@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using NightlyCode.Scripting;
+using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
@@ -25,7 +26,27 @@ namespace Scripting.Tests {
 
             tokensource.CancelAfter(1000);
 
-            await execution.ContinueWith(t => { });
+            await execution.ContinueWith(t => {
+                Assert.That(t.IsCanceled);
+            });
+        }
+
+        [Test, Parallelizable]
+        public void VariablesArePropagatedCorrectly() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "if(false) {",
+                "  for($i=0,$i<5,++$i) {",
+                "    return($log)",
+                "  }",
+                "}",
+                "else if(true) {",
+                "  for($i=0,$i<5,++$i) {",
+                "    return($log)",
+                "  }",
+                "}"
+            ));
+
+            Assert.AreEqual(42, script.Execute(new Variable("log", 42)));
         }
     }
 }

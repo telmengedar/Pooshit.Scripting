@@ -41,6 +41,9 @@ namespace NightlyCode.Scripting.Control {
                 try {
                     result = statement.Execute(blockcontext);
                 }
+                catch (OperationCanceledException) {
+                    throw;
+                }
                 catch (ScriptException) {
                     throw;
                 }

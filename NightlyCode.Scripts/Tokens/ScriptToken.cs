@@ -13,6 +13,9 @@ namespace NightlyCode.Scripting.Tokens {
             try {
                 return ExecuteToken(context);
             }
+            catch (OperationCanceledException) {
+                throw;
+            }
             catch (ScriptException) {
                 throw;
             }

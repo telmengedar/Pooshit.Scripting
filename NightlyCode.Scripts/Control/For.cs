@@ -28,7 +28,7 @@ namespace NightlyCode.Scripting.Control {
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
             VariableContext loopvariables = new VariableContext(context.Variables);
-            ScriptContext forcontext = new ScriptContext(loopvariables, context.Variables, context.CancellationToken);
+            ScriptContext forcontext = new ScriptContext(loopvariables, context.Arguments, context.CancellationToken);
             initializer?.Execute(forcontext);
 
             while (condition.Execute(forcontext).ToBoolean()) {
