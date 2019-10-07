@@ -49,5 +49,10 @@ namespace Scripting.Tests {
 
             Assert.DoesNotThrow(() => script.Execute(new Variable("script", resource)));
         }
+
+        [Test, Parallelizable]
+        public void ImportsInImports() {
+
+        }
     }
 }

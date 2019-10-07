@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using NightlyCode.Scripting;
 using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
 using Scripting.Tests.Data;
@@ -17,6 +18,14 @@ namespace Scripting.Tests {
         public static IEnumerable<string> IncompleteScripts {
             get {
                 foreach(string resource in typeof(ScriptParserTests).Assembly.GetManifestResourceNames().Where(r=>r.StartsWith("Scripting.Tests.Scripts.Incomplete.")))
+                    using (StreamReader reader = new StreamReader(typeof(ScriptParserTests).Assembly.GetManifestResourceStream(resource)))
+                        yield return reader.ReadToEnd();
+            }
+        }
+
+        public static IEnumerable<string> ValidScripts {
+            get {
+                foreach(string resource in typeof(ScriptParserTests).Assembly.GetManifestResourceNames().Where(r=>r.StartsWith("Scripting.Tests.Scripts.Valid.")))
                     using (StreamReader reader = new StreamReader(typeof(ScriptParserTests).Assembly.GetManifestResourceStream(resource)))
                         yield return reader.ReadToEnd();
             }
@@ -170,6 +179,12 @@ namespace Scripting.Tests {
             }
 
             Assert.Pass();
+        }
+
+        [Test, Parallelizable]
+        public void ParseValidScript([ValueSource(nameof(ValidScripts))]string scriptdata) {
+            ScriptParser parser = new ScriptParser();
+            Assert.DoesNotThrow(() => parser.Parse(scriptdata));
         }
 
         [Test, Parallelizable]

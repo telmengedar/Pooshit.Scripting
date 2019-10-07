@@ -75,7 +75,7 @@ namespace NightlyCode.Scripting.Visitors {
             ++Variables;
         }
 
-        public override void VisitControlToken(IControlToken controltoken) {
+        public override void VisitControlToken(IStatementContainer controltoken) {
             base.VisitControlToken(controltoken);
             ++ControlTokens;
         }

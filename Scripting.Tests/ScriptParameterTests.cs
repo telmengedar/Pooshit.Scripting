@@ -45,6 +45,17 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
+        public void DetectImplicitParameterInSwitch() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "switch($condition)",
+                "case(1) { return (4) }"
+            ));
+            ParameterExtractor extractor=new ParameterExtractor();
+            extractor.Visit(script);
+            Assert.That(new[] {"condition"}.SequenceEqual(extractor.Parameters));
+        }
+
+        [Test, Parallelizable]
         public void ExceptionInCatchBlockIsResolved() {
             IScript script = parser.Parse(ScriptCode.Create(
                 "try {",
@@ -72,6 +83,23 @@ namespace Scripting.Tests {
             ParameterExtractor extractor = new ParameterExtractor();
             extractor.Visit(script);
             Assert.That(!extractor.Parameters.Contains("exception"));
+        }
+
+        [Test, Parallelizable]
+        public void NewlineBetweenCommentAndToken() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "// bla bla",
+                "",
+                "using(true)",
+                "{",
+                "\nif(true)",
+                "\n\nreturn(0)",
+                "}"
+            ));
+
+            ParameterExtractor extractor = new ParameterExtractor();
+            extractor.Visit(script);
+            Assert.That(!extractor.Parameters.Any());
         }
 
     }

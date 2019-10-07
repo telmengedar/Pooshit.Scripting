@@ -22,6 +22,9 @@ namespace NightlyCode.Scripting.Tokens {
         public object Value => value;
 
         /// <inheritdoc />
+        public override string Literal => "value";
+
+        /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
             return value;
         }

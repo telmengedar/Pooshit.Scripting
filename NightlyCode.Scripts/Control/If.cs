@@ -1,4 +1,5 @@
-﻿using NightlyCode.Scripting.Errors;
+﻿using System.Collections.Generic;
+using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Tokens;
 
@@ -7,18 +8,19 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// statement execution a body when a condition is met
     /// </summary>
-    public class If : ControlToken {
+    public class If : ControlToken, IParameterContainer {
         readonly IScriptToken condition;
 
         /// <summary>
         /// creates a new <see cref="If"/> statement
         /// </summary>
-        /// <param name="parameters">condition statement has to match to execute body</param>
-        internal If(IScriptToken[] parameters) {
-            if (parameters.Length != 1)
-                throw new ScriptParserException("Expected exactly one condition for 'if' statement");
-            condition = parameters[0];
+        /// <param name="condition">condition statement has to match to execute body</param>
+        internal If(IScriptToken condition) {
+            this.condition = condition;
         }
+
+        /// <inheritdoc />
+        public override string Literal => "if";
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context)
@@ -26,6 +28,11 @@ namespace NightlyCode.Scripting.Control {
             if (condition.Execute(context).ToBoolean())
                 return Body.Execute(context);
             return Else?.Execute(context);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IScriptToken> Parameters {
+            get { yield return condition; }
         }
 
         /// <summary>

@@ -130,5 +130,45 @@ namespace Scripting.Tests {
             Assert.NotNull(result);
             Assert.AreEqual(60, result["number"]);
         }
+
+        [Test, Parallelizable]
+        public void ReadEntryAsProperty() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$value = {",
+                "  \"value\": 70,",
+                "  \"number\": 60",
+                "}",
+                "return($value.number)"
+            ));
+
+
+            Assert.AreEqual(60, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void SetEntryAsProperty() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$value = {}",
+                "$value.number=60",
+                "return($value.number)"
+            ));
+
+
+            Assert.AreEqual(60, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void ReadCasedEntryAsProperty() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$value = {",
+                "  \"Number\" : 60",
+                "}",
+                "return($value.Number)"
+            ));
+
+
+            Assert.AreEqual(60, script.Execute());
+        }
+
     }
 }

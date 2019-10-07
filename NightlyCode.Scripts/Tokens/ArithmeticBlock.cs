@@ -17,6 +17,9 @@ namespace NightlyCode.Scripting.Tokens {
         public IScriptToken InnerBlock => inner;
 
         /// <inheritdoc />
+        public override string Literal => "(...)";
+
+        /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
             return inner.Execute(context);
         }

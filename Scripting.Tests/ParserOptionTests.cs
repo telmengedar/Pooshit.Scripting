@@ -1,5 +1,4 @@
 ﻿using NightlyCode.Scripting;
-using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Providers;

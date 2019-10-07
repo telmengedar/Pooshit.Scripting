@@ -1,0 +1,7 @@
+﻿using(somevalue){
+	foreach(value,somevalue)
+	{
+		while(--value)
+			continue
+	}
+}

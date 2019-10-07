@@ -24,5 +24,7 @@ namespace NightlyCode.Scripting.Operations.Values {
             return $"{Lhs} % {Rhs}";
         }
 
+        /// <inheritdoc />
+        public override string Literal => "%";
     }
 }

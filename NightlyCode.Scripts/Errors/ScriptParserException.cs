@@ -11,7 +11,11 @@ namespace NightlyCode.Scripting.Errors {
         /// creates a new <see cref="ScriptParserException"/>
         /// </summary>
         /// <param name="message">error message</param>
-        public ScriptParserException(string message) : base(message) {
+        /// <param name="startindex">index where parser error started</param>
+        /// <param name="endindex">index where parser error ended</param>
+        public ScriptParserException(int startindex, int endindex, string message) : base(message) {
+            StartIndex = startindex;
+            EndIndex = endindex;
         }
 
         /// <summary>
@@ -19,8 +23,22 @@ namespace NightlyCode.Scripting.Errors {
         /// </summary>
         /// <param name="message">error message</param>
         /// <param name="innerException">exception which triggered this error</param>
-        public ScriptParserException(string message, Exception innerException) 
+        /// <param name="startindex">index where parser error started</param>
+        /// <param name="endindex">index where parser error ended</param>
+        public ScriptParserException(int startindex, int endindex, string message, Exception innerException) 
             : base(message, innerException) {
+            StartIndex = startindex;
+            EndIndex = endindex;
         }
+
+        /// <summary>
+        /// index where parser error started
+        /// </summary>
+        public int StartIndex { get; }
+
+        /// <summary>
+        /// index where parsing stopped
+        /// </summary>
+        public int EndIndex { get; set; }
     }
 }

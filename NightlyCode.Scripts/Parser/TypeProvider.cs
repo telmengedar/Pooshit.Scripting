@@ -10,8 +10,7 @@ namespace NightlyCode.Scripting.Parser {
 
         /// <inheritdoc />
         public ITypeInstanceProvider GetType(string name) {
-            if (!types.TryGetValue(name, out ITypeInstanceProvider provider))
-                throw new ScriptParserException($"Unknown type '{name}'");
+            types.TryGetValue(name, out ITypeInstanceProvider provider);
             return provider;
         }
 

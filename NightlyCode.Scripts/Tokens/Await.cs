@@ -1,13 +1,14 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Tokens {
 
     /// <summary>
     /// await token used to await async tasks
     /// </summary>
-    public class Await : IScriptToken {
+    public class Await : IParameterContainer {
         readonly IScriptToken token;
 
         /// <summary>
@@ -19,6 +20,9 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
+        public string Literal => "await";
+
+        /// <inheritdoc />
         public object Execute(ScriptContext context) {
             object result = token.Execute(context);
             if (!(result is Task task))
@@ -27,7 +31,17 @@ namespace NightlyCode.Scripting.Tokens {
             if (task.Status == TaskStatus.Created)
                 task.Start();
 
-            task.Wait();
+            try {
+                task.Wait();
+            }
+            catch (AggregateException e) {
+                Exception unwrapped = e;
+                while (unwrapped is AggregateException agg && agg.InnerException != null)
+                    unwrapped = agg.InnerException;
+                throw unwrapped;
+            }
+            
+
             if (!task.GetType().IsGenericType)
                 return null;
 
@@ -37,6 +51,11 @@ namespace NightlyCode.Scripting.Tokens {
         /// <inheritdoc />
         public T Execute<T>(ScriptContext context) {
             return (T) Execute(context);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IScriptToken> Parameters {
+            get { yield return token; }
         }
     }
 }

@@ -14,6 +14,9 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
+        public override string Literal => "try";
+
+        /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
             try {
                 return Body.Execute(context);

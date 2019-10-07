@@ -1,0 +1,10 @@
+﻿while(true) {
+
+	++$value
+}
+
+$value += 3
+if($value == 7)
+	$value = 8
+
+return($value)

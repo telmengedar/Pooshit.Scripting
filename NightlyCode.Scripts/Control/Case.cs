@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
@@ -6,7 +7,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// case for a <see cref="Switch"/> statement
     /// </summary>
-    public class Case : ControlToken {
+    public class Case : ControlToken, IParameterContainer {
         readonly IScriptToken[] conditions;
 
         /// <summary>
@@ -38,6 +39,9 @@ namespace NightlyCode.Scripting.Control {
         }
 
         /// <inheritdoc />
+        public override string Literal => "case";
+
+        /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context)
         {
             return Body.Execute(context);
@@ -49,6 +53,17 @@ namespace NightlyCode.Scripting.Control {
         /// <inheritdoc />
         public override string ToString() {
             return $"case({string.Join<IScriptToken>(", ", conditions)}) {Body}";
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IScriptToken> Parameters {
+            get {
+                if(IsDefault)
+                    yield break;
+
+                foreach (IScriptToken parameter in conditions)
+                    yield return parameter;
+            }
         }
     }
 }

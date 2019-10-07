@@ -27,5 +27,8 @@ namespace NightlyCode.Scripting.Operations.Values {
 
         /// <inheritdoc />
         public override Operator Operator => Operator.RolRight;
+
+        /// <inheritdoc />
+        public override string Literal => ">>>";
     }
 }

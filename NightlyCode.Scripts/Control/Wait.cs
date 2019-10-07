@@ -15,21 +15,18 @@ namespace NightlyCode.Scripting.Control {
         /// <summary>
         /// creates a new <see cref="Wait"/>
         /// </summary>
-        /// <param name="parameters">parameters for wait call (should be one parameter indicating the time to wait)</param>
-        public Wait(IScriptToken[] parameters) {
-            if (parameters.Length == 0)
-                throw new ScriptParserException("wait needs a time to wait as argument");
-
-            if (parameters.Length > 1)
-                throw new ScriptParserException("too many arguments for wait call");
-
-            timetoken = parameters[0];
+        /// <param name="time">time to wait</param>
+        public Wait(IScriptToken time) {
+            timetoken = time;
         }
 
         /// <summary>
         /// time to wait
         /// </summary>
         public IScriptToken Time => timetoken;
+
+        /// <inheritdoc />
+        public override string Literal => "wait";
 
         protected override object ExecuteToken(ScriptContext context) {
             object timeargument = timetoken.Execute(context);

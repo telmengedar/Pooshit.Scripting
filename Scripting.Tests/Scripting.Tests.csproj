@@ -7,8 +7,41 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Scripts\External\importlevel1.ns" />
+    <None Remove="Scripts\External\importlevel2.ns" />
     <None Remove="Scripts\External\increasedbyone.ns" />
     <None Remove="Scripts\External\initialization.ns" />
+    <None Remove="Scripts\External\parentbug.ns" />
+    <None Remove="Scripts\Formatting\arithmetic_code.ns" />
+    <None Remove="Scripts\Formatting\arithmetic_expected.ns" />
+    <None Remove="Scripts\Formatting\cast_code.ns" />
+    <None Remove="Scripts\Formatting\cast_expected.ns" />
+    <None Remove="Scripts\Formatting\eol_comments_code.ns" />
+    <None Remove="Scripts\Formatting\eol_comments_expected.ns" />
+    <None Remove="Scripts\Formatting\newline_code.ns" />
+    <None Remove="Scripts\Formatting\newline_expected.ns" />
+    <None Remove="Scripts\Formatting\new_code.ns" />
+    <None Remove="Scripts\Formatting\new_expected.ns" />
+    <None Remove="Scripts\Formatting\subblock_code.ns" />
+    <None Remove="Scripts\Formatting\subblock_expected.ns" />
+    <None Remove="Scripts\Formatting\switch_code.ns" />
+    <None Remove="Scripts\Formatting\switch_expected.ns" />
+    <None Remove="Scripts\Formatting\test1_expected.ns" />
+    <None Remove="Scripts\Formatting\test1_input.ns" />
+    <None Remove="Scripts\Formatting\test2_dictionaries_expected.ns" />
+    <None Remove="Scripts\Formatting\test2_dictionaries_input.ns" />
+    <None Remove="Scripts\Formatting\test3_methods_expected.ns" />
+    <None Remove="Scripts\Formatting\test3_methods_input.ns" />
+    <None Remove="Scripts\Formatting\test4_indexer_expected.ns" />
+    <None Remove="Scripts\Formatting\test4_indexer_input.ns" />
+    <None Remove="Scripts\Formatting\test5_interpolation_expected.ns" />
+    <None Remove="Scripts\Formatting\test5_interpolation_input.ns" />
+    <None Remove="Scripts\Formatting\test6_comments_expected.ns" />
+    <None Remove="Scripts\Formatting\test6_comments_input.ns" />
+    <None Remove="Scripts\Formatting\throw_code.ns" />
+    <None Remove="Scripts\Formatting\throw_expected.ns" />
+    <None Remove="Scripts\Formatting\using_code.ns" />
+    <None Remove="Scripts\Formatting\using_expected.ns" />
     <None Remove="Scripts\Incomplete\incomplete1.ns" />
     <None Remove="Scripts\Incomplete\incomplete2.ns" />
     <None Remove="Scripts\Incomplete\incomplete3.ns" />
@@ -16,9 +49,42 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Scripts\External\importlevel1.ns" />
+    <EmbeddedResource Include="Scripts\External\importlevel2.ns" />
     <EmbeddedResource Include="Scripts\External\increasedbyone.ns">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="Scripts\Formatting\cast_code.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\cast_expected.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\throw_code.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\throw_expected.ns" />
+    <EmbeddedResource Include="Scripts\Valid\parentbug.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\arithmetic_code.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\arithmetic_expected.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\eol_comments_code.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\eol_comments_expected.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\newline_code.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\newline_expected.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\new_code.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\new_expected.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\subblock_code.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\subblock_expected.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\switch_expected.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\switch_code.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\test1_expected.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\test6_comments_expected.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\test6_comments_input.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\test5_interpolation_expected.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\test5_interpolation_input.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\test2_dictionaries_expected.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\test3_methods_expected.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\test4_indexer_expected.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\test4_indexer_input.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\test3_methods_input.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\test2_dictionaries_input.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\test1_input.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\using_code.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\using_expected.ns" />
   </ItemGroup>
 
   <ItemGroup>

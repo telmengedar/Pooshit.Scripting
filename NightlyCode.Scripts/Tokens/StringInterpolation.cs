@@ -20,6 +20,9 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
+        public string Literal => "$\"...\"";
+
+        /// <inheritdoc />
         public object Execute(ScriptContext context) {
             return string.Join("", tokens.Select(t => t.Execute(context)?.ToString()));
         }

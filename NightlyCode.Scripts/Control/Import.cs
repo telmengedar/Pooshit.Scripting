@@ -1,4 +1,5 @@
-﻿using NightlyCode.Scripting.Parser;
+﻿using System.Collections.Generic;
+using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Providers;
 using NightlyCode.Scripting.Tokens;
 
@@ -7,7 +8,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// imports a script method using the <see cref="IExternalMethodProvider"/> of the parser
     /// </summary>
-    public class Import : ScriptToken {
+    public class Import : ScriptToken, IParameterContainer {
         readonly IScriptToken key;
         readonly IExternalMethodProvider methodprovider;
         
@@ -27,8 +28,16 @@ namespace NightlyCode.Scripting.Control {
         public IScriptToken Reference => key;
 
         /// <inheritdoc />
+        public override string Literal => "import";
+
+        /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
             return methodprovider.Import(key.Execute<string>(context));
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IScriptToken> Parameters {
+            get { yield return key; }
         }
     }
 }

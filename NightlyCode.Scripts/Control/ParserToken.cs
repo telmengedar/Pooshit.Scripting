@@ -1,4 +1,5 @@
-﻿using NightlyCode.Scripting.Parser;
+﻿using System;
+using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
@@ -17,6 +18,8 @@ namespace NightlyCode.Scripting.Control {
         }
 
         public string Data { get; }
+
+        public override string Literal => throw new NotImplementedException("this token is only used internally by the parser");
 
         protected override object ExecuteToken(ScriptContext context) {
             throw new System.NotImplementedException();

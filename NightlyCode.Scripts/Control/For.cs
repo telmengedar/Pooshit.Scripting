@@ -1,4 +1,5 @@
-﻿using NightlyCode.Scripting.Errors;
+﻿using System.Collections.Generic;
+using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
@@ -8,7 +9,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// loop with an initializer, a condition and an increment
     /// </summary>
-    public class For : ControlToken {
+    public class For : ControlToken, IParameterContainer {
         readonly IScriptToken initializer;
         readonly IScriptToken condition;
         readonly IScriptToken step;
@@ -16,14 +17,17 @@ namespace NightlyCode.Scripting.Control {
         /// <summary>
         /// creates a new <see cref="For"/> statement 
         /// </summary>
-        /// <param name="loopparameters"></param>
-        internal For(IScriptToken[] loopparameters) {
-            if (loopparameters.Length != 3)
-                throw new ScriptParserException("3 loop parameters needed for a 'for' loop");
-            initializer = loopparameters[0];
-            condition = loopparameters[1];
-            step = loopparameters[2];
+        /// <param name="initializer">variable initializer</param>
+        /// <param name="condition">loop condition</param>
+        /// <param name="step">loop step token</param>
+        internal For(IScriptToken initializer, IScriptToken condition, IScriptToken step) {
+            this.initializer = initializer;
+            this.condition = condition;
+            this.step = step;
         }
+
+        /// <inheritdoc />
+        public override string Literal => "for";
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
@@ -66,6 +70,18 @@ namespace NightlyCode.Scripting.Control {
         /// <inheritdoc />
         public override string ToString() {
             return $"for({initializer}, {condition}, {step}) {Body}";
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IScriptToken> Parameters {
+            get {
+                if (initializer != null)
+                    yield return initializer;
+                if (condition != null)
+                    yield return condition;
+                if (step != null)
+                    yield return step;
+            }
         }
     }
 }

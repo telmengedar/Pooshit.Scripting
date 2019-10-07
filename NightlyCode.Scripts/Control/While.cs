@@ -1,4 +1,5 @@
-﻿using NightlyCode.Scripting.Errors;
+﻿using System.Collections.Generic;
+using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
@@ -8,18 +9,19 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// executes a statement block while a condition is met
     /// </summary>
-    public class While : ControlToken {
+    public class While : ControlToken, IParameterContainer {
         readonly IScriptToken condition;
 
         /// <summary>
         /// creates a new <see cref="While"/>
         /// </summary>
-        /// <param name="parameters">parameters containing condition to check</param>
-        internal While(IScriptToken[] parameters) {
-            if (parameters.Length != 1)
-                throw new ScriptParserException("While needs exactly one condition as parameter");
-            condition = parameters[0];
+        /// <param name="condition">condition to check</param>
+        internal While(IScriptToken condition) {
+            this.condition = condition;
         }
+
+        /// <inheritdoc />
+        public override string Literal => "while";
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
@@ -52,5 +54,10 @@ namespace NightlyCode.Scripting.Control {
 
         /// <inheritdoc />
         public override IScriptToken Body { get; internal set; }
+
+        /// <inheritdoc />
+        public IEnumerable<IScriptToken> Parameters {
+            get { yield return condition; }
+        }
     }
 }

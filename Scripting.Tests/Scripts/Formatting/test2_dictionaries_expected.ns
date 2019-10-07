@@ -1,0 +1,8 @@
+﻿$result = 0
+$lookup = {
+	"values" : [1, 3, 7],
+	$result : "term"
+}
+foreach($value, $lookup.values)
+	$result += $value
+return($result)

@@ -21,5 +21,8 @@ namespace NightlyCode.Scripting.Operations.Values {
         public override string ToString() {
             return $"{Lhs} + {Rhs}";
         }
+
+        /// <inheritdoc />
+        public override string Literal => "+";
     }
 }

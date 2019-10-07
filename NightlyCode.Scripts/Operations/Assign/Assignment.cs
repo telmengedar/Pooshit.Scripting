@@ -14,6 +14,9 @@ namespace NightlyCode.Scripting.Operations.Assign {
         }
 
         /// <inheritdoc />
+        public override string Literal => "=";
+
+        /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
             return lhs.Assign(Rhs, context);
         }
@@ -31,7 +34,7 @@ namespace NightlyCode.Scripting.Operations.Assign {
             set {
                 lhs=value as IAssignableToken;
                 if (lhs == null)
-                    throw new ScriptRuntimeException("Left hand side of assignment has to be an assignable token");
+                    throw new ScriptParserException(-1, -1, "Left hand side of assignment has to be an assignable token");
             }
         }
 

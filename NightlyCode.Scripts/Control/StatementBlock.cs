@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Extern;
 using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
@@ -8,7 +9,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// a block of statements executed in sequence
     /// </summary>
-    public class StatementBlock : ScriptToken, ITokenContainer {
+    public class StatementBlock : IScriptToken, ITokenContainer {
         readonly IScriptToken[] statements;
         readonly bool methodblock;
 
@@ -26,9 +27,25 @@ namespace NightlyCode.Scripting.Control {
         public IEnumerable<IScriptToken> Children => statements;
 
         /// <inheritdoc />
-        protected override object ExecuteToken(ScriptContext context)
-        {
-            return ExecuteBlock(context);
+        public string Literal => "{ ... }";
+
+        public object Execute(ScriptContext context) {
+            try {
+                return ExecuteBlock(context);
+            }
+            catch (OperationCanceledException) {
+                throw;
+            }
+            catch (ScriptException) {
+                throw;
+            }
+            catch (Exception e) {
+                throw new ScriptRuntimeException($"Unable to execute '{this}'", e.Message, e);
+            }
+        }
+
+        public T Execute<T>(ScriptContext context) {
+            return Converter.Convert<T>(Execute(context));
         }
 
         object ExecuteBlock(ScriptContext context) {

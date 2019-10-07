@@ -1,0 +1,11 @@
+﻿while(true) 
+{
+	switch(value)
+	case(2,3) {
+		++$value
+	}
+	case(7)
+		--value
+	default
+		value = 8
+}

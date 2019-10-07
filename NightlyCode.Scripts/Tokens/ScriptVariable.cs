@@ -28,6 +28,9 @@ namespace NightlyCode.Scripting.Tokens {
         public string Name { get; }
 
         /// <inheritdoc />
+        public override string Literal => "$value";
+
+        /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
             if (context.Arguments?.ContainsVariable(Name) ?? false)
                 return context.Arguments.GetVariable(Name);

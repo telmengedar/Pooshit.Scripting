@@ -6,14 +6,23 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// creates a new instance of a type
     /// </summary>
-    public class NewInstance : ScriptToken, IParameterizedToken {
+    public class NewInstance : ScriptToken, IParameterContainer {
         readonly ITypeInstanceProvider provider;
         readonly IScriptToken[] parameters;
 
-        internal NewInstance(ITypeInstanceProvider provider, IScriptToken[] parameters) {
+        internal NewInstance(string typename, ITypeInstanceProvider provider, IScriptToken[] parameters) {
+            TypeName = typename;
             this.provider = provider;
             this.parameters = parameters;
         }
+
+        /// <summary>
+        /// name of type in script
+        /// </summary>
+        public string TypeName { get; }
+
+        /// <inheritdoc />
+        public override string Literal => "new";
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {

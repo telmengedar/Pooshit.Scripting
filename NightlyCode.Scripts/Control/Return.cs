@@ -1,4 +1,4 @@
-﻿using NightlyCode.Scripting.Parser;
+﻿using System.Collections.Generic;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
@@ -6,7 +6,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// returns a value and end execution of current method
     /// </summary>
-    public class Return : ScriptToken {
+    public class Return : ScriptToken, IParameterContainer {
         readonly IScriptToken value;
 
         /// <summary>
@@ -23,6 +23,9 @@ namespace NightlyCode.Scripting.Control {
         public IScriptToken Value => value;
 
         /// <inheritdoc />
+        public override string Literal => "return";
+
+        /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
             return new Return(new ScriptValue(Value?.Execute(context)));
         }
@@ -30,6 +33,13 @@ namespace NightlyCode.Scripting.Control {
         /// <inheritdoc />
         public override string ToString() {
             return $"return {value}";
+        }
+
+        public IEnumerable<IScriptToken> Parameters {
+            get {
+                if (value != null)
+                    yield return value;
+            }
         }
     }
 }

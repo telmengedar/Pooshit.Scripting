@@ -5,7 +5,7 @@ namespace NightlyCode.Scripting.Operations {
     /// <summary>
     /// token applying an operation to a single operand
     /// </summary>
-    interface IUnaryToken : IScriptToken {
+    public interface IUnaryToken : IScriptToken {
 
         /// <summary>
         /// determines whether the operand is ahead of this token or behind it

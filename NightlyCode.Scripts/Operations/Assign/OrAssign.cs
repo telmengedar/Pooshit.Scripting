@@ -24,5 +24,8 @@ namespace NightlyCode.Scripting.Operations.Assign {
         {
             return $"{Lhs} |= {Rhs}";
         }
+
+        /// <inheritdoc />
+        public override string Literal => "|=";
     }
 }

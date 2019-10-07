@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Parser;
@@ -9,23 +10,18 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// loop which iterates over a collection
     /// </summary>
-    public class Foreach : ControlToken {
+    public class Foreach : ControlToken, IParameterContainer {
         readonly ScriptVariable variable;
         readonly IScriptToken collection;
 
         /// <summary>
         /// creates a new <see cref="Foreach"/>
         /// </summary>
-        /// <param name="parameters">parameters containing iterator variable and collection to iterate over</param>
-        internal Foreach(IScriptToken[] parameters) {
-            if (parameters.Length != 2)
-                throw new ScriptParserException("Foreach needs a variable and a collection as parameters");
-
-            variable = parameters[0] as ScriptVariable;
-            if(variable==null)
-                throw new ScriptParserException("Foreach iterator variable has to be a variable token");
-            
-            collection = parameters[1];
+        /// <param name="variable">iterator variable</param>
+        /// <param name="collection">collection which is enumerated</param>
+        internal Foreach(ScriptVariable variable, IScriptToken collection) {
+            this.variable = variable;
+            this.collection = collection;
         }
 
         /// <summary>
@@ -37,6 +33,9 @@ namespace NightlyCode.Scripting.Control {
         /// collection to be iterated
         /// </summary>
         public IScriptToken Collection { get; set; }
+
+        /// <inheritdoc />
+        public override string Literal => "foreach";
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
@@ -79,6 +78,13 @@ namespace NightlyCode.Scripting.Control {
         /// <inheritdoc />
         public override string ToString() {
             return $"foreach({variable}, {collection}) {Body}";
+        }
+
+        public IEnumerable<IScriptToken> Parameters {
+            get {
+                yield return variable;
+                yield return collection;
+            }
         }
     }
 }

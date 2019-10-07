@@ -1,0 +1,2 @@
+﻿$value=8
+$log=$"bla bla {7+3} bla bla {value} bla bla {"phew"}"

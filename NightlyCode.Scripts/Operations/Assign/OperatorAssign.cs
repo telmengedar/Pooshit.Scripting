@@ -31,7 +31,8 @@ namespace NightlyCode.Scripting.Operations.Assign {
             {
                 lhs = value as IAssignableToken;
                 if (lhs == null)
-                    throw new ScriptParserException("Left hand side of an operator assign must be assignable");
+                    // TODO: try to provide position of token here
+                    throw new ScriptParserException(-1,-1,"Left hand side of an operator assign must be assignable");
             }
         }
 

@@ -12,7 +12,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// calls a method in a script
     /// </summary>
-    public class ScriptMethod : ScriptToken, IParameterizedToken {
+    public class ScriptMethod : ScriptToken, IParameterContainer {
         readonly IExtensionProvider extensions;
         readonly IScriptToken hosttoken;
         readonly string methodname;
@@ -40,6 +40,9 @@ namespace NightlyCode.Scripting.Tokens {
         public string MethodName => methodname;
 
         public IEnumerable<IScriptToken> Parameters => parameters;
+
+        /// <inheritdoc />
+        public override string Literal => $".{methodname}()";
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {

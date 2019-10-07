@@ -12,7 +12,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// indexer call on an object
     /// </summary>
-    public class ScriptIndexer : AssignableToken, IParameterizedToken {
+    public class ScriptIndexer : AssignableToken, IParameterContainer {
         readonly IScriptToken hosttoken;
         readonly IScriptToken[] parameters;
 
@@ -30,6 +30,9 @@ namespace NightlyCode.Scripting.Tokens {
 
         /// <inheritdoc />
         public IEnumerable<IScriptToken> Parameters => parameters;
+
+        /// <inheritdoc />
+        public override string Literal => "[]";
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {

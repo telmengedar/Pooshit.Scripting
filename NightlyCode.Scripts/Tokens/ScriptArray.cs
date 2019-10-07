@@ -23,6 +23,9 @@ namespace NightlyCode.Scripting.Tokens {
         public IEnumerable<IScriptToken> Values => values;
 
         /// <inheritdoc />
+        public override string Literal => "[]";
+
+        /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
             return values.Select(v => v.Execute(context)).ToArray();
         }

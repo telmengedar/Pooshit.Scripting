@@ -1,6 +1,5 @@
 ﻿using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Extensions;
-using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Operations.Logic {
 
@@ -24,5 +23,8 @@ namespace NightlyCode.Scripting.Operations.Logic {
         {
             return $"{Lhs} && {Rhs}";
         }
+
+        /// <inheritdoc />
+        public override string Literal => "&&";
     }
 }

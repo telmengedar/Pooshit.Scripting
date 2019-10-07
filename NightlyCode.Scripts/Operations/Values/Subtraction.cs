@@ -1,5 +1,4 @@
 ﻿using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Operations.Values {
 
@@ -25,5 +24,7 @@ namespace NightlyCode.Scripting.Operations.Values {
             return $"{Lhs} - {Rhs}";
         }
 
+        /// <inheritdoc />
+        public override string Literal => "-";
     }
 }

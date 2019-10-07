@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control.Internal {
@@ -21,6 +20,9 @@ namespace NightlyCode.Scripting.Control.Internal {
 
         /// <inheritdoc />
         public IEnumerable<IScriptToken> Children => body();
+
+        /// <inheritdoc />
+        public override string Literal => "...";
 
         protected override object ExecuteToken(ScriptContext context) {
             foreach (IScriptToken token in Children)

@@ -3,12 +3,12 @@
 namespace NightlyCode.Scripting.Tokens {
 
     /// <summary>
-    /// token which takes parameters
+    /// control token which is based on a condition
     /// </summary>
-    public interface IParameterizedToken {
+    public interface IParameterContainer : IScriptToken {
 
         /// <summary>
-        /// parameters for token
+        /// evaluated condition
         /// </summary>
         IEnumerable<IScriptToken> Parameters { get; }
     }

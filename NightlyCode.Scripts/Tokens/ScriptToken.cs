@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extern;
 
@@ -6,7 +7,11 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// base implementation of a script token with basic error handling
     /// </summary>
-    public abstract class ScriptToken : IScriptToken {
+    public abstract class ScriptToken : ICommentContainer {
+        readonly List<Comment> comments = new List<Comment>();
+
+        /// <inheritdoc />
+        public abstract string Literal { get; }
 
         /// <inheritdoc />
         public object Execute(ScriptContext context) {
@@ -34,5 +39,13 @@ namespace NightlyCode.Scripting.Tokens {
         /// </summary>
         /// <returns>result of statement</returns>
         protected abstract object ExecuteToken(ScriptContext context);
+
+        /// <inheritdoc />
+        public IEnumerable<Comment> Comments => comments;
+
+        /// <inheritdoc />
+        public void AddComment(Comment comment) {
+            comments.Add(comment);
+        }
     }
 }

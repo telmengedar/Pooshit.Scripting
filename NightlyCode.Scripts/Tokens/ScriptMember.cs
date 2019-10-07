@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NightlyCode.Scripting.Errors;
@@ -21,7 +22,7 @@ namespace NightlyCode.Scripting.Tokens {
         /// <param name="membername">name of member to read</param>
         internal ScriptMember(IScriptToken host, string membername) {
             hosttoken = host;
-            this.membername = membername.ToLower();
+            this.membername = membername;
         }
 
         /// <summary>
@@ -35,9 +36,17 @@ namespace NightlyCode.Scripting.Tokens {
         public string Member => membername;
 
         /// <inheritdoc />
+        public override string Literal => $".{membername}";
+
+        /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
             object host = hosttoken.Execute(context);
-            PropertyInfo property = host.GetType().GetProperties().FirstOrDefault(p => p.Name.ToLower() == membername);
+
+            if (host is Dictionary<object, object> dictionary)
+                return dictionary[Member];
+
+            string member = membername.ToLower();
+            PropertyInfo property = host.GetType().GetProperties().FirstOrDefault(p => p.Name.ToLower() == member);
             if(property != null) {
                 try {
                     return property.GetValue(host);
@@ -48,7 +57,7 @@ namespace NightlyCode.Scripting.Tokens {
             }
 
 
-            FieldInfo fieldinfo = host.GetType().GetFields().FirstOrDefault(f => f.Name.ToLower() == membername);
+            FieldInfo fieldinfo = host.GetType().GetFields().FirstOrDefault(f => f.Name.ToLower() == member);
             if (fieldinfo == null)
                 throw new ScriptRuntimeException($"A member with the name of {membername} was not found in type {host.GetType().Name}");
 
@@ -92,11 +101,15 @@ namespace NightlyCode.Scripting.Tokens {
 
         protected override object AssignToken(IScriptToken token, ScriptContext context) {
             object host = hosttoken.Execute(context);
-            PropertyInfo property = host.GetType().GetProperties().FirstOrDefault(p => p.Name.ToLower() == membername);
+            if (host is Dictionary<object, object> dictionary)
+                return dictionary[Member] = token.Execute(context);
+
+            string member = membername.ToLower();
+            PropertyInfo property = host.GetType().GetProperties().FirstOrDefault(p => p.Name.ToLower() == member);
             if (property != null)
                 return SetProperty(host, property, token, context);
 
-            FieldInfo fieldinfo = host.GetType().GetFields().FirstOrDefault(f => f.Name.ToLower() == membername);
+            FieldInfo fieldinfo = host.GetType().GetFields().FirstOrDefault(f => f.Name.ToLower() == member);
             if (fieldinfo == null)
                 throw new ScriptRuntimeException($"A member with the name of {membername} was not found in type {host.GetType().Name}");
 

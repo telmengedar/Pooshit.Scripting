@@ -26,6 +26,9 @@ namespace NightlyCode.Scripting.Control {
         public IScriptToken Depth { get; }
 
         /// <inheritdoc />
+        public override string Literal => "continue";
+
+        /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
             return this;
         }

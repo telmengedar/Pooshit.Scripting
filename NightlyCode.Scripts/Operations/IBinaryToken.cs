@@ -1,5 +1,4 @@
-﻿using System.Xml.Schema;
-using NightlyCode.Scripting.Tokens;
+﻿using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Operations {
 

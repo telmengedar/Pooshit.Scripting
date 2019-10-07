@@ -19,6 +19,9 @@ namespace NightlyCode.Scripting.Operations.Unary {
         }
 
         /// <inheritdoc />
+        public override string Literal => "--";
+
+        /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context)
         {
             if (IsPostToken) {
@@ -42,7 +45,8 @@ namespace NightlyCode.Scripting.Operations.Unary {
             set {
                 token = value as IAssignableToken;
                 if (token == null)
-                    throw new ScriptParserException("Operand of decrement must be assignable");
+                    // TODO: try to provide position of token
+                    throw new ScriptParserException(-1, -1, "Operand of decrement must be assignable");
             }
         }
 

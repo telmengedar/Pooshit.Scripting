@@ -31,5 +31,8 @@ namespace NightlyCode.Scripting.Operations.Comparision {
         public override string ToString() {
             return $"{Lhs} ~~ {Rhs}";
         }
+
+        /// <inheritdoc />
+        public override string Literal => "~~";
     }
 }

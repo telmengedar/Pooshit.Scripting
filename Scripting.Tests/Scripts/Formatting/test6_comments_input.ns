@@ -1,0 +1,16 @@
+﻿/* bla bla
+   bla bla
+*/
+
+// more bla bla
+// a block of text
+
+// and now some comment
+$value=2 while(true){
+// increase value
+	$value++}
+	/*
+	bla bla bla
+		bla bla bla
+	*/
+	return(value)

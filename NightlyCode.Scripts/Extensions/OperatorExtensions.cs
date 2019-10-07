@@ -71,7 +71,8 @@ namespace NightlyCode.Scripting.Extensions {
                 case Operator.XorAssign:
                     return 13;
                 default:
-                    throw new ScriptParserException("Unsupported operator");
+                    // this is only thrown when the script parser logic is actually broken so no indices need to be provided
+                    throw new ScriptParserException(-1,-1,"Unsupported operator");
             }
         }
     }

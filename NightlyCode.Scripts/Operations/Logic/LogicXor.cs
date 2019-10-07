@@ -23,5 +23,8 @@ namespace NightlyCode.Scripting.Operations.Logic {
         {
             return $"{Lhs} ^^ {Rhs}";
         }
+
+        /// <inheritdoc />
+        public override string Literal => "^^";
     }
 }

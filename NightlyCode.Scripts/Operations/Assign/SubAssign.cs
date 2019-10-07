@@ -1,5 +1,4 @@
 ﻿using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Operations.Assign {
 
@@ -24,5 +23,7 @@ namespace NightlyCode.Scripting.Operations.Assign {
         {
             return $"{Lhs} -= {Rhs}";
         }
+
+        public override string Literal => "-=";
     }
 }

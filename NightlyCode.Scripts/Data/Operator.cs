@@ -204,13 +204,8 @@
         XorAssign,
 
         /// <summary>
-        /// marks all characters until the next linebreak as a comment
+        /// lambda method
         /// </summary>
-        SingleLineComment,
-
-        /// <summary>
-        /// marks all characters until a multiline comment terminator as a comment
-        /// </summary>
-        MultilineComment
+        Lambda
     }
 }

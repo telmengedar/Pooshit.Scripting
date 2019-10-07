@@ -1,0 +1,3 @@
+﻿$increase=import("Scripting.Tests.Scripts.External.increasedbyone.ns")
+
+return($increase($arguments[0])+$increase($arguments[0]))

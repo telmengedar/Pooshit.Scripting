@@ -44,5 +44,17 @@ namespace Scripting.Tests {
                 ));
             });
         }
+
+        [Test, Parallelizable]
+        public void MixedMultiLineAndLineComments() {
+            Assert.DoesNotThrow(() => {
+                parser.Parse(ScriptCode.Create(
+                    "/* ----",
+                    "// bla bla bla ",
+                    "// bla bla bla ",
+                    "*/"
+                ));
+            });
+        }
     }
 }

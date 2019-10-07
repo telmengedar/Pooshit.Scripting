@@ -18,7 +18,7 @@ namespace NightlyCode.Scripting.Operations {
                 throw;
             }
             catch (Exception e) {
-                throw new ScriptRuntimeException($"Unable to execute assignment '{this}'", e.Message, e);
+                throw new ScriptRuntimeException($"Unable to execute assignment '{this}'", $"{e.GetType().Name}:\n{e.Message}", e);
             }
         }
 

@@ -9,6 +9,9 @@ namespace NightlyCode.Scripting.Control {
     class Catch : ControlToken {
 
         /// <inheritdoc />
+        public override string Literal => "catch";
+
+        /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
             throw new System.NotImplementedException();
         }

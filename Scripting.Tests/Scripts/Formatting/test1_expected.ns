@@ -1,0 +1,5 @@
+﻿$value = 2
+while(true) {
+	$value++
+}
+return($value)

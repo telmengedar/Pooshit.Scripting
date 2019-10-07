@@ -9,6 +9,9 @@ namespace NightlyCode.Scripting.Control {
     class Else : ControlToken {
 
         /// <inheritdoc />
+        public override string Literal => "else";
+
+        /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
             throw new System.NotImplementedException();
         }

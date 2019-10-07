@@ -53,7 +53,7 @@ namespace NightlyCode.Scripting.Operations {
                             continue;
                         parameter = array.GetValue(0);
                     }
-                    else if (parameter is IEnumerable enumerable && !(parameter is string)) {
+                    else if (parameter is IEnumerable enumerable && !(parameter is string) && !(parameter is Dictionary<object, object>)) {
                         if (!enumerable.Cast<object>().Any())
                             continue;
                         parameter = enumerable.Cast<object>().First();
@@ -75,7 +75,7 @@ namespace NightlyCode.Scripting.Operations {
                             continue;
                         parameter = array.GetValue(0);
                     }
-                    else if (parameter is IEnumerable enumerable && !(parameter is string)) {
+                    else if (parameter is IEnumerable enumerable && !(parameter is string) && !(parameter is Dictionary<object, object>)) {
                         if (!enumerable.Cast<object>().Any())
                             continue;
                         parameter = enumerable.Cast<object>().First();
@@ -107,7 +107,7 @@ namespace NightlyCode.Scripting.Operations {
                     continue;
                 }
 
-                if (!(parameter is string) && (parameter is Array || parameter is IEnumerable))
+                if (!(parameter is string) && !(parameter is Dictionary<object, object>) && (parameter is Array || parameter is IEnumerable))
                     return new Tuple<T, int>(method, -1);
 
                 if (methodparameter == parameter.GetType())
@@ -155,6 +155,11 @@ namespace NightlyCode.Scripting.Operations {
                     if (methodparameter.IsEnum)
                         result += 20 * multiplicator;
                     else result += 50 * multiplicator;
+                    continue;
+                }
+
+                if (parameter is Dictionary<object, object>) {
+                    result += 120 * multiplicator;
                     continue;
                 }
 
@@ -299,9 +304,25 @@ namespace NightlyCode.Scripting.Operations {
                 if (!(value is IEnumerable))
                     return Converter.Convert(value, targettype);
             }
+            else if (value is Dictionary<object, object> dictionary) {
+                return ConvertDictionary(dictionary, targettype);
+            }
             else return Converter.Convert(value, targettype);
 
             return null;
+        }
+
+        static object ConvertDictionary(Dictionary<object, object> dictionary, Type targettype) {
+            object value = Activator.CreateInstance(targettype, true);
+            foreach (KeyValuePair<object, object> property in dictionary) {
+                string propertyname = property.Key.ToString();
+                PropertyInfo propertyinfo = targettype.GetProperty(propertyname, BindingFlags.Instance | BindingFlags.IgnoreCase | BindingFlags.Public);
+                if(propertyinfo==null)
+                    continue;
+                propertyinfo.SetValue(value, Converter.Convert(property.Value, propertyinfo.PropertyType, true));
+            }
+
+            return value;
         }
 
         public static IEnumerable<object> CreateParameters(object staticparameter, ParameterInfo[] targetparameters, object[] sourceparameters)

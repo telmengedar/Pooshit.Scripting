@@ -13,20 +13,25 @@ namespace NightlyCode.Scripting.Control {
         /// <summary>
         /// creates a new <see cref="Throw"/>
         /// </summary>
-        /// <param name="parameters">parameters for throw</param>
-        internal Throw(IScriptToken[] parameters) {
-            if(parameters.Length==0)
-                throw new ScriptParserException("You need to throw at least a message");
-            if (parameters.Length > 2)
-                throw new ScriptParserException("Too many arguments for throw");
-            message = parameters[0];
-            if (parameters.Length > 1)
-                context = parameters[1];
+        /// <param name="message">exception message</param>
+        /// <param name="context">context data for exception</param>
+        internal Throw(IScriptToken message, IScriptToken context=null) {
+            this.message = message;
+            this.context = context;
         }
 
-        public IScriptToken Message { get; set; }
+        /// <summary>
+        /// exception message
+        /// </summary>
+        public IScriptToken Message => message;
 
-        public IScriptToken Context { get; set; }
+        /// <summary>
+        /// exception context
+        /// </summary>
+        public IScriptToken Context => context;
+
+        /// <inheritdoc />
+        public override string Literal => "throw";
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext scriptcontext) {

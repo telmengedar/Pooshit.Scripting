@@ -24,5 +24,6 @@ namespace NightlyCode.Scripting.Operations.Comparision {
             return $"{Lhs} <= {Rhs}";
         }
 
+        public override string Literal => "<=";
     }
 }

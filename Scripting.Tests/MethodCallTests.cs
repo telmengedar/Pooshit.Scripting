@@ -1,4 +1,5 @@
-﻿using NightlyCode.Scripting;
+﻿using System;
+using NightlyCode.Scripting;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
@@ -10,6 +11,10 @@ namespace Scripting.Tests {
     [TestFixture, Parallelizable]
     public class MethodCallTests {
         readonly IScriptParser parser = new ScriptParser();
+
+        public string MethodWithSingleParameter(string prefix, Parameter parameter) {
+            return $"{prefix}:{parameter.Name}={parameter.Value}";
+        }
 
         public string MethodWithArrayParameters(string prefix, params Parameter[] parameters)
         {
@@ -47,6 +52,14 @@ namespace Scripting.Tests {
 
         public void OutParameter(out int parameter) {
             parameter = 42;
+        }
+
+        public string GuidParameter(Guid guid) {
+            return guid.ToString();
+        }
+
+        public string NullableGuidParameter(Guid? guid) {
+            return guid?.ToString();
         }
 
         public Parameter Parameter(string name, string value) {
@@ -136,7 +149,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void CallAmbigiousMethodByteArray() {
-            IScript script = parser.Parse($"$test.ambigious([1,2,3,4,5])", new Variable("test", this));
+            IScript script = parser.Parse("$test.ambigious([1,2,3,4,5])", new Variable("test", this));
             Assert.AreEqual("bytearray", script.Execute());
         }
 
@@ -161,6 +174,56 @@ namespace Scripting.Tests {
             ), new Variable("test", this));
 
             Assert.AreEqual(42, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void CallParamArrayUsingDictionaryConversion() {
+            IScript script = parser.Parse(
+                ScriptCode.Create(
+                    "$test.methodwitharrayparameters(",
+                    "  \"success\", ",
+                    "  {",
+                    "    \"name\": \"n\",",
+                    "    \"value\": 1",
+                    "  },",
+                    "  {",
+                    "    \"name\": \"m\",",
+                    "    \"value\": 7",
+                    "  }",
+                    ")"),
+                new Variable("test", this));
+            Assert.AreEqual("success:n=1,m=7", script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void CallSingleParameterUsingDictionaryConversion() {
+            IScript script = parser.Parse(
+                ScriptCode.Create(
+                    "$test.methodwithsingleparameter(",
+                    "  \"success\", ",
+                    "  {",
+                    "    \"name\": \"n\",",
+                    "    \"value\": 42",
+                    "  }",
+                    ")"),
+                new Variable("test", this));
+            Assert.AreEqual("success:n=42", script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void AutoConvertStringToGuid() {
+            // 4cac6f34-ab34-48e5-bc5c-a0a23d282846
+
+            IScript script = parser.Parse("$test.guidparameter(\"4cac6f34-ab34-48e5-bc5c-a0a23d282846\")", new Variable("test", this));
+            Assert.AreEqual("4cac6f34-ab34-48e5-bc5c-a0a23d282846", script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void AutoConvertStringToNullableGuid() {
+            // 4cac6f34-ab34-48e5-bc5c-a0a23d282846
+
+            IScript script = parser.Parse("$test.nullableguidparameter(\"4cac6f34-ab34-48e5-bc5c-a0a23d282846\")", new Variable("test", this));
+            Assert.AreEqual("4cac6f34-ab34-48e5-bc5c-a0a23d282846", script.Execute());
         }
     }
 }

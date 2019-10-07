@@ -1,6 +1,5 @@
 ﻿using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Extensions;
-using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Operations.Unary {
 
@@ -10,6 +9,9 @@ namespace NightlyCode.Scripting.Operations.Unary {
     public class Not : UnaryOperator {
         internal Not() {
         }
+
+        /// <inheritdoc />
+        public override string Literal => "!";
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context)

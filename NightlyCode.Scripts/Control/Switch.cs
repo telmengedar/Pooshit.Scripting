@@ -10,7 +10,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// evaluates a value and jumps to matching cases
     /// </summary>
-    public class Switch : ControlToken {
+    public class Switch : ControlToken, IParameterContainer {
         readonly IScriptToken condition;
         readonly List<Case> cases=new List<Case>();
 
@@ -19,12 +19,9 @@ namespace NightlyCode.Scripting.Control {
         /// <summary>
         /// creates a new <see cref="Switch"/> statement
         /// </summary>
-        /// <param name="parameters">parameters which contain value to evaluate</param>
-        internal Switch(IScriptToken[] parameters) {
-            if (parameters.Length != 1)
-                throw new ScriptParserException("Switch statement needs exactly one value parameter");
-            condition = parameters[0];
-
+        /// <param name="condition">value to evaluate</param>
+        internal Switch(IScriptToken condition) {
+            this.condition = condition;
             body = new FuncStatementBlock(BodyFunc);
         }
 
@@ -34,6 +31,16 @@ namespace NightlyCode.Scripting.Control {
             if (Default != null)
                 yield return Default;
         }
+
+        /// <inheritdoc />
+        public IEnumerable<IScriptToken> Parameters {
+            get { yield return condition; }
+        }
+
+        /// <summary>
+        /// cases for switch branch
+        /// </summary>
+        public IEnumerable<Case> Cases => cases;
 
         /// <summary>
         /// default case executed if no other case matches
@@ -49,6 +56,9 @@ namespace NightlyCode.Scripting.Control {
                 Default = @case;
             else cases.Add(@case);
         }
+
+        /// <inheritdoc />
+        public override string Literal => "switch";
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context)

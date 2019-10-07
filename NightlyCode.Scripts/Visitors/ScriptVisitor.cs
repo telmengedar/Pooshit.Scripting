@@ -1,4 +1,5 @@
-﻿using NightlyCode.Scripting.Control;
+﻿using System.Collections.Generic;
+using NightlyCode.Scripting.Control;
 using NightlyCode.Scripting.Operations;
 using NightlyCode.Scripting.Tokens;
 
@@ -21,7 +22,7 @@ namespace NightlyCode.Scripting.Visitors {
                 VisitVariable(variable);
             else if (token is ITokenContainer container)
                 VisitContainer(container);
-            else if (token is IControlToken control)
+            else if (token is IStatementContainer control)
                 VisitControlToken(control);
             else if (token is IBinaryToken binary)
                 VisitBinaryToken(binary);
@@ -51,15 +52,19 @@ namespace NightlyCode.Scripting.Visitors {
                 VisitArithmeticBlock(arithmeticblock);
             else if (token is ScriptArray array)
                 VisitArray(array);
+            else if (token is DictionaryToken dictionary)
+                VisitDictionary(dictionary);
+        }
+
+        public virtual void VisitDictionary(DictionaryToken dictionary) {
+            foreach (KeyValuePair<IScriptToken, IScriptToken> entry in dictionary.Entries) {
+                VisitToken(entry.Key);
+                VisitToken(entry.Value);
+            }
         }
 
         public virtual void VisitMember(ScriptMember member) {
             VisitToken(member.Host);
-        }
-
-        public virtual void VisitTryCatchBlock(Try @try) {
-            VisitToken(@try.Body);
-            VisitToken(@try.Catch);
         }
 
         public virtual void VisitArray(ScriptArray array) {
@@ -188,17 +193,20 @@ namespace NightlyCode.Scripting.Visitors {
         /// visits a control token
         /// </summary>
         /// <param name="controltoken">control token to visit</param>
-        public virtual void VisitControlToken(IControlToken controltoken) {
+        public virtual void VisitControlToken(IStatementContainer controltoken) {
+            VisitToken(controltoken.Body);
+            if (controltoken is IParameterContainer parametercontrol)
+                foreach (IScriptToken parameter in parametercontrol.Parameters)
+                    VisitToken(parameter);
             if (controltoken is Try @try)
-                VisitTryCatchBlock(@try);
-            else VisitToken(controltoken.Body);
+                VisitToken(@try.Catch);
         }
 
         /// <summary>
         /// visits parameters of a token
         /// </summary>
         /// <param name="token">control token to visit</param>
-        public virtual void VisitParameters(IParameterizedToken token) {
+        public virtual void VisitParameters(IParameterContainer token) {
             foreach(IScriptToken parameter in token.Parameters)
                 VisitToken(parameter);
         }

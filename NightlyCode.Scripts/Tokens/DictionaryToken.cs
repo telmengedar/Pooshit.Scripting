@@ -18,6 +18,14 @@ namespace NightlyCode.Scripting.Tokens {
             dictionary[key] = value;
         }
 
+        /// <summary>
+        /// entries in dictionary
+        /// </summary>
+        public IEnumerable<KeyValuePair<IScriptToken, IScriptToken>> Entries => dictionary;
+
+        /// <inheritdoc />
+        public string Literal => "{ ... : ... }";
+
         /// <inheritdoc />
         public object Execute(ScriptContext context) {
             Dictionary<object, object> result=new Dictionary<object, object>();

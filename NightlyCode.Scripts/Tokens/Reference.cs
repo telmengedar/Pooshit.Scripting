@@ -17,6 +17,9 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
+        public string Literal => "ref";
+
+        /// <inheritdoc />
         public object Execute(ScriptContext context) {
             return argument.Execute(context);
         }

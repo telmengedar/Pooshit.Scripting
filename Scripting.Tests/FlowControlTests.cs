@@ -66,8 +66,8 @@ namespace Scripting.Tests {
             IScript script = parser.Parse(
                 "$result=0\n" +
                 "for($i=0,$i<10,++$i)\n" +
-                "// increment result\n"+
-                "++$result\n"+
+                "  // increment result\n"+
+                "  ++$result\n"+
                 "$result"
             );
             Assert.AreEqual(10, script.Execute());
@@ -369,5 +369,17 @@ namespace Scripting.Tests {
             IScript script = parser.Parse("try throw(\"error\") catch return($exception.message) return(0)");
             Assert.AreEqual("error", script.Execute());
         }
+
+        [Test, Parallelizable]
+        public void IfElseWithMetatokens() {
+            IScript script = parser.Parse("$i=0 if($i) $i++\n\n// bla\nelse $i+=2 return($i)");
+            Assert.AreEqual(2, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void IfWithPendingStatements() {
+            Assert.DoesNotThrow(()=>parser.Parse("$i=0\nif($i) {\n$i++\n}"));
+        }
+
     }
 }

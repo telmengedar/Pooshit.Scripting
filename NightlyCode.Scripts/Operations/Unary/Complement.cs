@@ -10,6 +10,9 @@ namespace NightlyCode.Scripting.Operations.Unary {
         }
 
         /// <inheritdoc />
+        public override string Literal => "~";
+
+        /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context)
         {
             return ~(dynamic) Operand.Execute(context);

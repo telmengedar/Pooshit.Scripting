@@ -56,6 +56,11 @@ namespace NightlyCode.Scripting.Extern {
             specificconverters[new ConversionKey(typeof(ulong),typeof(short))] = v => { unchecked { return (short)(ulong)v; } };
             specificconverters[new ConversionKey(typeof(ulong), typeof(int))] = v => { unchecked { return (int)(ulong)v; } };
             specificconverters[new ConversionKey(typeof(ulong), typeof(long))] = v => { unchecked { return (long)(ulong)v; } };
+
+            specificconverters[new ConversionKey(typeof(string), typeof(Guid))] = o => Guid.Parse((string)o);
+            specificconverters[new ConversionKey(typeof(string), typeof(Guid?))] = o => string.IsNullOrEmpty((string)o) ? (Guid?)null : Guid.Parse((string)o);
+            specificconverters[new ConversionKey(typeof(byte[]), typeof(Guid))] = o => new Guid((byte[])o);
+            specificconverters[new ConversionKey(typeof(byte[]), typeof(Guid?))] = o => o == null ? (Guid?)null : new Guid((byte[])o);
         }
 
         static int ParseColorValue(string value) {

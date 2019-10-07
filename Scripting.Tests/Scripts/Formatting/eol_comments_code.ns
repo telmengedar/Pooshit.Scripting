@@ -1,0 +1,13 @@
+﻿if(test)
+{
+	switch(test) // check for value of test flag
+	case("furchtbar")
+	// really not that good
+	{
+		test="better"
+		return(1)
+	}
+	case("ok") // we might accept it
+		return(0)
+}
+return(-1)

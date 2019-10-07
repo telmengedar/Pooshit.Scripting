@@ -9,12 +9,15 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// block which handles a disposable resource
     /// </summary>
-    public class Using : ControlToken {
+    public class Using : ControlToken, IParameterContainer {
         readonly IScriptToken[] disposables;
 
         internal Using(IScriptToken[] disposables) {
             this.disposables = disposables;
         }
+
+        /// <inheritdoc />
+        public override string Literal => "using";
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
@@ -50,7 +53,10 @@ namespace NightlyCode.Scripting.Control {
 
         /// <inheritdoc />
         public override string ToString() {
-            return $"using({string.Join<IScriptToken>(",", disposables)} {Body}";
+            return $"using({string.Join<IScriptToken>(",", disposables)}) {Body}";
         }
+
+        /// <inheritdoc />
+        public IEnumerable<IScriptToken> Parameters => disposables;
     }
 }

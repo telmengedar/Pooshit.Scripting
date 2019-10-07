@@ -151,17 +151,28 @@ namespace NightlyCode.Scripting.Parser {
             operatortree.Add("^=", Operator.XorAssign);
             operatortree.Add("++", Operator.Increment);
             operatortree.Add("--", Operator.Decrement);
-            operatortree.Add("//", Operator.SingleLineComment);
-            operatortree.Add("/*", Operator.MultilineComment);
+            operatortree.Add("=>", Operator.Lambda);
         }
 
-        void SkipWhitespaces(string data, ref int index) {
-            while (index < data.Length && char.IsWhiteSpace(data[index]))
+        int SkipWhitespaces(string data, ref int index) {
+            int newlinecount = 0;
+            while (index < data.Length && char.IsWhiteSpace(data[index])) {
+                if (data[index] == '\n')
+                    ++newlinecount;
                 ++index;
+            }
+
+            return newlinecount;
         }
 
         IScriptToken ParseSingleControlParameter(string data, ref int index, IVariableContext variables) {
-            return ParseControlParameters(null, data, ref index, variables).Single();
+            int start = index;
+            IScriptToken[] parameters = ParseControlParameters(null, data, ref index, variables);
+            if (parameters.Length == 0)
+                throw new ScriptParserException(start, index, "A parameter was expected");
+            if(parameters.Length>1)
+                throw new ScriptParserException(start, index, "Only one parameter was expected");
+            return parameters[0];
         }
 
         IScriptToken TryParseSingleParameter(string data, ref int index, IVariableContext variables) {
@@ -177,15 +188,16 @@ namespace NightlyCode.Scripting.Parser {
 
         IScriptToken[] ParseControlParameters(IScriptToken parent, string data, ref int index, IVariableContext variables) {
             SkipWhitespaces(data, ref index);
-            if (data[index] != '(')
-                throw new ScriptParserException("Expected parameters for control statement");
+            if (index >= data.Length || data[index] != '(')
+                throw new ScriptParserException(index, index, "Expected parameters for control statement");
+
             ++index;
             return ParseParameters(parent, data, ref index, variables);
         }
 
         void ForeachTokenParsed(TokenType type, int start, int end) {
             if (type != TokenType.Variable && type != TokenType.Parameter)
-                throw new ScriptParserException("First token has to be iterator variable");
+                throw new ScriptParserException(start, end, "First token has to be iterator variable");
 
             DefaultTokenParsed(TokenType.Variable, start, end);
             tokenparsed = DefaultTokenParsed;
@@ -193,7 +205,7 @@ namespace NightlyCode.Scripting.Parser {
 
         IScriptToken AnalyseToken(string token, string data, int start, ref int index, IVariableContext variables, bool first) {
             if (token.Length == 0)
-                throw new ScriptParserException("Unexpected structure leading to empty token");
+                throw new ScriptParserException(start, index, "token expected");
 
             if (char.IsDigit(token[0])) {
                 try {
@@ -211,22 +223,34 @@ namespace NightlyCode.Scripting.Parser {
 
             if (first) {
                 if (ControlTokensEnabled) {
+                    IScriptToken[] parameters;
                     switch (token) {
                     case "if":
                         TokenParsed?.Invoke(TokenType.Control, start, index);
-                        return new If(ParseControlParameters(null, data, ref index, variables));
+                        return new If(ParseSingleControlParameter(data, ref index, variables));
                     case "else":
                         TokenParsed?.Invoke(TokenType.Control, start, index);
                         return new Else();
                     case "for":
                         TokenParsed?.Invoke(TokenType.Control, start, index);
-                        return new For(ParseControlParameters(null, data, ref index, variables));
+                        parameters = ParseControlParameters(null, data, ref index, variables);
+                        if (parameters.Length != 3)
+                            throw new ScriptParserException(start, index, "for loop needs 3 tokens as parameters");
+                        return new For(parameters[0], parameters[1], parameters[2]);
                     case "foreach":
                         TokenParsed?.Invoke(TokenType.Control, start, index);
 
                         // overwrite token type event
                         tokenparsed = ForeachTokenParsed;
-                        Foreach foreachloop= new Foreach(ParseControlParameters(null, data, ref index, variables));
+                        parameters = ParseControlParameters(null, data, ref index, variables);
+                        if (parameters.Length < 2)
+                            throw new ScriptParserException(start, index, "foreach needs an iterator and a collection");
+                        if (parameters.Length > 2)
+                            throw new ScriptParserException(start, index, "foreach must only specify an iterator and a collection");
+                        if (!(parameters[0] is ScriptVariable foreachvariable))
+                            throw new ScriptParserException(start, index, "foreach iterator must be a variable");
+
+                        Foreach foreachloop = new Foreach(foreachvariable, parameters[1]);
 
                         // iterator variable is provided by foreach loop itself
                         foreachloop.Iterator.IsResolved = true;
@@ -237,10 +261,10 @@ namespace NightlyCode.Scripting.Parser {
                         return foreachloop;
                     case "while":
                         TokenParsed?.Invoke(TokenType.Control, start, index);
-                        return new While(ParseControlParameters(null, data, ref index, variables));
+                        return new While(ParseSingleControlParameter(data, ref index, variables));
                     case "switch":
                         TokenParsed?.Invoke(TokenType.Control, start, index);
-                        return new Switch(ParseControlParameters(null, data, ref index, variables));
+                        return new Switch(ParseSingleControlParameter(data, ref index, variables));
                     case "case":
                         TokenParsed?.Invoke(TokenType.Control, start, index);
                         return new Case(ParseControlParameters(null, data, ref index, variables));
@@ -252,7 +276,12 @@ namespace NightlyCode.Scripting.Parser {
                         return new Return(TryParseSingleParameter(data, ref index, variables));
                     case "throw":
                         TokenParsed?.Invoke(TokenType.Control, start, index);
-                        return new Throw(ParseControlParameters(null, data, ref index, variables));
+                        parameters = ParseControlParameters(null, data, ref index, variables);
+                        if (parameters.Length < 1)
+                            throw new ScriptParserException(start, index, "No exception message provided");
+                        if (parameters.Length > 2)
+                            throw new ScriptParserException(start, index, "Too many arguments for exception throw");
+                        return new Throw(parameters[0], parameters.Length > 1 ? parameters[1] : null);
                     case "break":
                         TokenParsed?.Invoke(TokenType.Control, start, index);
                         return new Break(TryParseSingleParameter(data, ref index, variables));
@@ -270,23 +299,23 @@ namespace NightlyCode.Scripting.Parser {
                         return new Catch();
                     case "wait":
                         TokenParsed?.Invoke(TokenType.Control, start, index);
-                        return new Wait(ParseControlParameters(null, data, ref index, variables));
+                        return new Wait(ParseSingleControlParameter(data, ref index, variables));
                     }
                 }
 
                 if (ImportsEnabled && token == "import") {
                     TokenParsed?.Invoke(TokenType.Control, start, index);
                     if (MethodResolver == null)
-                        throw new ScriptParserException("Import statement is unavailable since no method resolver is set.");
+                        throw new ScriptParserException(start, index, "Import statement is unavailable since no method resolver is set.");
                     return new Import(MethodResolver, ParseSingleControlParameter(data, ref index, variables));
                 }
             }
 
-            SkipWhitespaces(data, ref index);
+            //SkipWhitespaces(data, ref index);
             if (TypeCastsEnabled) {
                 if (supportedcasts.ContainsKey(token) && index < data.Length && data[index] == '(') {
                     TokenParsed?.Invoke(TokenType.Control, start, index);
-                    return new TypeCast(supportedcasts[token], ParseControlParameters(null, data, ref index, variables).Single());
+                    return new TypeCast(token, supportedcasts[token], ParseControlParameters(null, data, ref index, variables).Single());
                 }
             }
 
@@ -296,9 +325,11 @@ namespace NightlyCode.Scripting.Parser {
                 string type = ParseName(data, ref index);
                 TokenParsed?.Invoke(TokenType.Type, start, index);
                 ITypeInstanceProvider typeprovider = Types.GetType(type.ToLower());
+                if (typeprovider == null)
+                    throw new ScriptParserException(start, index, $"Unknown type {type}");
 
                 // setting a parent to non null forces the parser to interpret '{' as statement block and not as dictionary
-                return new NewInstance(typeprovider, ParseControlParameters(typeprovider is TaskProvider ? new ParserToken("task") : null, data, ref index, variables));
+                return new NewInstance(type, typeprovider, ParseControlParameters(typeprovider is TaskProvider ? new ParserToken("task") : null, data, ref index, variables));
             }
 
             if (ControlTokensEnabled) {
@@ -306,7 +337,7 @@ namespace NightlyCode.Scripting.Parser {
                 case "ref":
                     IAssignableToken reference = ParseSingleControlParameter(data, ref index, variables) as IAssignableToken;
                     if(reference==null)
-                        throw new ScriptParserException($"ref can only be used with an {nameof(IAssignableToken)}");
+                        throw new ScriptParserException(start, index, $"ref can only be used with an {nameof(IAssignableToken)}");
                     TokenParsed?.Invoke(TokenType.Control, start, index);
                     return new Reference(reference);
                 case "await":
@@ -337,7 +368,7 @@ namespace NightlyCode.Scripting.Parser {
             variable.IsResolved = variables.GetProvider(variable.Name) != null;
 
             // check if an assignment is following
-            if (Peek(code, ref codeindex) == '=' && codeindex < code.Length - 1 && code[codeindex + 1] != '=') {
+            if (Peek(code, codeindex, out int foundindex) == '=' && Peek(code, foundindex+1)  != '=') {
                 variable.IsResolved = true;
                 variables.SetVariable(variable.Name, null);
             }
@@ -516,7 +547,7 @@ namespace NightlyCode.Scripting.Parser {
 
             ++index;
             if (data[index] != '\'')
-                throw new ScriptParserException("Character literal not terminated");
+                throw new ScriptParserException(start, index, "Character literal not terminated");
             ++index;
             TokenParsed?.Invoke(TokenType.Literal, start, index);
             return new ScriptValue(character);
@@ -542,7 +573,7 @@ namespace NightlyCode.Scripting.Parser {
                 }
             }
 
-            throw new ScriptParserException("Literal not terminated");
+            throw new ScriptParserException(start, index, "Literal not terminated");
         }
 
         IScriptToken ParseStringInterpolation(IScriptToken parent, string data, ref int index, IVariableProvider variables) {
@@ -561,7 +592,7 @@ namespace NightlyCode.Scripting.Parser {
                     return new StringInterpolation(tokens.ToArray());
                 case '{':
                     ++index;
-                    if (Peek(data, ref index) == '{') {
+                    if (Peek(data, index) == '{') {
                         literal.Append('{');
                     }
                     else {
@@ -585,7 +616,7 @@ namespace NightlyCode.Scripting.Parser {
                 }
             }
 
-            throw new ScriptParserException("Literal not terminated");
+            throw new ScriptParserException(start, index, "Literal not terminated");
         }
 
         IScriptToken ParseMethodCall(IScriptToken host, string methodname, string data, int start, ref int index, IVariableContext variables) {
@@ -620,11 +651,13 @@ namespace NightlyCode.Scripting.Parser {
                 return new ScriptMember(host, membername.ToString());
             }
 
-            throw new ScriptParserException("Member name expected");
+            throw new ScriptParserException(start, index, "Member name expected");
         }
 
         IScriptToken[] ParseArray(IScriptToken parent, string data, ref int index, IVariableContext variables) {
+            int newlines = 0;
             SkipWhitespaces(data, ref index);
+            int start = index;
             List<IScriptToken> array = new List<IScriptToken>();
             for (; index < data.Length;)
             {
@@ -642,26 +675,28 @@ namespace NightlyCode.Scripting.Parser {
                     ++index;
                     break;
                 default:
-                    IScriptToken element = Parse(parent, data, ref index, variables);
+                    IScriptToken element = Parse(parent, data, ref index, ref newlines, variables);
                     if (element == null)
-                        throw new ScriptParserException("Invalid array specification");
+                        throw new ScriptParserException(start, index, "Invalid array specification");
                     array.Add(element);
                     break;
                 }
             }
 
-            throw new ScriptParserException("Array not terminated");
+            throw new ScriptParserException(start, index, "Array not terminated");
         }
 
         IScriptToken[] ParseParameters(IScriptToken parent, string data, ref int index, IVariableContext variables) {
+            int newlines = 0;
+            int start = index;
             List<IScriptToken> parameters = new List<IScriptToken>();
             for(; index < data.Length;) {
                 char character = data[index];
                 switch(character) {
-                    case '[':
+                    /*case '[':
                         ++index;
                         parameters.Add(new ScriptArray(ParseArray(null, data, ref index, variables)));
-                        break;
+                        break;*/
                     case ')':
                     case ']':
                         ++index;
@@ -670,12 +705,12 @@ namespace NightlyCode.Scripting.Parser {
                         ++index;
                         break;
                     default:
-                        parameters.Add(Parse(parent, data, ref index, variables));
+                        parameters.Add(Parse(parent, data, ref index, ref newlines, variables));
                         break;
                 }
             }
 
-            throw new ScriptParserException("Parameter list not terminated");
+            throw new ScriptParserException(start, index, "Parameter list not terminated");
         }
 
 
@@ -720,19 +755,7 @@ namespace NightlyCode.Scripting.Parser {
             }
 
             if (node == null)
-                throw new ScriptParserException("Operator expected but nothing found");
-
-            switch (node.Operator) {
-                case Operator.SingleLineComment:
-                    ParseSingleLineComment(data, ref index);
-                    TokenParsed?.Invoke(TokenType.Comment, startoperator, index);
-                    return null;
-                case Operator.MultilineComment:
-                    ParseMultiLineComment(data, ref index);
-                    TokenParsed?.Invoke(TokenType.Comment, startoperator, index);
-                    return null;
-            }
-
+                throw new ScriptParserException(startoperator, index, "Operator expected but nothing found");
 
             TokenParsed?.Invoke(TokenType.Operator, startoperator, index);
             switch (node.Operator) {
@@ -742,14 +765,14 @@ namespace NightlyCode.Scripting.Parser {
                     else if (index < data.Length && !char.IsWhiteSpace(data[index]))
                         return new Increment(false);
                     else
-                        throw new ScriptParserException("Increment without connected operand detected");
+                        throw new ScriptParserException(startoperator, index, "Increment without connected operand detected");
                 case Operator.Decrement:
                     if (index - parsestart >= 3 && !char.IsWhiteSpace(data[index - 3]))
                         return new Decrement(true);
                     else if (index < data.Length && !char.IsWhiteSpace(data[index]))
                         return new Decrement(false);
                     else
-                        throw new ScriptParserException("Increment without connected operand detected");
+                        throw new ScriptParserException(startoperator, index, "Increment without connected operand detected");
                 case Operator.Equal:
                     return new Equal();
                 case Operator.NotEqual:
@@ -822,25 +845,35 @@ namespace NightlyCode.Scripting.Parser {
                     return new OrAssign();
                 case Operator.XorAssign:
                     return new XorAssign();
+                case Operator.Lambda:
+                    return new LambdaToken();
                 default:
-                    throw new ScriptParserException($"Unsupported operator '{node.Operator}'");
+                    throw new ScriptParserException(startoperator, index, $"Unsupported operator '{node.Operator}'");
             }
         }
 
-        void ParseMultiLineComment(string data, ref int index) {
-            while (index < data.Length - 1 && data[index] != '*' && data[index + 1] != '/')
-                ++index;
+        Comment ParseMultiLineComment(string data, ref int index) {
+            StringBuilder builder=new StringBuilder();
+            while (index < data.Length - 1 && (data[index] != '*' || data[index + 1] != '/'))
+                builder.Append(data[index++]);
+
             index += 2;
+            return new Comment(builder.ToString());
         }
 
-        void ParseSingleLineComment(string data, ref int index) {
-            while (index < data.Length && data[index] != '\n')
-                ++index;
+        Comment ParseSingleLineComment(string data, ref int index) {
+            StringBuilder builder=new StringBuilder();
+            while (index < data.Length && data[index] != '\n' && data[index]!='\r')
+                builder.Append(data[index++]);
+
             ++index;
+            return new Comment(builder.ToString(), false);
         }
 
         IScriptToken ParseBlock(IScriptToken parent, string data, ref int index, IVariableContext variables) {
-            IScriptToken block = Parse(parent, data, ref index, variables);
+            int newlines = 0;
+            int start = index;
+            IScriptToken block = Parse(parent, data, ref index, ref newlines, variables);
             while (index < data.Length) {
                 if (char.IsWhiteSpace(data[index]))
                 {
@@ -852,20 +885,30 @@ namespace NightlyCode.Scripting.Parser {
             }
 
             if (data[index] != ')')
-                throw new ScriptParserException("Block not terminated");
+                throw new ScriptParserException(start, index, "Block not terminated");
 
             ++index;
             return new ArithmeticBlock(block);
         }
 
-        char Peek(string data, ref int index) {
-            SkipWhitespaces(data, ref index);
-            if (index < data.Length)
+        char Peek(string data, int index) {
+            return Peek(data, index, out int peekindex);
+        }
+
+        char Peek(string data, int index, out int peenindex) {
+            while (index < data.Length && char.IsWhiteSpace(data[index]))
+                ++index;
+
+            if (index < data.Length) {
+                peenindex = index;
                 return data[index];
+            }
+
+            peenindex = -1;
             return '\0';
         }
 
-        IScriptToken Parse(IScriptToken parent, string data, ref int index, IVariableContext variables, bool startofstatement=false) {
+        IScriptToken Parse(IScriptToken parent, string data, ref int index, ref int newlines, IVariableContext variables, bool startofstatement=false) {
             List<IScriptToken> tokenlist=new List<IScriptToken>();
             List<OperatorIndex> indexlist=new List<OperatorIndex>();
 
@@ -890,6 +933,30 @@ namespace NightlyCode.Scripting.Parser {
                     case '&':
                     case '|':
                     case '^':
+                        if (data[index] == '/' && index<data.Length-1 && (data[index+1] == '/' || data[index+1] == '*')) {
+                            if (tokenlist.Count==0) {
+                                index += 2;
+                                Comment comment;
+                                switch (data[index - 1]) {
+                                    case '/':
+                                        comment = ParseSingleLineComment(data, ref index);
+                                        break;
+                                    case '*':
+                                        comment = ParseMultiLineComment(data, ref index);
+                                        break;
+                                    default:
+                                        // can actually never happen
+                                        throw new ScriptParserException(parsestart, index, "Nani");
+                                }
+
+                                newlines = 0;
+                                TokenParsed?.Invoke(TokenType.Comment, parsestart, index);
+                                tokenlist.Add(comment);
+                            }
+                            done = true;
+                            break;
+                        }
+
                         IOperator @operator = ParseOperator(parsestart, data, ref index);
                         if (@operator == null) {
                             // this most likely means the operator was actually a comment
@@ -925,7 +992,7 @@ namespace NightlyCode.Scripting.Parser {
                         }
 
                         ++index;
-                        if (Peek(data, ref index) == '\"') {
+                        if (Peek(data, index) == '\"') {
                             ++index;
                             tokenlist.Add(ParseStringInterpolation(parent, data, ref index, variables));
                         }
@@ -957,11 +1024,18 @@ namespace NightlyCode.Scripting.Parser {
                         break;
                     case '{':
                         ++index;
-                        if (parent is null || tokenlist.Count > 0 && tokenlist.Last() is IOperator) {
+                        IOperator op = tokenlist.LastOrDefault() as IOperator;
+                        if ((parent is null || op!=null) && op?.Operator!=Operator.Lambda) {
                             tokenlist.Add(ParseDictionary(parent, data, ref index, variables));
-                            concat = false;
                         }
-                        else return ParseStatementBlock(parent, data, ref index, variables);
+                        else {
+                            StatementBlock statementblock = ParseStatementBlock(parent, data, ref index, variables);
+                            if (!statementblock.Children.Any())
+                                throw new ScriptParserException(starttoken, index, "Empty statement block detected");
+                            tokenlist.Add(statementblock);
+                        }
+
+                        concat = false;
                         break;
                     //case ')':
                     case ',':
@@ -981,16 +1055,17 @@ namespace NightlyCode.Scripting.Parser {
                         }
                         
                         IScriptToken token = ParseToken(data, ref index, variables, startofstatement);
-                        if (token is IControlToken || token is ParserToken || token is Return)
+                        if (token is IStatementContainer || token is ParserToken || token is Return)
                             return token;
                         tokenlist.Add(token);
                         concat = false;
                         break;
                 }
                 if (index == starttoken && !done)
-                    throw new ScriptParserException("Unable to parse code");
+                    throw new ScriptParserException(starttoken, index, "Unable to parse code");
 
-                SkipWhitespaces(data, ref index);
+                if(!done)
+                    newlines = SkipWhitespaces(data, ref index);
             }
 
             if (tokenlist.Count > 1)
@@ -1006,7 +1081,8 @@ namespace NightlyCode.Scripting.Parser {
                         if (unary.IsPostToken)
                         {
                             if (operatorindex.Index == 0)
-                                throw new ScriptParserException("Posttoken at beginning of tokenlist detected");
+                                // TODO: provide indices if this can actually happen
+                                throw new ScriptParserException(parsestart, index, "Posttoken at beginning of tokenlist detected");
 
                             unary.Operand = tokenlist[operatorindex.Index - 1];
                             tokenlist.RemoveAt(operatorindex.Index-1);
@@ -1024,6 +1100,11 @@ namespace NightlyCode.Scripting.Parser {
                     }
                     else if (operatorindex.Token is IBinaryToken binary)
                     {
+                        if(operatorindex.Index==0)
+                            throw new ScriptParserException(parsestart, index, "Left hand side operand expected");
+                        if(operatorindex.Index>=tokenlist.Count-1)
+                            throw new ScriptParserException(parsestart, index, "Right hand side operand expected");
+
                         binary.Lhs = tokenlist[operatorindex.Index - 1];
                         binary.Rhs = tokenlist[operatorindex.Index + 1];
                         tokenlist.RemoveAt(operatorindex.Index + 1);
@@ -1041,17 +1122,18 @@ namespace NightlyCode.Scripting.Parser {
         }
 
         IScriptToken ParseDictionary(IScriptToken parent, string data, ref int index, IVariableContext variables) {
+            int newlines = 0;
             DictionaryToken dictionary = new DictionaryToken();
-            while (Peek(data, ref index) != '}') {
-                IScriptToken key = Parse(parent, data, ref index, variables);
+            while (Peek(data, index) != '}') {
+                IScriptToken key = Parse(parent, data, ref index, ref newlines, variables);
                 IScriptToken value = null;
-                if (Peek(data, ref index) == ':') {
+                if (Peek(data, index) == ':') {
                     ++index;
-                    value = Parse(parent, data, ref index, variables);
+                    value = Parse(parent, data, ref index, ref newlines, variables);
                 }
 
                 dictionary.Add(key, value);
-                if (Peek(data, ref index) == ',')
+                if (Peek(data, index) == ',')
                     ++index;
             }
 
@@ -1065,9 +1147,14 @@ namespace NightlyCode.Scripting.Parser {
 
             VariableContext blockvariables = new VariableContext(variables);
             List<IScriptToken> statements = new List<IScriptToken>();
+
+            int start = index;
+            bool terminated = false;
             while (index < data.Length) {
+                int newlines = 0;
                 if (index < data.Length && data[index] == '}') {
                     ++index;
+                    terminated = true;
                     break;
                 }
 
@@ -1075,25 +1162,40 @@ namespace NightlyCode.Scripting.Parser {
                 if (statements.LastOrDefault() is Catch)
                     blockvariables.SetVariable("exception", null);
 
-                IScriptToken token = Parse(statements.LastOrDefault() is IControlToken control ? control : parent, data, ref index, blockvariables, true);
+                IScriptToken token;
+                try {
+                    token = Parse(statements.LastOrDefault() is IStatementContainer control ? control : parent, data, ref index, ref newlines, blockvariables, true);
+                }
+                catch (ScriptParserException e) {
+                    if (e.StartIndex == -1 || e.EndIndex == -1)
+                        throw new ScriptParserException(tokenstart, index, e.Message, e);
+                    throw;
+                }
+
                 if (index == tokenstart)
-                    throw new ScriptParserException("Unable to parse code");
+                    throw new ScriptParserException(tokenstart, index, "Unable to parse code");
 
                 if (token != null) {
-
                     if (statements.Count >= 2 && statements[statements.Count - 2] is Catch)
                         blockvariables.RemoveVariable("exception");
 
-                    statements.Add(token);
+                    if (token is Comment comment && newlines == 0 && statements.Count > 0 && statements.Last() is ICommentContainer container) {
+                        container.AddComment(comment);
+                    }
+                    else statements.Add(token);
                 }
 
-                SkipWhitespaces(data, ref index);
+                if (newlines > 1)
+                    statements.Add(new NewLine());
+                newlines = SkipWhitespaces(data, ref index);
+                if (newlines > 1)
+                    statements.Add(new NewLine());
             }
 
-            if (statements.Count == 0)
-                return null;
+            if (!terminated && !methodblock)
+                throw new ScriptParserException(start, index, "Unterminated Statementblock");
 
-            if (statements.Count == 1)
+            if (statements.Count <= 1)
                 return new StatementBlock(statements.ToArray(), methodblock);
 
 
@@ -1103,44 +1205,87 @@ namespace NightlyCode.Scripting.Parser {
                     continue;
 
                 if (statements[i] is ControlToken control)
-                    FetchBlock(control, statements, i + 1);
+                    FetchBlock(control, statements, i + 1, start, index);
             }
 
             return new StatementBlock(statements.ToArray(), methodblock);
         }
 
-        void FetchBlock(ControlToken control, List<IScriptToken> tokens, int index) {
+        IScriptToken FetchMetatokens(List<IScriptToken> result, List<IScriptToken> tokens, int index) {
+            result.Clear();
             if (index >= tokens.Count)
-                throw new ScriptParserException("Statement block expected");
+                return null;
+            IScriptToken block = tokens[index];
+            while (block is Comment || block is NewLine) {
+                result.Add(block);
+                tokens.RemoveAt(index);
+                if (index >= tokens.Count)
+                    return null;
+
+                block = tokens[index];
+            }
+
+            return block;
+        }
+
+        void FetchBlock(ControlToken control, List<IScriptToken> tokens, int index, int parserstart, int parserindex) {
+            if (index >= tokens.Count)
+                throw new ScriptParserException(parserstart, parserindex, "Statement block expected");
 
             if (control is Switch @switch) {
-                while (index < tokens.Count && tokens[index] is Case @case) {
-                    FetchBlock(@case, tokens, index + 1);
-                    @switch.AddCase(@case);
+                while (index < tokens.Count && (tokens[index] is Case || tokens[index] is Comment || tokens[index] is NewLine)) {
+                    if (tokens[index] is Case @case) {
+                        FetchBlock(@case, tokens, index + 1, parserstart, parserindex);
+                        @switch.AddCase(@case);
+                    }
+                    else if (tokens[index] is Comment @comment) {
+                        if (index < tokens.Count - 1 && tokens[index + 1] is Case @innercase) {
+                            innercase.AddComment(comment);
+                        }
+                    }
                     tokens.RemoveAt(index);
                 }
                 return;
             }
 
-            IScriptToken block = tokens[index];
+            List<IScriptToken> metatokens=new List<IScriptToken>();
+            IScriptToken block = FetchMetatokens(metatokens, tokens, index);
+
             if (block is ControlToken subcontrol)
-                FetchBlock(subcontrol, tokens, index + 1);
-            control.Body = block;
+                FetchBlock(subcontrol, tokens, index + 1, parserstart, parserindex);
+
+            if (metatokens.Count > 0) {
+                if (block is StatementBlock statementblock) {
+                    control.Body = new StatementBlock(metatokens.Concat(statementblock.Children).ToArray());
+                }
+                else control.Body = new StatementBlock(metatokens.Concat(new[] {block}).ToArray());
+            }
+            else control.Body = block;
+
             tokens.RemoveAt(index);
 
             if (control is If @if) {
-                if (index < tokens.Count && tokens[index] is Else @else) {
-                    FetchBlock(@else, tokens, index + 1);
+                block=FetchMetatokens(metatokens, tokens, index);
+                if (block is Else @else) {
+                    FetchBlock(@else, tokens, index + 1, parserstart, parserindex);
                     @if.Else = @else.Body;
                     tokens.RemoveAt(index);
                 }
+                else {
+                    for (int i = metatokens.Count - 1; i >= 0; --i)
+                        tokens.Insert(index, metatokens[i]);
+                }
             }
-
-            if (control is Try @try) {
-                if (index < tokens.Count && tokens[index] is Catch @catch) {
-                    FetchBlock(@catch, tokens, index + 1);
+            else if (control is Try @try) {
+                block=FetchMetatokens(metatokens, tokens, index);
+                if (block is Catch @catch) {
+                    FetchBlock(@catch, tokens, index + 1, parserstart, parserindex);
                     @try.Catch = @catch.Body;
                     tokens.RemoveAt(index);
+                }
+                else {
+                    for (int i = metatokens.Count - 1; i >= 0; --i)
+                        tokens.Insert(index, metatokens[i]);
                 }
             }
         }
