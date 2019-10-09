@@ -8,6 +8,7 @@ namespace NightlyCode.Scripting.Formatters.Tokens {
     /// </summary>
     public class NewLineFormatter : ITokenFormatter {
 
+        /// <inheritdoc />
         public void FormatToken(IScriptToken token, StringBuilder resulttext, IFormatterCollection formatters, int depth = 0, bool mustindent = false) {
         }
     }

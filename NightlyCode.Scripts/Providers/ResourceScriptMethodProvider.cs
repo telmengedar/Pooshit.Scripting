@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Reflection;
 using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Providers {
@@ -25,10 +26,15 @@ namespace NightlyCode.Scripting.Providers {
         /// <summary>
         /// imports an external script method assembly resources
         /// </summary>
-        /// <param name="key">resource name</param>
+        /// <param name="parameters">resource name</param>
         /// <returns>script method stored in resource</returns>
-        public IExternalMethod Import(string key) {
-            using (StreamReader reader = new StreamReader(assembly.GetManifestResourceStream(key)))
+        public IExternalMethod Import(object[] parameters) {
+            if (parameters.Length == 0)
+                throw new ScriptRuntimeException("A resource to import is necessary");
+            if (parameters.Length > 1)
+                throw new ScriptRuntimeException("Too many arguments provided. Only a resource path is necessary.");
+
+            using (StreamReader reader = new StreamReader(assembly.GetManifestResourceStream(parameters[0].ToString())))
                 return new ExternalScriptMethod(parser.Parse(reader.ReadToEnd()));
         }
     }

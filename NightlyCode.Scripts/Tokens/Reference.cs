@@ -25,11 +25,6 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        public T Execute<T>(ScriptContext context) {
-            return argument.Execute<T>(context);
-        }
-
-        /// <inheritdoc />
         public object Assign(IScriptToken token, ScriptContext context) {
             return argument.Assign(token, context);
         }

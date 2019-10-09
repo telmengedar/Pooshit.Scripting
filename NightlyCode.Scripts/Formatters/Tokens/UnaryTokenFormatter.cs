@@ -8,6 +8,7 @@ namespace NightlyCode.Scripting.Formatters.Tokens {
     /// formats <see cref="IUnaryToken"/>s
     /// </summary>
     public class UnaryTokenFormatter : TokenFormatter {
+        /// <inheritdoc />
         protected override void Format(IScriptToken token, StringBuilder resulttext, IFormatterCollection formatters, int depth = 0) {
             IUnaryToken unarytoken = (IUnaryToken) token;
 

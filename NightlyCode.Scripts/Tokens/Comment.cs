@@ -35,11 +35,6 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        public T Execute<T>(ScriptContext context) {
-            return default(T);
-        }
-
-        /// <inheritdoc />
         public override string ToString() {
             if (IsMultiline)
                 return $"/*{Text}*/";

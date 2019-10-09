@@ -9,7 +9,10 @@ namespace Scripting.Tests {
 
     [TestFixture, Parallelizable]
     public class FormatterTests {
-        readonly ScriptParser parser = new ScriptParser();
+        readonly ScriptParser parser = new ScriptParser {
+            // metatokens should be enabled for formatting to include them
+            MetatokensEnabled = true
+        };
         readonly ScriptFormatter formatter = new ScriptFormatter();
 
         [TestCase("test1_input.ns", "test1_expected.ns")]

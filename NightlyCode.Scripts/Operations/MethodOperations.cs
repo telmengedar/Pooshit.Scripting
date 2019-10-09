@@ -203,7 +203,8 @@ namespace NightlyCode.Scripting.Operations {
         /// </summary>
         /// <param name="constructor">constructor to call</param>
         /// <param name="parameters">parameters for constructor</param>
-        /// <returns></returns>
+        /// <param name="context">execution context</param>
+        /// <returns>constructed object</returns>
         public static object CallConstructor(ConstructorInfo constructor, IScriptToken[] parameters, ScriptContext context) {
             ParameterInfo[] targetparameters = constructor.GetParameters();
             object[] callparameters = parameters.Select(p => p.Execute(context)).ToArray();

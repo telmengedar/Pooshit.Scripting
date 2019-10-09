@@ -10,8 +10,8 @@ namespace NightlyCode.Scripting.Providers {
         /// <summary>
         /// imports a script method using the specified argument
         /// </summary>
-        /// <param name="key">key used to identify the method to import</param>
+        /// <param name="parameters">parameters for import</param>
         /// <returns>loaded from key</returns>
-        IExternalMethod Import(string key);
+        IExternalMethod Import(object[] parameters);
     }
 }

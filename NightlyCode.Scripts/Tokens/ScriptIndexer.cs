@@ -26,6 +26,9 @@ namespace NightlyCode.Scripting.Tokens {
             this.parameters = parameters;
         }
 
+        /// <summary>
+        /// host to call indexer on
+        /// </summary>
         public IScriptToken Host => hosttoken;
 
         /// <inheritdoc />
@@ -61,6 +64,7 @@ namespace NightlyCode.Scripting.Tokens {
             return MethodOperations.CallMethod(host, method, parametervalues, context);
         }
 
+        /// <inheritdoc />
         protected override object AssignToken(IScriptToken token, ScriptContext context) {
             object host = hosttoken.Execute(context);
             if (parameters.Length == 1) {
@@ -82,6 +86,7 @@ namespace NightlyCode.Scripting.Tokens {
             return MethodOperations.CallMethod(host, evaluated[0].Item1, parametervalues, context);
         }
 
+        /// <inheritdoc />
         public override string ToString() {
             return $"{hosttoken}[{string.Join<IScriptToken>(", ", parameters)}]";
         }

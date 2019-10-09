@@ -9,6 +9,7 @@ namespace NightlyCode.Scripting.Formatters.Tokens {
     /// </summary>
     public class BinaryTokenFormatter : TokenFormatter {
 
+        /// <inheritdoc />
         protected override void Format(IScriptToken token, StringBuilder resulttext, IFormatterCollection formatters, int depth = 0) {
             IBinaryToken binary = (IBinaryToken) token;
             formatters[binary.Lhs].FormatToken(binary.Lhs, resulttext, formatters);

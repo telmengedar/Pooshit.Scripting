@@ -32,6 +32,9 @@ namespace NightlyCode.Scripting.Tokens {
             this.parameters = parameters;
         }
 
+        /// <summary>
+        /// host to call method on
+        /// </summary>
         public IScriptToken Host => hosttoken;
 
         /// <summary>
@@ -39,6 +42,7 @@ namespace NightlyCode.Scripting.Tokens {
         /// </summary>
         public string MethodName => methodname;
 
+        /// <inheritdoc />
         public IEnumerable<IScriptToken> Parameters => parameters;
 
         /// <inheritdoc />
@@ -94,6 +98,7 @@ namespace NightlyCode.Scripting.Tokens {
             throw new ScriptRuntimeException($"Method '{methodname}' matching the parameters '({string.Join(",", parametervalues)})' not found on type {host.GetType().Name}");
         }
 
+        /// <inheritdoc />
         public override string ToString() {
             return $"{hosttoken}.{methodname}({string.Join(",", parameters.Select(p => p.ToString()))})";
         }

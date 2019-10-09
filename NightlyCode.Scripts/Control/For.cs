@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;

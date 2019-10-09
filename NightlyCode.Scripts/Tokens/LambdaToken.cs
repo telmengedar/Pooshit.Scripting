@@ -14,7 +14,7 @@ namespace NightlyCode.Scripting.Tokens {
         IScriptToken lhs;
 
         /// <inheritdoc />
-        public string Literal => "()=>{}";
+        public string Literal => "=>";
 
         /// <summary>
         /// parameters for lambda method
@@ -50,11 +50,6 @@ namespace NightlyCode.Scripting.Tokens {
 
             ScriptContext lambdacontext = new ScriptContext(new VariableContext(context.Variables), context.Arguments, context.CancellationToken);
             return new LambdaMethod(parameters, lambdacontext, Rhs);
-        }
-
-        /// <inheritdoc />
-        public T Execute<T>(ScriptContext context) {
-            throw new System.NotImplementedException();
         }
 
         /// <inheritdoc />

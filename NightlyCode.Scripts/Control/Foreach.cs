@@ -4,6 +4,7 @@ using System.Linq;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
+using NightlyCode.Scripting.Extensions;
 
 namespace NightlyCode.Scripting.Control {
 
@@ -80,6 +81,7 @@ namespace NightlyCode.Scripting.Control {
             return $"foreach({variable}, {collection}) {Body}";
         }
 
+        /// <inheritdoc />
         public IEnumerable<IScriptToken> Parameters {
             get {
                 yield return variable;

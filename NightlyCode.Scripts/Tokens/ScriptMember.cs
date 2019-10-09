@@ -99,6 +99,7 @@ namespace NightlyCode.Scripting.Tokens {
             return targetvalue;
         }
 
+        /// <inheritdoc />
         protected override object AssignToken(IScriptToken token, ScriptContext context) {
             object host = hosttoken.Execute(context);
             if (host is Dictionary<object, object> dictionary)

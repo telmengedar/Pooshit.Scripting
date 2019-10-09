@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using NightlyCode.Scripting.Extern;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Extensions {
@@ -18,6 +20,17 @@ namespace NightlyCode.Scripting.Extensions {
                 foreach (string line in comment.Text.Split('\n'))
                     yield return line.TrimEnd('\r');
             }
+        }
+
+        /// <summary>
+        /// executes a script and converts the result
+        /// </summary>
+        /// <typeparam name="T">type to convert result to</typeparam>
+        /// <param name="token">token to execute</param>
+        /// <param name="context">context to provide for execution</param>
+        /// <returns>converted token result</returns>
+        public static T Execute<T>(this IScriptToken token, ScriptContext context) {
+            return Converter.Convert<T>(token.Execute(context));
         }
     }
 }

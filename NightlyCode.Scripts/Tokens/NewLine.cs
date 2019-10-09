@@ -5,16 +5,12 @@
     /// </summary>
     public class NewLine : IScriptToken {
 
+        /// <inheritdoc />
         public string Literal => "";
 
         /// <inheritdoc />
         public object Execute(ScriptContext context) {
             return null;
-        }
-
-        /// <inheritdoc />
-        public T Execute<T>(ScriptContext context) {
-            return default(T);
         }
 
         /// <inheritdoc />

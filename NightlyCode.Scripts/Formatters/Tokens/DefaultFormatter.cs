@@ -9,6 +9,10 @@ namespace NightlyCode.Scripting.Formatters.Tokens {
     /// formatter to use if no formatter applies
     /// </summary>
     public class DefaultFormatter : TokenFormatter {
+
+        /// <summary>
+        /// static instance of a default formatter
+        /// </summary>
         public static readonly DefaultFormatter Instance = new DefaultFormatter();
 
         /// <inheritdoc />

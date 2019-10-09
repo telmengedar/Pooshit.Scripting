@@ -29,6 +29,7 @@ namespace NightlyCode.Scripting.Control {
         /// <inheritdoc />
         public string Literal => "{ ... }";
 
+        /// <inheritdoc />
         public object Execute(ScriptContext context) {
             try {
                 return ExecuteBlock(context);
@@ -42,10 +43,6 @@ namespace NightlyCode.Scripting.Control {
             catch (Exception e) {
                 throw new ScriptRuntimeException($"Unable to execute '{this}'", e.Message, e);
             }
-        }
-
-        public T Execute<T>(ScriptContext context) {
-            return Converter.Convert<T>(Execute(context));
         }
 
         object ExecuteBlock(ScriptContext context) {

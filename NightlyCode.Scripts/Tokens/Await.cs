@@ -49,11 +49,6 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        public T Execute<T>(ScriptContext context) {
-            return (T) Execute(context);
-        }
-
-        /// <inheritdoc />
         public IEnumerable<IScriptToken> Parameters {
             get { yield return token; }
         }

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using NightlyCode.Scripting.Control;
-using NightlyCode.Scripting.Extern;
 
 namespace NightlyCode.Scripting.Tokens {
 
@@ -25,11 +24,6 @@ namespace NightlyCode.Scripting.Tokens {
         /// <inheritdoc />
         public object Execute(ScriptContext context) {
             return string.Join("", tokens.Select(t => t.Execute(context)?.ToString()));
-        }
-
-        /// <inheritdoc />
-        public T Execute<T>(ScriptContext context) {
-            return Converter.Convert<T>(Execute(context));
         }
 
         /// <inheritdoc />

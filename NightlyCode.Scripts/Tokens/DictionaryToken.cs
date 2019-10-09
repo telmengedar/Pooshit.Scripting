@@ -33,10 +33,5 @@ namespace NightlyCode.Scripting.Tokens {
                 result[kvp.Key.Execute(context)] = kvp.Value?.Execute(context);
             return result;
         }
-
-        /// <inheritdoc />
-        public T Execute<T>(ScriptContext context) {
-            return Converter.Convert<T>(Execute(context));
-        }
     }
 }

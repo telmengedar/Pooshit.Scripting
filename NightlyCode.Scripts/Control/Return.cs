@@ -35,6 +35,7 @@ namespace NightlyCode.Scripting.Control {
             return $"return {value}";
         }
 
+        /// <inheritdoc />
         public IEnumerable<IScriptToken> Parameters {
             get {
                 if (value != null)

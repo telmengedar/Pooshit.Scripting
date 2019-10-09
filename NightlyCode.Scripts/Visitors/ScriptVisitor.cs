@@ -56,6 +56,10 @@ namespace NightlyCode.Scripting.Visitors {
                 VisitDictionary(dictionary);
         }
 
+        /// <summary>
+        /// visits a dictionary token
+        /// </summary>
+        /// <param name="dictionary">dictionary to visit</param>
         public virtual void VisitDictionary(DictionaryToken dictionary) {
             foreach (KeyValuePair<IScriptToken, IScriptToken> entry in dictionary.Entries) {
                 VisitToken(entry.Key);
@@ -63,10 +67,18 @@ namespace NightlyCode.Scripting.Visitors {
             }
         }
 
+        /// <summary>
+        /// visits a member of a host
+        /// </summary>
+        /// <param name="member">member to visit</param>
         public virtual void VisitMember(ScriptMember member) {
             VisitToken(member.Host);
         }
 
+        /// <summary>
+        /// visits an array
+        /// </summary>
+        /// <param name="array">array to visit</param>
         public virtual void VisitArray(ScriptArray array) {
             foreach (IScriptToken value in array.Values)
                 VisitToken(value);
@@ -120,7 +132,7 @@ namespace NightlyCode.Scripting.Visitors {
         /// </summary>
         /// <param name="import">token to visit</param>
         public virtual void VisitImport(Import import) {
-            VisitToken(import.Reference);
+            VisitParameters(import);
         }
 
         /// <summary>

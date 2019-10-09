@@ -48,7 +48,7 @@ namespace Scripting.Tests {
             catch (ScriptParserException parserexception) {
                 Assert.AreEqual("Empty statement block detected",parserexception.Message);
             }
-            catch (Exception e) {
+            catch (Exception) {
                 Assert.Fail("Wrong exception type");
             }
         }

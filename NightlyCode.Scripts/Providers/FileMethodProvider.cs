@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Reflection;
 using NightlyCode.Scripting.Data;
+using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Providers {
@@ -22,10 +23,15 @@ namespace NightlyCode.Scripting.Providers {
         /// <summary>
         /// loads a script from a file to provide an external method
         /// </summary>
-        /// <param name="key">path to scriptfile to load and compile</param>
+        /// <param name="parameters">path to scriptfile to load and compile</param>
         /// <returns>compiled script as a external method</returns>
-        public IExternalMethod Import(string key) {
-            string fullpath = Path.Combine(Path.GetDirectoryName((Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly()).Location), key);
+        public IExternalMethod Import(object[] parameters) {
+            if (parameters.Length == 0)
+                throw new ScriptRuntimeException("A script file to import is necessary");
+            if (parameters.Length > 1)
+                throw new ScriptRuntimeException("Too many arguments provided. Only a filename is necessary.");
+
+            string fullpath = Path.Combine(Path.GetDirectoryName((Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly()).Location), parameters[0].ToString());
             if (!File.Exists(fullpath))
                 throw new FileNotFoundException("External script not found", fullpath);
 

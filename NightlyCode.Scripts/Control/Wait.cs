@@ -28,6 +28,7 @@ namespace NightlyCode.Scripting.Control {
         /// <inheritdoc />
         public override string Literal => "wait";
 
+        /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
             object timeargument = timetoken.Execute(context);
             if (timeargument == null)

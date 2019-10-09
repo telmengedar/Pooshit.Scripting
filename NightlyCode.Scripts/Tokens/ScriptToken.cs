@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Extern;
 
 namespace NightlyCode.Scripting.Tokens {
     /// <summary>
@@ -27,11 +26,6 @@ namespace NightlyCode.Scripting.Tokens {
             catch (Exception e) {
                 throw new ScriptRuntimeException($"Unable to execute '{this}'", e.Message, e);
             }
-        }
-
-        /// <inheritdoc />
-        public T Execute<T>(ScriptContext context) {
-            return Converter.Convert<T>(Execute(context));
         }
 
         /// <summary>

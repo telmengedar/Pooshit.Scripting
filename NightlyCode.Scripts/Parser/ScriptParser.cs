@@ -88,6 +88,11 @@ namespace NightlyCode.Scripting.Parser {
         /// </summary>
         public bool ImportsEnabled { get; set; } = true;
 
+        /// <summary>
+        /// determines whether meta tokens are included in parsed script
+        /// </summary>
+        public bool MetatokensEnabled { get; set; }
+
         /// <inheritdoc />
         public IVariableProvider GlobalVariables => globalvariables;
 
@@ -307,7 +312,7 @@ namespace NightlyCode.Scripting.Parser {
                     TokenParsed?.Invoke(TokenType.Control, start, index);
                     if (MethodResolver == null)
                         throw new ScriptParserException(start, index, "Import statement is unavailable since no method resolver is set.");
-                    return new Import(MethodResolver, ParseSingleControlParameter(data, ref index, variables));
+                    return new Import(MethodResolver, ParseControlParameters(null, data, ref index, variables));
                 }
             }
 
@@ -951,7 +956,8 @@ namespace NightlyCode.Scripting.Parser {
 
                                 newlines = 0;
                                 TokenParsed?.Invoke(TokenType.Comment, parsestart, index);
-                                tokenlist.Add(comment);
+                                if(MetatokensEnabled)
+                                    tokenlist.Add(comment);
                             }
                             done = true;
                             break;
@@ -1185,10 +1191,10 @@ namespace NightlyCode.Scripting.Parser {
                     else statements.Add(token);
                 }
 
-                if (newlines > 1)
+                if (MetatokensEnabled && newlines > 1)
                     statements.Add(new NewLine());
                 newlines = SkipWhitespaces(data, ref index);
-                if (newlines > 1)
+                if (MetatokensEnabled && newlines > 1)
                     statements.Add(new NewLine());
             }
 
