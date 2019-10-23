@@ -1,0 +1,4 @@
+﻿if(true)
+	throw("shit")
+else
+	throw("shut")

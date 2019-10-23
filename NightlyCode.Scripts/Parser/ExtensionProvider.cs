@@ -45,7 +45,11 @@ namespace NightlyCode.Scripting.Parser {
                 ParameterInfo[] parameters = method.GetParameters();
                 if (parameters.Length == 0)
                     continue;
-                AddExtensionMethod(parameters[0].ParameterType, method);
+
+                Type hosttype = parameters[0].ParameterType;
+                if (hosttype.IsGenericType)
+                    hosttype = hosttype.GetGenericTypeDefinition();
+                AddExtensionMethod(hosttype, method);
             }
         }
 

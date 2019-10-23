@@ -6,17 +6,17 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// changes the type of an expression result
     /// </summary>
-    public class TypeCast : ScriptToken {
+    public class ImpliciteTypeCast : ScriptToken {
         readonly Type targettype;
         readonly IScriptToken token;
 
         /// <summary>
-        /// creates a new <see cref="TypeCast"/>
+        /// creates a new <see cref="ImpliciteTypeCast"/>
         /// </summary>
         /// <param name="keyword">keyword used in script when casting</param>
         /// <param name="targettype">target type</param>
         /// <param name="token">token resulting in value to cast</param>
-        public TypeCast(string keyword, Type targettype, IScriptToken token) {
+        public ImpliciteTypeCast(string keyword, Type targettype, IScriptToken token) {
             Keyword = keyword;
             this.targettype = targettype;
             this.token = token;

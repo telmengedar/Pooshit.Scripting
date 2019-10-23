@@ -24,6 +24,15 @@ namespace NightlyCode.Scripting.Parser {
         }
 
         /// <summary>
+        /// replaces a variable value
+        /// </summary>
+        /// <param name="name">name of variable</param>
+        /// <param name="value">value to write</param>
+        internal void ReplaceVariable(string name, object value) {
+            values[name] = value;
+        }
+
+        /// <summary>
         /// access to value lookup
         /// </summary>
         protected Dictionary<string, object> Values => values;
@@ -31,7 +40,7 @@ namespace NightlyCode.Scripting.Parser {
         /// <inheritdoc />
         public object GetVariable(string name) {
             if (!ContainsVariable(name))
-                throw new ScriptRuntimeException($"Variable {name} not found");
+                throw new ScriptRuntimeException($"Variable {name} not found", null);
 
             return values[name];
         }

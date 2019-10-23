@@ -1,4 +1,5 @@
-﻿using NightlyCode.Scripting.Errors;
+﻿using System;
+using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
@@ -35,7 +36,25 @@ namespace NightlyCode.Scripting.Control {
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext scriptcontext) {
-            throw new ScriptExecutionException(message.Execute(scriptcontext)?.ToString(), Context?.Execute(scriptcontext));
+            string messagetext;
+            object contextdata;
+            try {
+                contextdata = Context?.Execute(scriptcontext);
+            }
+            catch (Exception e) {
+                throw new ScriptRuntimeException($"Unable to create context data for throw\n{e.Message}", this, e);
+            }
+
+            try {
+                messagetext = message.Execute(scriptcontext)?.ToString();
+            }
+            catch (Exception e) {
+                throw new ScriptRuntimeException($"Unable to create message for throw\n{e.Message}", this, e);
+            }
+
+            throw new ScriptRuntimeException(messagetext, this) {
+                ContextData = contextdata
+            };
         }
 
         /// <inheritdoc />

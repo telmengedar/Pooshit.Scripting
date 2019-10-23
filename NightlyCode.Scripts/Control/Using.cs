@@ -26,7 +26,7 @@ namespace NightlyCode.Scripting.Control {
                 foreach (IScriptToken token in disposables) {
                     object value = token.Execute(context);
                     if (!(value is IDisposable disposablevalue))
-                        throw new ScriptRuntimeException($"'{token}' does not evaluate to an idisposable");
+                        throw new ScriptRuntimeException($"'{token}' does not evaluate to an idisposable", token);
                     values.Add(disposablevalue);
                 }
 
@@ -44,7 +44,7 @@ namespace NightlyCode.Scripting.Control {
                 }
 
                 if (log.Length > 0)
-                    throw new ScriptRuntimeException($"Error disposing values: {log}");
+                    throw new ScriptRuntimeException($"Error disposing values: {log}", this);
             }
         }
 

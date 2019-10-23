@@ -32,7 +32,8 @@ namespace NightlyCode.Scripting.Control {
         protected override object ExecuteToken(ScriptContext context) {
             object timeargument = timetoken.Execute(context);
             if (timeargument == null)
-                throw new ScriptRuntimeException("Specified waiting time was null");
+                throw new ScriptRuntimeException("Specified waiting time was null", this);
+
             if (timeargument is TimeSpan timespan)
                 Thread.Sleep(timespan);
             else {
@@ -58,7 +59,7 @@ namespace NightlyCode.Scripting.Control {
                         Thread.Sleep(Converter.Convert<int>(timeargument));
                     break;
                 default:
-                    throw new ScriptRuntimeException("argument to wait can not be converted to a valid time");
+                    throw new ScriptRuntimeException("argument to wait can not be converted to a valid time", this);
                 }
             }
             return null;

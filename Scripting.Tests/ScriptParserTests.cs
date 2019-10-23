@@ -3,9 +3,10 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using NightlyCode.Scripting;
+using NightlyCode.Scripting.Control;
 using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
+using NightlyCode.Scripting.Tokens;
 using NUnit.Framework;
 using Scripting.Tests.Data;
 
@@ -234,5 +235,27 @@ namespace Scripting.Tests {
             // task is automatically added by parser
             Assert.That(new[] {"test", "host", "task"}.SequenceEqual(parser.GlobalVariables.Variables));
         }
+
+        [Test, Parallelizable]
+        public void MemberIndex() {
+            IScript script=globalparser.Parse("$host.member");
+            int textindex = ((script.Body as StatementBlock)?.Children.First() as ICodePositionToken)?.TextIndex ?? -1;
+            Assert.AreEqual(0, textindex);
+        }
+
+        [Test, Parallelizable]
+        public void MethodIndex() {
+            IScript script=globalparser.Parse("$host.method(1,2,3)");
+            int textindex = ((script.Body as StatementBlock)?.Children.First() as ICodePositionToken)?.TextIndex ?? -1;
+            Assert.AreEqual(0, textindex);
+        }
+
+        [Test, Parallelizable]
+        public void IndexerPositionIndex() {
+            IScript script=globalparser.Parse("$host[1,2,3]");
+            int textindex = ((script.Body as StatementBlock)?.Children.First() as ICodePositionToken)?.TextIndex ?? -1;
+            Assert.AreEqual(0, textindex);
+        }
+
     }
 }

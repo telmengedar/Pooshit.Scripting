@@ -30,6 +30,10 @@ namespace Scripting.Tests {
         [TestCase("eol_comments_code.ns", "eol_comments_expected.ns")]
         [TestCase("throw_code.ns", "throw_expected.ns")]
         [TestCase("cast_code.ns", "cast_expected.ns")]
+        [TestCase("multilineinblock_code.ns", "multilineinblock_expected.ns")]
+        [TestCase("simpleifelse_code.ns", "simpleifelse_expected.ns")]
+        [TestCase("lukas_code.ns", "lukas_expected.ns")]
+        [TestCase("commentinnewline_code.ns", "commentinnewline_expected.ns")]
         public void FormatTestScripts(string inputresource, string expectedresource) {
             string inputcode;
             string expectedcode;

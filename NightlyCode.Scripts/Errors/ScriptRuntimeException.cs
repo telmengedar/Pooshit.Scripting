@@ -1,4 +1,5 @@
 ﻿using System;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Errors {
 
@@ -12,16 +13,21 @@ namespace NightlyCode.Scripting.Errors {
         /// creates a new <see cref="ScriptRuntimeException"/>
         /// </summary>
         /// <param name="message">error message</param>
-        /// <param name="details">details for error</param>
+        /// <param name="token">token which triggered the error</param>
         /// <param name="innerException">error which lead to this error</param>
-        public ScriptRuntimeException(string message, string details = null, Exception innerException = null)
-            : base($"{message}\r\n{details}", innerException) {
-            Details = details;
+        public ScriptRuntimeException(string message, IScriptToken token, Exception innerException = null)
+            : base($"{message}", innerException) {
+            Token = token;
         }
 
         /// <summary>
-        /// details for error
+        /// token which triggered the error
         /// </summary>
-        public string Details { get; set; }
+        public IScriptToken Token { get; }
+
+        /// <summary>
+        /// context data for error
+        /// </summary>
+        public object ContextData { get; set; }
     }
 }

@@ -72,7 +72,7 @@ namespace NightlyCode.Scripting.Extensions {
                     return 13;
                 default:
                     // this is only thrown when the script parser logic is actually broken so no indices need to be provided
-                    throw new ScriptParserException(-1,-1,"Unsupported operator");
+                    throw new ScriptParserException(-1,-1,-1,"Unsupported operator");
             }
         }
     }

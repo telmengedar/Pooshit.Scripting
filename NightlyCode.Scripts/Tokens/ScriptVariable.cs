@@ -37,7 +37,7 @@ namespace NightlyCode.Scripting.Tokens {
 
             IVariableProvider provider = context.Variables.GetProvider(Name);
             if (provider == null)
-                throw new ScriptRuntimeException($"Variable {Name} not declared");
+                throw new ScriptRuntimeException($"Variable {Name} not declared", this);
 
             return provider.GetVariable(Name);
         }
@@ -50,7 +50,7 @@ namespace NightlyCode.Scripting.Tokens {
                 provider = context.Variables;
 
             if (!(provider is IVariableContext variablecontext))
-                throw new ScriptRuntimeException($"Variable {Name} not writable");
+                throw new ScriptRuntimeException($"Variable {Name} not writable", this);
 
             object value = token.Execute(context);
             variablecontext.SetVariable(Name, value);

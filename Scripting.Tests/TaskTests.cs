@@ -86,7 +86,7 @@ namespace Scripting.Tests {
                 Assert.Fail("No Exception was thrown");
             }
             catch (Exception e) {
-                Assert.AreEqual("Unable to execute assignment '$result'\r\nException:\nBullshit", e.Message);
+                Assert.AreEqual("Unable to execute assignment '$result'\nBullshit", e.Message);
             }
         }
 

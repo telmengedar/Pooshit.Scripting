@@ -1,0 +1,15 @@
+﻿using($Backend) {
+	throw("")
+
+	// send information to printer
+	/* log.info("Connecting to printer @ 10.0.0.21:3003")
+	$Printer=zipher.connect("10.0.0.21", 3003)
+	log.info("Connected")
+	using($Printer)
+	{
+		log.info($"Sending parcel {$ParcelId} of {$Position.name} to printer")
+		$Printer.selectjob("Produktlabel", $Fields.toarray())
+		log.info("Printing label")
+		$Printer.print()
+	} */
+}

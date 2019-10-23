@@ -12,9 +12,8 @@ namespace NightlyCode.Scripting.Control {
     /// </summary>
     public class Switch : ControlToken, IParameterContainer {
         readonly IScriptToken condition;
+        readonly ListStatementBlock body = new ListStatementBlock();
         readonly List<Case> cases=new List<Case>();
-
-        readonly FuncStatementBlock body;
 
         /// <summary>
         /// creates a new <see cref="Switch"/> statement
@@ -22,14 +21,17 @@ namespace NightlyCode.Scripting.Control {
         /// <param name="condition">value to evaluate</param>
         internal Switch(IScriptToken condition) {
             this.condition = condition;
-            body = new FuncStatementBlock(BodyFunc);
         }
 
-        IEnumerable<IScriptToken> BodyFunc() {
-            foreach (Case @case in cases)
-                yield return @case;
-            if (Default != null)
-                yield return Default;
+        public void AddChild(IScriptToken child) {
+            if (child is Case @case) {
+                if (@case.IsDefault)
+                    Default = @case;
+                else AddCase(@case);
+            }
+            else if (!(child is Comment || child is NewLine))
+                throw new ScriptParserException(TextIndex, -1, LineNumber, $"Switch body can not contain {child.GetType().Name}");
+            body.Add(child);
         }
 
         /// <inheritdoc />
@@ -45,13 +47,9 @@ namespace NightlyCode.Scripting.Control {
         /// <summary>
         /// default case executed if no other case matches
         /// </summary>
-        public Case Default { get; set; }
+        public Case Default { get; internal set; }
 
-        /// <summary>
-        /// adds a case to the switch statement
-        /// </summary>
-        /// <param name="case">case to add</param>
-        public void AddCase(Case @case) {
+        internal void AddCase(Case @case) {
             if (@case.IsDefault)
                 Default = @case;
             else cases.Add(@case);

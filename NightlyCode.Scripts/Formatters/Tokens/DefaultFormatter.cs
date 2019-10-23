@@ -17,7 +17,6 @@ namespace NightlyCode.Scripting.Formatters.Tokens {
 
         /// <inheritdoc />
         protected override void Format(IScriptToken token, StringBuilder resulttext, IFormatterCollection formatters, int depth = 0) {
-            FormatLinkedComments(token, resulttext, depth);
             resulttext.Append(token.Literal);
 
             if (token is IParameterContainer parametertoken && parametertoken.Parameters != null) {
@@ -33,11 +32,9 @@ namespace NightlyCode.Scripting.Formatters.Tokens {
                 resulttext.Append(')');
             }
 
-            if (token is IStatementContainer controltoken) {
-                if (!(controltoken.Body is StatementBlock))
-                    resulttext.AppendLine();
-                formatters[controltoken.Body].FormatToken(controltoken.Body, resulttext, formatters, depth + 1, true);
-            }
+            
+            if (token is IStatementContainer controltoken)
+                FormatBody(controltoken.Body, resulttext, formatters, depth);
         }
     }
 }

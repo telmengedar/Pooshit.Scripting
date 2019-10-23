@@ -62,6 +62,10 @@ namespace Scripting.Tests {
             return guid?.ToString();
         }
 
+        public void RandomListMethod(bool first = false, Guid? second = null, Guid? third = null, int[] last = null) {
+
+        }
+
         public Parameter Parameter(string name, string value) {
             return new Parameter {
                 Name = name,
@@ -92,6 +96,12 @@ namespace Scripting.Tests {
         public void CallMethodWithDefaultParameters() {
             IScript script = parser.Parse("$test.methodwithdefaults(\"max\")", new Variable("test", this));
             Assert.AreEqual(" max ", script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void ConvertGuidToStringOnCall() {
+            IScript script = parser.Parse("$test.methodwithdefaults($guid)", new Variable("test", this), new Variable("guid", Guid.Empty));
+            Assert.AreEqual($" {Guid.Empty} ", script.Execute());
         }
 
         [Test, Parallelizable]
@@ -224,6 +234,14 @@ namespace Scripting.Tests {
 
             IScript script = parser.Parse("$test.nullableguidparameter(\"4cac6f34-ab34-48e5-bc5c-a0a23d282846\")", new Variable("test", this));
             Assert.AreEqual("4cac6f34-ab34-48e5-bc5c-a0a23d282846", script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void CallNullableMixedWithDefaults() {
+            // 4cac6f34-ab34-48e5-bc5c-a0a23d282846
+
+            IScript script = parser.Parse("$test.randomlistmethod(false, \"4cac6f34-ab34-48e5-bc5c-a0a23d282846\", null, [1,2])", new Variable("test", this));
+            Assert.DoesNotThrow(()=>script.Execute());
         }
     }
 }

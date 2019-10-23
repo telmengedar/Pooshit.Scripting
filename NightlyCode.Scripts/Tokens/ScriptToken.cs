@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using NightlyCode.Scripting.Errors;
 
 namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// base implementation of a script token with basic error handling
     /// </summary>
-    public abstract class ScriptToken : ICommentContainer {
-        readonly List<Comment> comments = new List<Comment>();
+    public abstract class ScriptToken : ICodePositionToken {
 
         /// <inheritdoc />
         public abstract string Literal { get; }
@@ -24,7 +22,7 @@ namespace NightlyCode.Scripting.Tokens {
                 throw;
             }
             catch (Exception e) {
-                throw new ScriptRuntimeException($"Unable to execute '{this}'", e.Message, e);
+                throw new ScriptRuntimeException($"Unable to execute '{this}'\n{e.Message}", this, e);
             }
         }
 
@@ -35,11 +33,9 @@ namespace NightlyCode.Scripting.Tokens {
         protected abstract object ExecuteToken(ScriptContext context);
 
         /// <inheritdoc />
-        public IEnumerable<Comment> Comments => comments;
+        public int LineNumber { get; internal set; }
 
         /// <inheritdoc />
-        public void AddComment(Comment comment) {
-            comments.Add(comment);
-        }
+        public int TextIndex { get; internal set; }
     }
 }

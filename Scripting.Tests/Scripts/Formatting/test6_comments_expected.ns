@@ -1,6 +1,5 @@
 ﻿/* bla bla
-   bla bla
-*/
+	bla bla */
 
 // more bla bla
 // a block of text
@@ -11,8 +10,6 @@ while(true) {
 	// increase value
 	$value++
 }
-/*
-	bla bla bla
-		bla bla bla
-	*/
+/* bla bla bla
+		bla bla bla */
 return($value)

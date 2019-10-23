@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Scripts\External\fail.ns" />
     <None Remove="Scripts\External\importlevel1.ns" />
     <None Remove="Scripts\External\importlevel2.ns" />
     <None Remove="Scripts\External\increasedbyone.ns" />
@@ -16,12 +17,20 @@
     <None Remove="Scripts\Formatting\arithmetic_expected.ns" />
     <None Remove="Scripts\Formatting\cast_code.ns" />
     <None Remove="Scripts\Formatting\cast_expected.ns" />
+    <None Remove="Scripts\Formatting\commentinnewline_code.ns" />
+    <None Remove="Scripts\Formatting\commentinnewline_expected.ns" />
     <None Remove="Scripts\Formatting\eol_comments_code.ns" />
     <None Remove="Scripts\Formatting\eol_comments_expected.ns" />
+    <None Remove="Scripts\Formatting\lukas_code.ns" />
+    <None Remove="Scripts\Formatting\lukas_expected.ns" />
+    <None Remove="Scripts\Formatting\multilineinblock_code.ns" />
+    <None Remove="Scripts\Formatting\multilineinblock_expected.ns" />
     <None Remove="Scripts\Formatting\newline_code.ns" />
     <None Remove="Scripts\Formatting\newline_expected.ns" />
     <None Remove="Scripts\Formatting\new_code.ns" />
     <None Remove="Scripts\Formatting\new_expected.ns" />
+    <None Remove="Scripts\Formatting\simpleifelse_code.ns" />
+    <None Remove="Scripts\Formatting\simpleifelse_expected.ns" />
     <None Remove="Scripts\Formatting\subblock_code.ns" />
     <None Remove="Scripts\Formatting\subblock_expected.ns" />
     <None Remove="Scripts\Formatting\switch_code.ns" />
@@ -49,6 +58,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Scripts\External\fail.ns" />
     <EmbeddedResource Include="Scripts\External\importlevel1.ns" />
     <EmbeddedResource Include="Scripts\External\importlevel2.ns" />
     <EmbeddedResource Include="Scripts\External\increasedbyone.ns">
@@ -56,6 +66,14 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Scripts\Formatting\cast_code.ns" />
     <EmbeddedResource Include="Scripts\Formatting\cast_expected.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\commentinnewline_code.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\commentinnewline_expected.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\lukas_code.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\lukas_expected.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\multilineinblock_code.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\multilineinblock_expected.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\simpleifelse_code.ns" />
+    <EmbeddedResource Include="Scripts\Formatting\simpleifelse_expected.ns" />
     <EmbeddedResource Include="Scripts\Formatting\throw_code.ns" />
     <EmbeddedResource Include="Scripts\Formatting\throw_expected.ns" />
     <EmbeddedResource Include="Scripts\Valid\parentbug.ns" />

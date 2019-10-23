@@ -25,14 +25,14 @@ namespace NightlyCode.Scripting.Tokens {
                 lhs = value;
                 if (lhs is ScriptArray array) {
                     if(array.Values.Any(v=>!(v is ScriptVariable)))
-                        throw new ScriptParserException(-1,-1,"Lambda parameters must be a single variable or an array of variables");
+                        throw new ScriptParserException(-1,-1,-1,"Lambda parameters must be a single variable or an array of variables");
 
                     foreach (ScriptVariable var in array.Values.Cast<ScriptVariable>())
                         var.IsResolved = true;
                 }
                 else if (lhs is ScriptVariable variable)
                     variable.IsResolved = true;
-                else throw new ScriptParserException(-1,-1,"Lambda parameters must be a single variable or an array of variables");
+                else throw new ScriptParserException(-1,-1,-1,"Lambda parameters must be a single variable or an array of variables");
             }
         }
 

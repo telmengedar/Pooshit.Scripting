@@ -30,12 +30,12 @@ namespace NightlyCode.Scripting.Providers {
         /// <returns>script method stored in resource</returns>
         public IExternalMethod Import(object[] parameters) {
             if (parameters.Length == 0)
-                throw new ScriptRuntimeException("A resource to import is necessary");
+                throw new ScriptRuntimeException("A resource to import is necessary", null);
             if (parameters.Length > 1)
-                throw new ScriptRuntimeException("Too many arguments provided. Only a resource path is necessary.");
+                throw new ScriptRuntimeException("Too many arguments provided. Only a resource path is necessary.", null);
 
             using (StreamReader reader = new StreamReader(assembly.GetManifestResourceStream(parameters[0].ToString())))
-                return new ExternalScriptMethod(parser.Parse(reader.ReadToEnd()));
+                return new ExternalScriptMethod(parameters[0]?.ToString(), parser.Parse(reader.ReadToEnd()));
         }
     }
 }

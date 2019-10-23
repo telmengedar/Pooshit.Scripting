@@ -46,7 +46,7 @@ namespace NightlyCode.Scripting.Operations.Unary {
                 token = value as IAssignableToken;
                 if (token == null)
                     // TODO: try to provide position of token
-                    throw new ScriptParserException(-1, -1, "Operand of decrement must be assignable");
+                    throw new ScriptParserException(-1, -1, -1,"Operand of decrement must be assignable");
             }
         }
 

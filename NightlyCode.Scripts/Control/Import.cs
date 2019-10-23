@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Providers;
 using NightlyCode.Scripting.Tokens;
 
@@ -27,7 +29,12 @@ namespace NightlyCode.Scripting.Control {
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
-            return methodprovider.Import(parameters.Select(p=>p.Execute(context)).ToArray());
+            try {
+                return methodprovider.Import(parameters.Select(p=>p.Execute(context)).ToArray());
+            }
+            catch (ScriptRuntimeException e) {
+                throw new ScriptRuntimeException($"Extern({string.Join(", ", parameters.Select(p => p.ToString()))})", this, e);
+            }
         }
 
         /// <inheritdoc />

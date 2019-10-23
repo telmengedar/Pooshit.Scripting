@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Tokens {
@@ -10,8 +12,9 @@ namespace NightlyCode.Scripting.Tokens {
         readonly ITypeInstanceProvider provider;
         readonly IScriptToken[] parameters;
 
-        internal NewInstance(string typename, ITypeInstanceProvider provider, IScriptToken[] parameters) {
+        internal NewInstance(string typename, Type type, ITypeInstanceProvider provider, IScriptToken[] parameters) {
             TypeName = typename;
+            Type = type;
             this.provider = provider;
             this.parameters = parameters;
         }
@@ -21,12 +24,25 @@ namespace NightlyCode.Scripting.Tokens {
         /// </summary>
         public string TypeName { get; }
 
+        /// <summary>
+        /// type to be created (just an indicator for reflection)
+        /// </summary>
+        /// <remarks>
+        /// when in doubt use typeof(object)
+        /// </remarks>
+        public Type Type { get; }
+
         /// <inheritdoc />
         public override string Literal => "new";
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
-            return provider.Create(parameters, context);
+            try {
+                return provider.Create(parameters, context);
+            }
+            catch (ScriptRuntimeException e) {
+                throw new ScriptRuntimeException(e.Message, this, e.InnerException);
+            }
         }
 
         /// <inheritdoc />

@@ -13,11 +13,23 @@ namespace Scripting.Tests {
         readonly IScriptParser parser = new ScriptParser();
 
         [Test, Parallelizable]
+        public void DetectOptionalScriptParameter() {
+            IScript script = parser.Parse("parameter($parameter, \"int\", 0) method.call($parameter)", new Variable("method"));
+            ParameterExtractor extractor=new ParameterExtractor();
+            extractor.Visit(script);
+            Assert.AreEqual(1, extractor.Parameters.Count());
+            Assert.AreEqual("parameter", extractor.Parameters.First().Name);
+            Assert.That(extractor.Parameters.First().IsOptional);
+        }
+
+        [Test, Parallelizable]
         public void DetectScriptParameter() {
             IScript script = parser.Parse("method.call($parameter)", new Variable("method"));
             ParameterExtractor extractor=new ParameterExtractor();
             extractor.Visit(script);
-            Assert.That(new[] {"parameter"}.SequenceEqual(extractor.Parameters));
+            Assert.AreEqual(1, extractor.Parameters.Count());
+            Assert.AreEqual("parameter", extractor.Parameters.First().Name);
+            Assert.AreEqual(false, extractor.Parameters.First().IsOptional);
         }
 
         [Test, Parallelizable]
@@ -41,7 +53,9 @@ namespace Scripting.Tests {
             ), new Variable("method"));
             ParameterExtractor extractor=new ParameterExtractor();
             extractor.Visit(script);
-            Assert.That(new[] {"parameter"}.SequenceEqual(extractor.Parameters));
+            Assert.AreEqual(1, extractor.Parameters.Count());
+            Assert.AreEqual("parameter", extractor.Parameters.First().Name);
+            Assert.AreEqual(false, extractor.Parameters.First().IsOptional);
         }
 
         [Test, Parallelizable]
@@ -52,7 +66,9 @@ namespace Scripting.Tests {
             ));
             ParameterExtractor extractor=new ParameterExtractor();
             extractor.Visit(script);
-            Assert.That(new[] {"condition"}.SequenceEqual(extractor.Parameters));
+            Assert.AreEqual(1, extractor.Parameters.Count());
+            Assert.AreEqual("condition", extractor.Parameters.First().Name);
+            Assert.AreEqual(false, extractor.Parameters.First().IsOptional);
         }
 
         [Test, Parallelizable]
@@ -68,7 +84,7 @@ namespace Scripting.Tests {
 
             ParameterExtractor extractor = new ParameterExtractor();
             extractor.Visit(script);
-            Assert.That(!extractor.Parameters.Contains("exception"));
+            Assert.AreEqual(0, extractor.Parameters.Count());
         }
 
         [Test, Parallelizable]
@@ -82,7 +98,7 @@ namespace Scripting.Tests {
 
             ParameterExtractor extractor = new ParameterExtractor();
             extractor.Visit(script);
-            Assert.That(!extractor.Parameters.Contains("exception"));
+            Assert.That(!extractor.Parameters.Any());
         }
 
         [Test, Parallelizable]

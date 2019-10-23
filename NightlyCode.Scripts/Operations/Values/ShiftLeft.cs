@@ -17,7 +17,7 @@ namespace NightlyCode.Scripting.Operations.Values {
             object value = lhs;
             int steps = rhs.Convert<int>();
 
-            int numberofbits = value.GetNumberOfBits();
+            int numberofbits = value.GetNumberOfBits(this);
             if (steps >= numberofbits)
                 return Activator.CreateInstance(value.GetType());
 

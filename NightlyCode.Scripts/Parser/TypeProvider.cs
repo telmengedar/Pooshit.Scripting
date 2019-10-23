@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Providers;
 
 namespace NightlyCode.Scripting.Parser {
@@ -29,6 +28,11 @@ namespace NightlyCode.Scripting.Parser {
         /// <inheritdoc />
         public void RemoveType(string name) {
             types.Remove(name);
+        }
+
+        /// <inheritdoc />
+        public bool HasType(string name) {
+            return types.ContainsKey(name);
         }
 
         /// <inheritdoc />

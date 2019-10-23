@@ -30,7 +30,7 @@ namespace NightlyCode.Scripting.Providers {
         /// <returns>execution result</returns>
         public object Invoke(params object[] arguments) {
             if (parameters.Length != arguments.Length)
-                throw new ScriptRuntimeException("Argument count doesn't match up parameter count", string.Join(", ", parameters));
+                throw new ScriptRuntimeException($"Argument count doesn't match up parameter count:\n{string.Join(", ", parameters)}", expression);
 
             for (int i = 0; i < parameters.Length; ++i)
                 context.Variables.SetVariable(parameters[i], arguments[i]);

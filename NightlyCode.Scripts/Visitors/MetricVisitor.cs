@@ -45,7 +45,7 @@ namespace NightlyCode.Scripting.Visitors {
         }
 
         /// <inheritdoc />
-        public override void VisitTypeCast(TypeCast typecast) {
+        public override void VisitTypeCast(ImpliciteTypeCast typecast) {
             base.VisitTypeCast(typecast);
             ++TypeCasts;
         }

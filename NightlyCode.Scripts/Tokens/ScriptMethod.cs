@@ -52,10 +52,16 @@ namespace NightlyCode.Scripting.Tokens {
         protected override object ExecuteToken(ScriptContext context) {
             object host = hosttoken.Execute(context);
             if (host == null)
-                throw new ScriptExecutionException($"'{hosttoken}' results in null");
+                throw new ScriptRuntimeException($"'{hosttoken}' results in null", this);
 
-            if (host is IExternalMethod externmethod && MethodName.ToLower()=="invoke")
-                return externmethod.Invoke(context.Arguments, Parameters.Select(a => a.Execute(context)).ToArray());
+            if (host is IExternalMethod externmethod && MethodName.ToLower() == "invoke") {
+                try {
+                    return externmethod.Invoke(context.Arguments, Parameters.Select(a => a.Execute(context)).ToArray());
+                }
+                catch (Exception e) {
+                    throw new ScriptRuntimeException($"Error calling external method '{externmethod}'", this, e);
+                }
+            }
 
             MethodInfo[] methods = host.GetType().GetMethods().Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters)).ToArray();
 
@@ -70,16 +76,24 @@ namespace NightlyCode.Scripting.Tokens {
 
             Tuple<MethodInfo, int>[] evaluation = methods.Select(m => MethodOperations.GetMethodMatchValue(m, parametervalues)).Where(e=>e.Item2>=0).OrderBy(m => m.Item2).ToArray();
             if (evaluation.Length > 0)
-                return MethodOperations.CallMethod(host, evaluation[0].Item1, parametervalues, context, references);
+                return MethodOperations.CallMethod(this, host, evaluation[0].Item1, parametervalues, context, references);
 
             if (extensions != null) {
                 Type extensionbase = host.GetType();
                 while (extensionbase != null) {
-                    methods = extensions.GetExtensions(extensionbase).Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters, true)).ToArray();
+                    Type lookuptype = extensionbase;
+                    if (lookuptype.IsGenericType)
+                        lookuptype = lookuptype.GetGenericTypeDefinition();
+
+                    methods = extensions.GetExtensions(lookuptype).Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters, true)).ToArray();
                     evaluation = methods.Select(m => MethodOperations.GetMethodMatchValue(m, parametervalues, true)).OrderBy(m => m.Item2).ToArray();
-                    if (evaluation.Length > 0)
-                        return MethodOperations.CallMethod(host, evaluation[0].Item1, parametervalues, context, references, true);
-                    
+                    if (evaluation.Length > 0) {
+                        MethodInfo method = evaluation[0].Item1;
+                        if (method.IsGenericMethodDefinition)
+                            method = method.MakeGenericMethod(extensionbase.GetGenericArguments());
+
+                        return MethodOperations.CallMethod(this, host, method, parametervalues, context, references, true);
+                    }
 
                     if (extensionbase == typeof(object))
                         break;
@@ -87,15 +101,24 @@ namespace NightlyCode.Scripting.Tokens {
                 }
 
 
-                foreach (Type interfacetype in host.GetType().GetInterfaces()) {
-                    methods = extensions.GetExtensions(interfacetype).Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters, true)).ToArray();
+                foreach (Type interfacetype in host.GetType().GetInterfaces().OrderBy(i => i.IsGenericType ? 0 : 1)) {
+                    Type lookuptype = interfacetype;
+                    if (lookuptype.IsGenericType)
+                        lookuptype = lookuptype.GetGenericTypeDefinition();
+
+                    methods = extensions.GetExtensions(lookuptype).Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters, true)).ToArray();
                     evaluation = methods.Select(m => MethodOperations.GetMethodMatchValue(m, parametervalues, true)).OrderBy(m => m.Item2).ToArray();
-                    if (evaluation.Length > 0)
-                        return MethodOperations.CallMethod(host, evaluation[0].Item1, parametervalues, context, references, true);
+                    if (evaluation.Length > 0) {
+                        MethodInfo method = evaluation[0].Item1;
+                        if (method.IsGenericMethodDefinition)
+                            method = method.MakeGenericMethod(interfacetype.GetGenericArguments());
+
+                        return MethodOperations.CallMethod(this, host, method, parametervalues, context, references, true);
+                    }
                 }
             }
 
-            throw new ScriptRuntimeException($"Method '{methodname}' matching the parameters '({string.Join(",", parametervalues)})' not found on type {host.GetType().Name}");
+            throw new ScriptRuntimeException($"Method '{methodname}' matching the parameters '({string.Join(",", parametervalues)})' not found on type {host.GetType().Name}", this);
         }
 
         /// <inheritdoc />

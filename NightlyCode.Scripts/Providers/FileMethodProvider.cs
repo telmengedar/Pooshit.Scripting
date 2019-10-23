@@ -27,15 +27,15 @@ namespace NightlyCode.Scripting.Providers {
         /// <returns>compiled script as a external method</returns>
         public IExternalMethod Import(object[] parameters) {
             if (parameters.Length == 0)
-                throw new ScriptRuntimeException("A script file to import is necessary");
+                throw new ScriptRuntimeException("A script file to import is necessary", null);
             if (parameters.Length > 1)
-                throw new ScriptRuntimeException("Too many arguments provided. Only a filename is necessary.");
+                throw new ScriptRuntimeException("Too many arguments provided. Only a filename is necessary.", null);
 
             string fullpath = Path.Combine(Path.GetDirectoryName((Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly()).Location), parameters[0].ToString());
             if (!File.Exists(fullpath))
                 throw new FileNotFoundException("External script not found", fullpath);
 
-            return new ExternalScriptMethod(scriptparser.Parse(File.ReadAllText(fullpath)));
+            return new ExternalScriptMethod(parameters[0]?.ToString(), scriptparser.Parse(File.ReadAllText(fullpath)));
         }
     }
 }

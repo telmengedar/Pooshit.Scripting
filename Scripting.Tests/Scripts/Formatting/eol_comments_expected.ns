@@ -1,13 +1,12 @@
 ﻿if($test) {
-	// check for value of test flag
-	switch($test)
-	// really not that good
+	switch($test) // check for value of test flag
 	case("furchtbar") {
+		// really not that good
 		$test = "better"
 		return(1)
 	}
-	// we might accept it
-	case("ok")
+	case("ok") { // we might accept it
 		return(0)
+	}
 }
 return(-1)

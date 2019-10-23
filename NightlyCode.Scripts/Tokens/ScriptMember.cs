@@ -11,7 +11,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// reads a value from a host member
     /// </summary>
-    public class ScriptMember : AssignableToken {
+    public class ScriptMember : AssignableToken, ICodePositionToken {
         readonly IScriptToken hosttoken;
         readonly string membername;
 
@@ -59,7 +59,7 @@ namespace NightlyCode.Scripting.Tokens {
 
             FieldInfo fieldinfo = host.GetType().GetFields().FirstOrDefault(f => f.Name.ToLower() == member);
             if (fieldinfo == null)
-                throw new ScriptRuntimeException($"A member with the name of {membername} was not found in type {host.GetType().Name}");
+                throw new ScriptRuntimeException($"A member with the name of {membername} was not found in type {host.GetType().Name}", this);
 
             try {
                 return fieldinfo.GetValue(host);
@@ -112,7 +112,7 @@ namespace NightlyCode.Scripting.Tokens {
 
             FieldInfo fieldinfo = host.GetType().GetFields().FirstOrDefault(f => f.Name.ToLower() == member);
             if (fieldinfo == null)
-                throw new ScriptRuntimeException($"A member with the name of {membername} was not found in type {host.GetType().Name}");
+                throw new ScriptRuntimeException($"A member with the name of {membername} was not found in type {host.GetType().Name}", this);
 
             return SetField(host, fieldinfo, token, context);
         }

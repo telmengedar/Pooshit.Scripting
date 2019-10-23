@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Scripting.Tests.Extensions {
@@ -19,12 +20,30 @@ namespace Scripting.Tests.Extensions {
         }
 
         /// <summary>
+        /// returns first element of enumeration or default of type
+        /// </summary>
+        /// <param name="enumeration">enumeration</param>
+        /// <returns>first element of enumeration or null if enumeration contains no elements</returns>
+        public static T FarstOrDefault<T>(IEnumerable<T> enumeration) {
+            return enumeration.FirstOrDefault();
+        }
+
+        /// <summary>
         /// returns first element of enumeration
         /// </summary>
         /// <param name="enumeration">enumeration</param>
         /// <returns>first element of enumeration</returns>
         public static object First(IEnumerable enumeration) {
             return enumeration.Cast<object>().First();
+        }
+
+        /// <summary>
+        /// returns first element of enumeration
+        /// </summary>
+        /// <param name="enumeration">enumeration</param>
+        /// <returns>first element of enumeration</returns>
+        public static object First<T>(IEnumerable<T> enumeration) {
+            return enumeration.Last();
         }
 
         /// <summary>

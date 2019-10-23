@@ -19,6 +19,11 @@ namespace NightlyCode.Scripting.Tokens {
             this.token = token;
         }
 
+        /// <summary>
+        /// task to be awaited
+        /// </summary>
+        public IScriptToken Task => token;
+
         /// <inheritdoc />
         public string Literal => "await";
 
@@ -26,7 +31,7 @@ namespace NightlyCode.Scripting.Tokens {
         public object Execute(ScriptContext context) {
             object result = token.Execute(context);
             if (!(result is Task task))
-                throw new ScriptRuntimeException("Only tasks can get awaited");
+                throw new ScriptRuntimeException("Only tasks can get awaited", this);
 
             if (task.Status == TaskStatus.Created)
                 task.Start();

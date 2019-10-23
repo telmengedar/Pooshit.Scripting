@@ -32,7 +32,8 @@ namespace NightlyCode.Scripting.Formatters.Tokens {
             AddFormatter(typeof(NewLine), new NewLineFormatter());
             AddFormatter(typeof(Throw), new ThrowFormatter());
             AddFormatter(typeof(Try), new TryFormatter());
-            AddFormatter(typeof(TypeCast), new CastFormatter());
+            AddFormatter(typeof(ImpliciteTypeCast), new CastFormatter());
+            AddFormatter(typeof(If), new IfFormatter());
         }
     }
 }

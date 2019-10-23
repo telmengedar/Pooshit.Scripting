@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Extern;
 using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
@@ -9,7 +8,7 @@ namespace NightlyCode.Scripting.Control {
     /// <summary>
     /// a block of statements executed in sequence
     /// </summary>
-    public class StatementBlock : IScriptToken, ITokenContainer {
+    public class StatementBlock : ITokenContainer, ICodePositionToken {
         readonly IScriptToken[] statements;
         readonly bool methodblock;
 
@@ -41,7 +40,7 @@ namespace NightlyCode.Scripting.Control {
                 throw;
             }
             catch (Exception e) {
-                throw new ScriptRuntimeException($"Unable to execute '{this}'", e.Message, e);
+                throw new ScriptRuntimeException(e.Message, this, e);
             }
         }
 
@@ -62,7 +61,7 @@ namespace NightlyCode.Scripting.Control {
                     throw;
                 }
                 catch (Exception e) {
-                    throw new ScriptExecutionException($"Unable to execute '{statement}': {e.Message}", e);
+                    throw new ScriptRuntimeException($"Unable to execute '{statement}': {e.Message}", this, e);
                 }
 
                 if (result is Return @return)
@@ -84,5 +83,11 @@ namespace NightlyCode.Scripting.Control {
         public override string ToString() {
             return $"{{ {string.Join<IScriptToken>("\n", statements)} }}";
         }
+
+        /// <inheritdoc />
+        public int LineNumber { get; internal set; }
+
+        /// <inheritdoc />
+        public int TextIndex { get; internal set;}
     }
 }

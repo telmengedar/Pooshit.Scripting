@@ -43,5 +43,35 @@ namespace Scripting.Tests {
 
             Assert.DoesNotThrow(() => script.Execute());
         }
+
+        [Test, Parallelizable]
+        public void CallGenericExtensionMethod() {
+            IScriptParser parser = new ScriptParser();
+            parser.Extensions.AddExtensions<EnumerableExtensions>();
+
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$input",
+                "$firstelement=$input.farstordefault()",
+                "$firstelement"
+            ));
+
+            Assert.AreEqual(5, script.Execute(new Variable("input", new[] {5, 9, 1})));
+        }
+
+        [Test, Parallelizable]
+        public void PreferGenericExtension() {
+            IScriptParser parser = new ScriptParser();
+            parser.Extensions.AddExtensions<EnumerableExtensions>();
+
+            // the generic extension actually returns the last instead of the first
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$input",
+                "$firstelement=$input.first()",
+                "$firstelement"
+            ));
+
+            Assert.AreEqual(1, script.Execute(new Variable("input", new[] {5, 9, 1})));
+        }
+
     }
 }

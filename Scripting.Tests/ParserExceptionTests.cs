@@ -1,4 +1,5 @@
 ﻿using System;
+using NightlyCode.Scripting;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
@@ -57,6 +58,5 @@ namespace Scripting.Tests {
         public void UnterminatedString() {
             Assert.Throws<ScriptParserException>(() => parser.Parse("\"\"\"==\"\""));
         }
-
     }
 }

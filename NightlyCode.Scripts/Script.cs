@@ -51,9 +51,7 @@ namespace NightlyCode.Scripting {
 
         /// <inheritdoc />
         public object Execute(params Variable[] variables) {
-            if (variables?.Length > 0)
-                return script.Execute(new ScriptContext(new VariableContext(scriptvariables), new VariableProvider(null, variables)));
-            return script.Execute(new ScriptContext(new VariableContext(scriptvariables), null));
+            return script.Execute(new ScriptContext(new VariableContext(scriptvariables), new VariableProvider(null, variables)));
         }
 
         /// <inheritdoc />

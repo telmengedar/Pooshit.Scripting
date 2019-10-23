@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Extern;
-using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Operations {
@@ -63,7 +64,7 @@ namespace NightlyCode.Scripting.Operations {
                 }
 
                 if (parameter == null) {
-                    if (methodparameter.IsValueType)
+                    if (methodparameter.IsValueType && !(methodparameter.IsGenericType && methodparameter.GetGenericTypeDefinition()==typeof(Nullable<>)))
                         return new Tuple<T, int>(method, -1);
                     continue;
                 }
@@ -110,7 +111,7 @@ namespace NightlyCode.Scripting.Operations {
                 if (!(parameter is string) && !(parameter is Dictionary<object, object>) && (parameter is Array || parameter is IEnumerable))
                     return new Tuple<T, int>(method, -1);
 
-                if (methodparameter == parameter.GetType())
+                if (methodparameter == parameter.GetType() || (parameter.GetType().IsNullable() && parameter.GetType().GetGenericArguments()[0] == methodparameter))
                     continue;
 
                 if (methodparameter == typeof(string)) {
@@ -224,7 +225,7 @@ namespace NightlyCode.Scripting.Operations {
             }
         }
 
-        public static object CallMethod(object host, MethodInfo method, object[] parameters, ScriptContext context, IEnumerable<ReferenceParameter> refparameters=null, bool extension=false, ParameterInfo[] targetparameters=null) {
+        public static object CallMethod(IScriptToken methodcall, object host, MethodInfo method, object[] parameters, ScriptContext context, IEnumerable<ReferenceParameter> refparameters=null, bool extension=false, ParameterInfo[] targetparameters=null) {
             if(targetparameters==null)
                 targetparameters = method.GetParameters();
 
@@ -235,10 +236,10 @@ namespace NightlyCode.Scripting.Operations {
                 else callparameters = CreateParameters(targetparameters, parameters).ToArray();
             }
             catch (ScriptRuntimeException e) {
-                throw new ScriptRuntimeException($"Unable to convert parameters for {host.GetType().Name}.{method.Name}({string.Join(",", targetparameters.Select(p => p.ParameterType.Name + " " + p.Name))})", e.Message);
+                throw new ScriptRuntimeException($"Unable to convert parameters for {host.GetType().Name}.{method.Name}({string.Join(",", targetparameters.Select(p => p.ParameterType.Name + " " + p.Name))})\n{e.Message}", methodcall, e);
             }
             catch (Exception e) {
-                throw new ScriptRuntimeException($"Unable to convert parameters for {host.GetType().Name}.{method.Name}({string.Join(",", targetparameters.Select(p => p.ParameterType.Name + " " + p.Name))})", string.Join("\r\n", parameters.Select(p => p.ToString())), e);
+                throw new ScriptRuntimeException($"Unable to convert parameters for {host.GetType().Name}.{method.Name}({string.Join(",", targetparameters.Select(p => p.ParameterType.Name + " " + p.Name))})\n{string.Join("\r\n", parameters.Select(p => p.ToString()))}", methodcall, e);
             }
 
             try {
@@ -251,10 +252,10 @@ namespace NightlyCode.Scripting.Operations {
                 return result;
             }
             catch (TargetInvocationException e) {
-                throw new ScriptRuntimeException($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)})", e.InnerException?.Message ?? e.Message, e.InnerException ?? e);
+                throw new ScriptRuntimeException($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)})\n{e.InnerException?.Message ?? e.Message}", methodcall, e.InnerException ?? e);
             }
             catch (Exception e) {
-                throw new ScriptRuntimeException($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)})", e.Message, e);
+                throw new ScriptRuntimeException($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)})\n{e.Message}", methodcall, e);
             }
         }
 
@@ -308,6 +309,8 @@ namespace NightlyCode.Scripting.Operations {
             else if (value is Dictionary<object, object> dictionary) {
                 return ConvertDictionary(dictionary, targettype);
             }
+            else if (targettype == typeof(string))
+                return Convert.ToString(value, CultureInfo.InvariantCulture);
             else return Converter.Convert(value, targettype);
 
             return null;
@@ -320,7 +323,26 @@ namespace NightlyCode.Scripting.Operations {
                 PropertyInfo propertyinfo = targettype.GetProperty(propertyname, BindingFlags.Instance | BindingFlags.IgnoreCase | BindingFlags.Public);
                 if(propertyinfo==null)
                     continue;
-                propertyinfo.SetValue(value, Converter.Convert(property.Value, propertyinfo.PropertyType, true));
+
+                if (property.Value is Dictionary<object, object> subdictionary && propertyinfo.PropertyType != typeof(Dictionary<object, object>)) {
+                    propertyinfo.SetValue(value, ConvertDictionary(subdictionary, propertyinfo.PropertyType));
+                }
+                else if (propertyinfo.PropertyType.IsArray) {
+                    Array arrayvalue;
+                    Type elementtype = propertyinfo.PropertyType.GetElementType();
+                    if (property.Value is Array sourcearray) {
+                        arrayvalue = Array.CreateInstance(elementtype,sourcearray.Length);
+                        for (int i = 0; i < sourcearray.Length; ++i)
+                            arrayvalue.SetValue(Converter.Convert(sourcearray.GetValue(i), elementtype), i);
+                    }
+                    else {
+                        arrayvalue = Array.CreateInstance(propertyinfo.PropertyType.GetElementType(),1);
+                        arrayvalue.SetValue(Converter.Convert(property.Value, elementtype), 0);
+                    }
+
+                    propertyinfo.SetValue(value, arrayvalue);
+                }
+                else propertyinfo.SetValue(value, Converter.Convert(property.Value, propertyinfo.PropertyType, true));
             }
 
             return value;
@@ -340,7 +362,7 @@ namespace NightlyCode.Scripting.Operations {
                         continue;
                     }
                     if (!targetparameter.HasDefaultValue)
-                        throw new ScriptRuntimeException($"Unable to create parameter {i}. No value specified and parameter doesn't provide a default value.");
+                        throw new ScriptRuntimeException($"Unable to create parameter {i}. No value specified and parameter doesn't provide a default value.", null);
                     yield return targetparameter.DefaultValue;
                     continue;
                 }
@@ -349,7 +371,7 @@ namespace NightlyCode.Scripting.Operations {
                 if (i == targetparameters.Length - 1 && Attribute.IsDefined(targetparameter, typeof(ParamArrayAttribute))) {
                     Type targettype = targetparameter.ParameterType.GetElementType();
                     if (targettype == null)
-                        throw new ScriptRuntimeException("Methodparameter without type detected");
+                        throw new ScriptRuntimeException("Methodparameter without type detected", null);
 
                     if (i >= sourceparameters.Length) {
                         yield return Array.CreateInstance(targettype, 0);
@@ -377,8 +399,8 @@ namespace NightlyCode.Scripting.Operations {
 
                 value = sourceparameters[i];
                 if (value == null) {
-                    if (targetparameter.ParameterType.IsValueType)
-                        throw new ScriptRuntimeException($"Unable to convert null to {targetparameter.ParameterType.Name} since a valuetype is needed");
+                    if (targetparameter.ParameterType.IsValueType && !targetparameter.ParameterType.IsNullable())
+                        throw new ScriptRuntimeException($"Unable to convert null to {targetparameter.ParameterType.Name} since a valuetype is needed", null);
                     yield return null;
                     continue;
                 }

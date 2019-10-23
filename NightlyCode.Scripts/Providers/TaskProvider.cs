@@ -17,7 +17,7 @@ namespace NightlyCode.Scripting.Providers {
         /// <inheritdoc />
         public object Create(IScriptToken[] parameters, ScriptContext context) {
             if (parameters.Length != 1)
-                throw new ScriptRuntimeException("Threads can only contain the method body as parameter");
+                throw new ScriptRuntimeException("Threads can only contain the method body as parameter", null);
 
             return new Task<object>(() => parameters[0].Execute(context));
         }

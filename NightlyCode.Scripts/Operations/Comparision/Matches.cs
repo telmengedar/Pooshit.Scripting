@@ -13,9 +13,8 @@ namespace NightlyCode.Scripting.Operations.Comparision {
 
         /// <inheritdoc />
         protected override object Compare(object lhs, object rhs, ScriptContext context) {
-            string pattern = rhs as string;
-            if (pattern == null)
-                throw new ScriptRuntimeException("Matching pattern must be a regex string");
+            if (!(rhs is string pattern))
+                throw new ScriptRuntimeException("Matching pattern must be a regex string", this);
 
             string value = lhs?.ToString();
             if (value == null)

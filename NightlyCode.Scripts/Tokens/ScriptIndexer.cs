@@ -51,17 +51,17 @@ namespace NightlyCode.Scripting.Tokens {
                         return enumerable.Cast<object>().Skip(Converter.Convert<int>(parameters[0].Execute(context))).First();
                 }
 
-                throw new ScriptRuntimeException($"No indexer methods found on {host}");
+                throw new ScriptRuntimeException($"No indexer methods found on {host}", this);
             }
 
             object[] parametervalues = parameters.Select(p => p.Execute(context)).ToArray();
             Tuple<MethodInfo, int>[] evaluated = indexer.Select(i => MethodOperations.GetMethodMatchValue(i.GetMethod, parametervalues)).Where(e=>e.Item2>=0).ToArray();
 
             if (evaluated.Length == 0)
-                throw new ScriptRuntimeException($"No index getter found on '{host.GetType().Name}' which matched the specified parameters '{string.Join(", ", parametervalues)}'");
+                throw new ScriptRuntimeException($"No index getter found on '{host.GetType().Name}' which matched the specified parameters '{string.Join(", ", parametervalues)}'", this);
 
             MethodInfo method = evaluated.OrderBy(m => m.Item2).Select(m => m.Item1).First();
-            return MethodOperations.CallMethod(host, method, parametervalues, context);
+            return MethodOperations.CallMethod(this, host, method, parametervalues, context);
         }
 
         /// <inheritdoc />
@@ -81,9 +81,9 @@ namespace NightlyCode.Scripting.Tokens {
             Tuple<MethodInfo, int>[] evaluated = indexer.Select(i => MethodOperations.GetMethodMatchValue(i.SetMethod, parametervalues)).Where(e=>e.Item2>=0).OrderBy(m=>m.Item2).ToArray();
 
             if (evaluated.Length == 0)
-                throw new ScriptRuntimeException($"No index setter found on '{host.GetType().Name}' which matched the specified parameters '{string.Join(", ", parametervalues)}'");
+                throw new ScriptRuntimeException($"No index setter found on '{host.GetType().Name}' which matched the specified parameters '{string.Join(", ", parametervalues)}'", this);
 
-            return MethodOperations.CallMethod(host, evaluated[0].Item1, parametervalues, context);
+            return MethodOperations.CallMethod(this, host, evaluated[0].Item1, parametervalues, context);
         }
 
         /// <inheritdoc />

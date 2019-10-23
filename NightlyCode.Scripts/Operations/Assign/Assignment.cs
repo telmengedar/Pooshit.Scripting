@@ -25,7 +25,7 @@ namespace NightlyCode.Scripting.Operations.Assign {
         protected override object AssignToken(IScriptToken token, ScriptContext context) {
             if (Rhs is IAssignableToken assignable)
                 return assignable.Assign(token, context);
-            throw new ScriptRuntimeException("Can't assign value to non assignable token");
+            throw new ScriptRuntimeException("Can't assign value to non assignable token", token);
         }
 
         /// <inheritdoc />
@@ -34,7 +34,7 @@ namespace NightlyCode.Scripting.Operations.Assign {
             set {
                 lhs=value as IAssignableToken;
                 if (lhs == null)
-                    throw new ScriptParserException(-1, -1, "Left hand side of assignment has to be an assignable token");
+                    throw new ScriptParserException(-1, -1, -1, "Left hand side of assignment has to be an assignable token");
             }
         }
 

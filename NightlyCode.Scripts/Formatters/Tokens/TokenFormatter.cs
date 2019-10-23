@@ -1,6 +1,5 @@
-﻿using System.Linq;
-using System.Text;
-using NightlyCode.Scripting.Extensions;
+﻿using System.Text;
+using NightlyCode.Scripting.Control;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Formatters.Tokens {
@@ -9,23 +8,16 @@ namespace NightlyCode.Scripting.Formatters.Tokens {
     public abstract class TokenFormatter : ITokenFormatter {
 
         /// <summary>
-        /// formats comments linked to a token
+        /// formats a body for a control token
         /// </summary>
-        /// <param name="token">token to format</param>
-        /// <param name="resulttext">text to append formatted result to</param>
-        /// <param name="depth">current indentation depth</param>
-        protected void FormatLinkedComments(IScriptToken token, StringBuilder resulttext, int depth = 0) {
-            ICommentContainer comments = token as ICommentContainer;
-            if (comments?.Comments.Any() ?? false) {
-                foreach (string commentline in comments.Comments.Unwrap()) {
-                    resulttext.Append("//");
-                    if (!commentline.StartsWith(" "))
-                        resulttext.Append(" ");
-                    resulttext.Append(commentline);
-                    resulttext.AppendLine();
-                    AppendIntendation(resulttext, depth);
-                }
-            }
+        /// <param name="token">body token</param>
+        /// <param name="resulttext">formatted result target</param>
+        /// <param name="formatters">collection of token formatters</param>
+        /// <param name="depth">indentation depth (should be depth of control token)</param>
+        protected void FormatBody(IScriptToken token, StringBuilder resulttext, IFormatterCollection formatters, int depth) {
+            if (!(token is StatementBlock))
+                resulttext.AppendLine();
+            formatters[token].FormatToken(token, resulttext, formatters, depth + 1, true);
         }
 
         /// <summary>

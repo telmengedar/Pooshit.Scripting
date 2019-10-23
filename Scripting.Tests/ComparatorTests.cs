@@ -16,6 +16,7 @@ namespace Scripting.Tests {
         [TestCase("3==3")]
         [TestCase("8.2==8.2")]
         [TestCase("\"string\"==\"string\"")]
+        [TestCase("3==3.0d")]
         [Parallelizable]
         public void Equals(string data) {
             Assert.AreEqual(true, parser.Parse(data).Execute());

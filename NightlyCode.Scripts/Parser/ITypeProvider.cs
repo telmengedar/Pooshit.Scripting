@@ -35,6 +35,13 @@ namespace NightlyCode.Scripting.Parser {
         void RemoveType(string name);
 
         /// <summary>
+        /// determines whether the type provider contains a specific type
+        /// </summary>
+        /// <param name="name">name of type</param>
+        /// <returns>true if type information exists, false otherwise</returns>
+        bool HasType(string name);
+
+        /// <summary>
         /// types provdided
         /// </summary>
         IEnumerable<string> ProvidedTypes { get; }

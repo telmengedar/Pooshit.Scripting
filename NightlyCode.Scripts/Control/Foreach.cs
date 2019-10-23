@@ -33,7 +33,7 @@ namespace NightlyCode.Scripting.Control {
         /// <summary>
         /// collection to be iterated
         /// </summary>
-        public IScriptToken Collection { get; set; }
+        public IScriptToken Collection => collection;
 
         /// <inheritdoc />
         public override string Literal => "foreach";
@@ -48,18 +48,17 @@ namespace NightlyCode.Scripting.Control {
                     context.CancellationToken.ThrowIfCancellationRequested();
 
                     variable.Assign(new ScriptValue(value), loopcontext);
-                    object bodyvalue=Body?.Execute(loopcontext);
+                    object bodyvalue = Body?.Execute(loopcontext);
                     if (bodyvalue is Return)
                         return bodyvalue;
-                    if (bodyvalue is Break breaktoken)
-                    {
+                    if (bodyvalue is Break breaktoken) {
                         int depth = breaktoken.Depth.Execute<int>(loopcontext);
                         if (depth <= 1)
                             return null;
                         return new Break(new ScriptValue(depth - 1));
                     }
-                    if (value is Continue continuetoken)
-                    {
+
+                    if (value is Continue continuetoken) {
                         int depth = continuetoken.Depth.Execute<int>(loopcontext);
                         if (depth <= 1)
                             continue;
@@ -68,7 +67,7 @@ namespace NightlyCode.Scripting.Control {
                     }
                 }
             }
-            else throw new ScriptRuntimeException("Foreach value is not a collection");
+            else throw new ScriptRuntimeException("Foreach value is not a collection", collection);
 
             return null;
         }

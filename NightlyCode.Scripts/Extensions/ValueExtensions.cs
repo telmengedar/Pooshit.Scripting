@@ -1,6 +1,7 @@
 ﻿using System;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extern;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Extensions {
 
@@ -19,7 +20,7 @@ namespace NightlyCode.Scripting.Extensions {
             return mask;
         }
 
-        public static int GetNumberOfBits(this object value) {
+        public static int GetNumberOfBits(this object value, IScriptToken token) {
             if (value is int || value is uint)
                 return 32;
             if (value is long || value is ulong)
@@ -28,7 +29,7 @@ namespace NightlyCode.Scripting.Extensions {
                 return 16;
             if (value is byte || value is sbyte)
                 return 8;
-            throw new ScriptRuntimeException("Type not supported for operation");
+            throw new ScriptRuntimeException("Type not supported for operation", token);
         }
 
         public static bool ToBoolean(this object value) {

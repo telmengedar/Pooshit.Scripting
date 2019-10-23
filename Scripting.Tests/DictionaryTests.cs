@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
 using NightlyCode.Scripting;
+using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
+using Scripting.Tests.Data;
 
 namespace Scripting.Tests {
 
@@ -13,6 +15,10 @@ namespace Scripting.Tests {
         [OneTimeSetUp]
         public void SetUp() {
             parser.Types.AddType<List<object>>("list");
+        }
+
+        public void CallComplex(ComplexType argument) {
+
         }
 
         [Test, Parallelizable]
@@ -92,6 +98,22 @@ namespace Scripting.Tests {
             List<object> result = script.Execute<List<object>>();
             Assert.AreEqual(1, result.Count);
             Assert.AreEqual(60, (result[0] as Dictionary<object, object>)["number"]);
+        }
+
+        [Test, Parallelizable]
+        public void DictionaryAsComplexArgument() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$host.callcomplex({",
+                "  \"parameter\": {",
+                "    \"name\" : \"faxen\",",
+                "    \"value\" : \"schmutz\"",
+                "  }",
+                "  \"count\": 7,",
+                "  \"numbers\":[1,2,3]",
+                "})"
+            ), new Variable("host", this));
+
+            Assert.DoesNotThrow(() => script.Execute());
         }
 
         [Test, Parallelizable]

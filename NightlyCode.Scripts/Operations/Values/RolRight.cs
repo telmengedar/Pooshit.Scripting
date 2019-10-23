@@ -16,7 +16,7 @@ namespace NightlyCode.Scripting.Operations.Values {
             object value = lhs;
             int steps = Converter.Convert<int>(rhs);
 
-            int numberofbits = value.GetNumberOfBits();
+            int numberofbits = value.GetNumberOfBits(this);
             steps = steps % numberofbits;
             if (steps == 0)
                 return value;

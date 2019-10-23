@@ -1,0 +1,29 @@
+﻿/* ---------------------------------------------------------------------------
+Name: Lukas.Sandkasten
+Copyright 2019 vertical GmbH
+-----------------------------------------------------------------------------
+Description: Sandbox of LM
+-----------------------------------------------------------------------------
+Change Log:
+2019-10-04 - IBS - Added Comments
+//------------------------------------------------------------------------- */
+// Parameters:
+
+//---------------------------------------------------------------------------
+// Methods:
+
+//---------------------------------------------------------------------------
+parameter($PositionId, "string")
+// get all Positions that could posibly get matched with this
+
+using($backend = $symphony.connect()) {
+
+	$Position = await($productionapi.v1.positions.getposition($PositionId))
+	$log.info($Position.materialid.tostring())
+	/* $Order =await($productionapi.v1.orders.getorder($PositionPrefetch.orderid))
+// get order position for full data
+$Position = Order.items[0] */
+	foreach($Position, $backend[$"Class=Position && MaterialId={$Position.materialid.tostring()} && Status=1"]) {
+		$log.info($Position.Name)
+	}
+}

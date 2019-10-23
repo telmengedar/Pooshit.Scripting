@@ -267,7 +267,7 @@ namespace Scripting.Tests {
         [TestCase("throw(\"message\", \"data\")")]
         [Parallelizable]
         public void ThrowException(string data) {
-            Assert.Throws<ScriptExecutionException>(() => parser.Parse(data).Execute());
+            Assert.Throws<ScriptRuntimeException>(() => parser.Parse(data).Execute());
         }
 
         [Test, Parallelizable]

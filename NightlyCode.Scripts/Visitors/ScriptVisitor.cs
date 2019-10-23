@@ -26,6 +26,8 @@ namespace NightlyCode.Scripting.Visitors {
                 VisitControlToken(control);
             else if (token is IBinaryToken binary)
                 VisitBinaryToken(binary);
+            else if (token is IUnaryToken unary)
+                VisitUnary(unary);
             else if (token is Break @break)
                 VisitBreak(@break);
             else if (token is Continue @continue)
@@ -36,7 +38,9 @@ namespace NightlyCode.Scripting.Visitors {
                 VisitThrow(@throw);
             else if (token is Wait wait)
                 VisitWait(wait);
-            else if (token is TypeCast typecast)
+            else if (token is Await awaittoken)
+                VisitAwait(awaittoken);
+            else if (token is ImpliciteTypeCast typecast)
                 VisitTypeCast(typecast);
             else if (token is Import import)
                 VisitImport(import);
@@ -54,6 +58,34 @@ namespace NightlyCode.Scripting.Visitors {
                 VisitArray(array);
             else if (token is DictionaryToken dictionary)
                 VisitDictionary(dictionary);
+            else if (token is ScriptParameter parameter)
+                VisitScriptParameter(parameter);
+            else if (token is ExpliciteTypeCast explicittypecast)
+                VisitExplicitTypeCast(explicittypecast);
+        }
+
+        /// <summary>
+        /// visits an explicit type cast
+        /// </summary>
+        /// <param name="explicittypecast">type cast token</param>
+        public virtual void VisitExplicitTypeCast(ExpliciteTypeCast explicittypecast) {
+            VisitParameterContainer(explicittypecast);
+        }
+
+        /// <summary>
+        /// visits a script parameter declaration
+        /// </summary>
+        /// <param name="parameter">script parameter token</param>
+        public virtual void VisitScriptParameter(ScriptParameter parameter) {
+            VisitParameterContainer(parameter);
+        }
+
+        /// <summary>
+        /// visits an await token
+        /// </summary>
+        /// <param name="awaittoken">await token to visit</param>
+        public virtual void VisitAwait(Await awaittoken) {
+            VisitToken(awaittoken.Task);
         }
 
         /// <summary>
@@ -111,6 +143,14 @@ namespace NightlyCode.Scripting.Visitors {
         }
 
         /// <summary>
+        /// visits an unary token
+        /// </summary>
+        /// <param name="unary"></param>
+        public virtual void VisitUnary(IUnaryToken unary) {
+            VisitToken(unary.Operand);
+        }
+
+        /// <summary>
         /// visits a binary token
         /// </summary>
         /// <param name="binary">token to visit</param>
@@ -139,7 +179,7 @@ namespace NightlyCode.Scripting.Visitors {
         /// visits a type cast token
         /// </summary>
         /// <param name="typecast">token to visit</param>
-        public virtual void VisitTypeCast(TypeCast typecast) {
+        public virtual void VisitTypeCast(ImpliciteTypeCast typecast) {
             VisitToken(typecast.Argument);
         }
 
@@ -202,16 +242,26 @@ namespace NightlyCode.Scripting.Visitors {
         }
 
         /// <summary>
+        /// visits a parameter container
+        /// </summary>
+        /// <param name="parametercontainer">token which takes parameters for execution</param>
+        public virtual void VisitParameterContainer(IParameterContainer parametercontainer) {
+            foreach (IScriptToken parameter in parametercontainer.Parameters)
+                VisitToken(parameter);
+        }
+
+        /// <summary>
         /// visits a control token
         /// </summary>
         /// <param name="controltoken">control token to visit</param>
         public virtual void VisitControlToken(IStatementContainer controltoken) {
-            VisitToken(controltoken.Body);
             if (controltoken is IParameterContainer parametercontrol)
-                foreach (IScriptToken parameter in parametercontrol.Parameters)
-                    VisitToken(parameter);
+                VisitParameterContainer(parametercontrol);
+            VisitToken(controltoken.Body);
             if (controltoken is Try @try)
                 VisitToken(@try.Catch);
+            if (controltoken is If @if && @if.Else != null)
+                VisitToken(@if.Else);
         }
 
         /// <summary>
