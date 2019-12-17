@@ -8,7 +8,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// await token used to await async tasks
     /// </summary>
-    public class Await : IParameterContainer {
+    public class Await : ScriptToken, IParameterContainer {
         readonly IScriptToken token;
 
         /// <summary>
@@ -25,10 +25,10 @@ namespace NightlyCode.Scripting.Tokens {
         public IScriptToken Task => token;
 
         /// <inheritdoc />
-        public string Literal => "await";
+        public override string Literal => "await";
 
         /// <inheritdoc />
-        public object Execute(ScriptContext context) {
+        protected override object ExecuteToken(ScriptContext context) {
             object result = token.Execute(context);
             if (!(result is Task task))
                 throw new ScriptRuntimeException("Only tasks can get awaited", this);
@@ -56,6 +56,14 @@ namespace NightlyCode.Scripting.Tokens {
         /// <inheritdoc />
         public IEnumerable<IScriptToken> Parameters {
             get { yield return token; }
+        }
+
+        /// <inheritdoc />
+        public bool ParametersOptional => false;
+
+        /// <inheritdoc />
+        public override string ToString() {
+            return $"await({Task})";
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using NightlyCode.Scripting;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Extensions;
+using NightlyCode.Scripting.Hosts;
 using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
 
@@ -10,7 +11,7 @@ namespace Scripting.Tests {
 
     [TestFixture, Parallelizable]
     public class TaskTests {
-        readonly IScriptParser parser = new ScriptParser();
+        readonly IScriptParser parser = new ScriptParser(new Variable("task", new TaskHost()));
 
         public Task TaskMethod() {
             return Task.Run(() => throw new Exception("Bullshit"));
@@ -20,8 +21,7 @@ namespace Scripting.Tests {
         public void ExecuteExpressionInTask() {
             IScript script = parser.Parse(ScriptCode.Create(
                 "$result=0",
-                "$t=new task($result=5)",
-                "$t.start()",
+                "$t=task.run([]=>{$result=5})",
                 "$t.wait()",
                 "$result"
             ));
@@ -31,17 +31,16 @@ namespace Scripting.Tests {
         
         [Test, Parallelizable]
         public void ExecuteMultipleTasksInParallel() {
+
             IScript script = parser.Parse(ScriptCode.Create(
                 "$result=0",
                 "$tasks=new list()",
                 "for($i=0,$i<5,++$i){",
-                "  $tasks.add(new task({",
+                "  $tasks.add(task.run([]=>{",
                 "    for($k=0,$k<150,++$k)",
                 "      ++$result",
                 "  }))",
                 "}",
-                "foreach($t,$tasks)",
-                "  $t.start()",
                 "task.waitall($tasks.toarray())",
                 "$result"
             ));
@@ -52,7 +51,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void AwaitTask() {
             IScript script = parser.Parse(ScriptCode.Create(
-                "$t=new task({",
+                "$t=task.run([]=>{",
                 "  3+8",
                 "})",
                 "await($t)"
@@ -64,7 +63,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void AwaitGetsInnerException() {
             IScript script = parser.Parse(ScriptCode.Create(
-                "$t=new task({",
+                "$t=task.run([]=>{",
                 "  throw(\"Bullshit\")",
                 "})",
                 "$result=await($t)"
@@ -86,7 +85,7 @@ namespace Scripting.Tests {
                 Assert.Fail("No Exception was thrown");
             }
             catch (Exception e) {
-                Assert.AreEqual("Unable to execute assignment '$result'\nBullshit", e.Message);
+                Assert.AreEqual("Unable to execute 'await($this.taskmethod())'\nBullshit", e.Message);
             }
         }
 

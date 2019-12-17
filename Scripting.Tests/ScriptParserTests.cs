@@ -231,30 +231,28 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void ReadAvailableVariables() {
             IScriptParser parser = new ScriptParser(new Variable("test"), new Variable("host"));
-
-            // task is automatically added by parser
-            Assert.That(new[] {"test", "host", "task"}.SequenceEqual(parser.GlobalVariables.Variables));
+            Assert.That(new[] {"test", "host"}.SequenceEqual(parser.GlobalVariables.Variables));
         }
 
         [Test, Parallelizable]
         public void MemberIndex() {
             IScript script=globalparser.Parse("$host.member");
             int textindex = ((script.Body as StatementBlock)?.Children.First() as ICodePositionToken)?.TextIndex ?? -1;
-            Assert.AreEqual(0, textindex);
+            Assert.AreEqual(6, textindex);
         }
 
         [Test, Parallelizable]
         public void MethodIndex() {
             IScript script=globalparser.Parse("$host.method(1,2,3)");
             int textindex = ((script.Body as StatementBlock)?.Children.First() as ICodePositionToken)?.TextIndex ?? -1;
-            Assert.AreEqual(0, textindex);
+            Assert.AreEqual(6, textindex);
         }
 
         [Test, Parallelizable]
         public void IndexerPositionIndex() {
             IScript script=globalparser.Parse("$host[1,2,3]");
             int textindex = ((script.Body as StatementBlock)?.Children.First() as ICodePositionToken)?.TextIndex ?? -1;
-            Assert.AreEqual(0, textindex);
+            Assert.AreEqual(5, textindex);
         }
 
     }

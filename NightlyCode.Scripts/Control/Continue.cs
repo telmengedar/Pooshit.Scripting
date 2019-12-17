@@ -1,11 +1,12 @@
-﻿using NightlyCode.Scripting.Tokens;
+﻿using System.Collections.Generic;
+using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
 
     /// <summary>
     /// breaks execution of a loop
     /// </summary>
-    public class Continue : ScriptToken {
+    public class Continue : ScriptToken, IParameterContainer {
 
         /// <summary>
         /// creates a new <see cref="Break"/>
@@ -37,5 +38,15 @@ namespace NightlyCode.Scripting.Control {
         public override string ToString() {
             return "continue";
         }
+
+        public IEnumerable<IScriptToken> Parameters {
+            get {
+                if (Depth is ScriptValue value && !1.Equals(value.Value))
+                    yield return Depth;
+            }
+        }
+
+        /// <inheritdoc />
+        public bool ParametersOptional => true;
     }
 }

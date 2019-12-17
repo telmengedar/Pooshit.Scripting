@@ -10,7 +10,6 @@ namespace NightlyCode.Scripting.Control {
     /// </summary>
     public class StatementBlock : ITokenContainer, ICodePositionToken {
         readonly IScriptToken[] statements;
-        readonly bool methodblock;
 
         /// <summary>
         /// creates a new <see cref="StatementBlock"/>
@@ -19,7 +18,7 @@ namespace NightlyCode.Scripting.Control {
         /// <param name="methodblock">determines whether this is the main block of a method</param>
         internal StatementBlock(IScriptToken[] statements, bool methodblock=false) {
             this.statements = statements;
-            this.methodblock = methodblock;
+            MethodBlock = methodblock;
         }
 
         /// <inheritdoc />
@@ -27,6 +26,11 @@ namespace NightlyCode.Scripting.Control {
 
         /// <inheritdoc />
         public string Literal => "{ ... }";
+
+        /// <summary>
+        /// determines whether block is a method block
+        /// </summary>
+        public bool MethodBlock { get; internal set; }
 
         /// <inheritdoc />
         public object Execute(ScriptContext context) {
@@ -66,7 +70,7 @@ namespace NightlyCode.Scripting.Control {
 
                 if (result is Return @return)
                 {
-                    if (methodblock)
+                    if (MethodBlock)
                         return @return.Value?.Execute(blockcontext);
                     return @return;
                 }
@@ -89,5 +93,8 @@ namespace NightlyCode.Scripting.Control {
 
         /// <inheritdoc />
         public int TextIndex { get; internal set;}
+
+        /// <inheritdoc />
+        public int TokenLength { get; internal set; }
     }
 }

@@ -42,5 +42,8 @@ namespace NightlyCode.Scripting.Control {
                     yield return value;
             }
         }
+
+        /// <inheritdoc />
+        public bool ParametersOptional => true;
     }
 }

@@ -1,4 +1,5 @@
-﻿using NightlyCode.Scripting;
+﻿using System.Linq;
+using NightlyCode.Scripting;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extensions;
@@ -70,6 +71,26 @@ namespace Scripting.Tests {
             ));
 
             Assert.AreEqual(25, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void TypedArrayParameterFromObjectArray() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "parameter($value, \"int[]\")",
+                "return($value)"
+            ));
+
+            Assert.AreEqual(typeof(int[]), script.Execute(new Variable("value", new object[] {1, 2, 3})).GetType());
+        }
+
+        [Test, Parallelizable]
+        public void TypedArrayParameterFromEnumeration() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "parameter($value, \"int[]\")",
+                "return($value)"
+            ));
+
+            Assert.AreEqual(typeof(int[]), script.Execute(new Variable("value", new object[] {1, 2, 3}.Select(v => v))).GetType());
         }
     }
 }

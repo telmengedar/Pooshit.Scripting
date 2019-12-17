@@ -8,7 +8,7 @@ namespace NightlyCode.Scripting.Operations.Comparision {
     /// <summary>
     /// operator used to compare two values resulting in a boolean
     /// </summary>
-    public abstract class Comparator : ScriptToken, IBinaryToken, IOperator, ICodePositionToken {
+    public abstract class Comparator : ScriptToken, IBinaryToken, IOperator {
 
         /// <summary>
         /// compares lhs and rhs and returns value of comparision

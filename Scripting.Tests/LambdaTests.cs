@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using NightlyCode.Scripting;
 using NightlyCode.Scripting.Extensions;
@@ -13,6 +14,10 @@ namespace Scripting.Tests {
 
         public static IEnumerable Select(IEnumerable enumeration, LambdaMethod lambda) {
             return enumeration.Cast<object>().Select(i => lambda.Invoke(i));
+        }
+
+        public static IEnumerable<T> Select<T>(IEnumerable<T> enumeration, LambdaMethod selector) {
+            return enumeration.Select(item => (T)selector.Invoke(item));
         }
 
         [Test, Parallelizable]
@@ -49,5 +54,20 @@ namespace Scripting.Tests {
             Assert.That(new[]{3,5,7}.SequenceEqual(script.Execute<IEnumerable>().Cast<int>()));
         }
 
+        [Test, Parallelizable]
+        public void LambdaWithArrayInReturn() {
+            IScriptParser parser = new ScriptParser();
+            IScript script = parser.Parse("return(([]=>{return([3,5,7])}).invoke())");
+
+            Assert.That(new[] { 3, 5, 7 }.SequenceEqual(script.Execute<IEnumerable>().Cast<int>()));
+        }
+
+        [Test, Parallelizable]
+        public void LambdaStatement() {
+            IScriptParser parser=new ScriptParser();
+            IScript script = parser.Parse("([]=>30.2).invoke()");
+
+            Assert.AreEqual(30.2, script.Execute<double>());
+        }
     }
 }

@@ -1,0 +1,10 @@
+﻿/*
+	Configuration values necessary to interact with cloudflow
+*/
+
+{
+	"Host" : "172.17.6.50",	// Host where cloudflow endpoint is located
+	"Port" : 9090,			// port to send requests to
+	"User" : "ctrl-s",		// user to be used for authentication
+	"Password" : "symphony"	// password to be used for authentication
+}

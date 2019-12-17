@@ -19,10 +19,7 @@ namespace NightlyCode.Scripting.Formatters.Tokens {
             if (trytoken.Catch != null) {
                 resulttext.AppendLine();
                 AppendIntendation(resulttext, depth);
-                resulttext.Append("catch");
-                if (!(trytoken.Catch is StatementBlock))
-                    resulttext.AppendLine();
-                formatters[trytoken.Catch].FormatToken(trytoken.Catch, resulttext, formatters, depth + 1, true);
+                formatters[trytoken.Catch].FormatToken(trytoken.Catch, resulttext, formatters, depth);
             }
         }
     }

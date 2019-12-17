@@ -3,7 +3,7 @@
     /// <summary>
     /// token which contains information about its position in original source code
     /// </summary>
-    public interface ICodePositionToken : IScriptToken{
+    public interface ICodePositionToken : IScriptToken {
 
         /// <summary>
         /// line number where token is stored
@@ -14,5 +14,10 @@
         /// index in text where token starts
         /// </summary>
         int TextIndex { get; }
+
+        /// <summary>
+        /// length of token in code
+        /// </summary>
+        int TokenLength { get; }
     }
 }

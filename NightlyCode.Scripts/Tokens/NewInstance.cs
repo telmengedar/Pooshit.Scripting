@@ -12,6 +12,13 @@ namespace NightlyCode.Scripting.Tokens {
         readonly ITypeInstanceProvider provider;
         readonly IScriptToken[] parameters;
 
+        /// <summary>
+        /// creates a new <see cref="NewInstance"/>
+        /// </summary>
+        /// <param name="typename">name of type to instanciate like specified in code</param>
+        /// <param name="type">type information to instanciate</param>
+        /// <param name="provider">type provider to use</param>
+        /// <param name="parameters">parameters for constructor</param>
         internal NewInstance(string typename, Type type, ITypeInstanceProvider provider, IScriptToken[] parameters) {
             TypeName = typename;
             Type = type;
@@ -52,5 +59,8 @@ namespace NightlyCode.Scripting.Tokens {
 
         /// <inheritdoc />
         public IEnumerable<IScriptToken> Parameters => parameters;
+
+        /// <inheritdoc />
+        public bool ParametersOptional => false;
     }
 }

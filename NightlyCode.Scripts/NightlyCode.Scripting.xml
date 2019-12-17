@@ -29,6 +29,9 @@
         <member name="M:NightlyCode.Scripting.Control.Break.ToString">
             <inheritdoc />
         </member>
+        <member name="P:NightlyCode.Scripting.Control.Break.ParametersOptional">
+            <inheritdoc />
+        </member>
         <member name="T:NightlyCode.Scripting.Control.Case">
             <summary>
             case for a <see cref="T:NightlyCode.Scripting.Control.Switch"/> statement
@@ -73,6 +76,9 @@
         <member name="P:NightlyCode.Scripting.Control.Case.Parameters">
             <inheritdoc />
         </member>
+        <member name="P:NightlyCode.Scripting.Control.Case.ParametersOptional">
+            <inheritdoc />
+        </member>
         <member name="T:NightlyCode.Scripting.Control.Catch">
             <summary>
             token containing body for a <see cref="T:NightlyCode.Scripting.Control.Try"/> statement when an exception is catched
@@ -85,6 +91,9 @@
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Control.Catch.Body">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Catch.ToString">
             <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.Control.Continue">
@@ -115,6 +124,9 @@
         <member name="M:NightlyCode.Scripting.Control.Continue.ToString">
             <inheritdoc />
         </member>
+        <member name="P:NightlyCode.Scripting.Control.Continue.ParametersOptional">
+            <inheritdoc />
+        </member>
         <member name="T:NightlyCode.Scripting.Control.ControlToken">
             <summary>
             token representing a control structure
@@ -128,6 +140,11 @@
             token containing body for an <see cref="T:NightlyCode.Scripting.Control.If"/> statement of which condition is not met
             </summary>
         </member>
+        <member name="M:NightlyCode.Scripting.Control.Else.#ctor">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Control.Else"/>
+            </summary>
+        </member>
         <member name="P:NightlyCode.Scripting.Control.Else.Literal">
             <inheritdoc />
         </member>
@@ -135,6 +152,9 @@
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Control.Else.Body">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Control.Else.ToString">
             <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.Control.For">
@@ -163,6 +183,9 @@
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Control.For.Parameters">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.For.ParametersOptional">
             <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.Control.Foreach">
@@ -202,6 +225,9 @@
         <member name="P:NightlyCode.Scripting.Control.Foreach.Parameters">
             <inheritdoc />
         </member>
+        <member name="P:NightlyCode.Scripting.Control.Foreach.ParametersOptional">
+            <inheritdoc />
+        </member>
         <member name="T:NightlyCode.Scripting.Control.If">
             <summary>
             statement execution a body when a condition is met
@@ -220,6 +246,9 @@
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Control.If.Parameters">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.If.ParametersOptional">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Control.If.Body">
@@ -254,6 +283,9 @@
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Control.Import.Parameters">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.Import.ParametersOptional">
             <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.Control.IStatementContainer">
@@ -315,6 +347,9 @@
         <member name="P:NightlyCode.Scripting.Control.Return.Parameters">
             <inheritdoc />
         </member>
+        <member name="P:NightlyCode.Scripting.Control.Return.ParametersOptional">
+            <inheritdoc />
+        </member>
         <member name="T:NightlyCode.Scripting.Control.StatementBlock">
             <summary>
             a block of statements executed in sequence
@@ -333,6 +368,11 @@
         <member name="P:NightlyCode.Scripting.Control.StatementBlock.Literal">
             <inheritdoc />
         </member>
+        <member name="P:NightlyCode.Scripting.Control.StatementBlock.MethodBlock">
+            <summary>
+            determines whether block is a method block
+            </summary>
+        </member>
         <member name="M:NightlyCode.Scripting.Control.StatementBlock.Execute(NightlyCode.Scripting.ScriptContext)">
             <inheritdoc />
         </member>
@@ -343,6 +383,9 @@
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Control.StatementBlock.TextIndex">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.StatementBlock.TokenLength">
             <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.Control.Switch">
@@ -357,6 +400,9 @@
             <param name="condition">value to evaluate</param>
         </member>
         <member name="P:NightlyCode.Scripting.Control.Switch.Parameters">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.Switch.ParametersOptional">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Control.Switch.Cases">
@@ -456,6 +502,9 @@
         <member name="P:NightlyCode.Scripting.Control.Using.Parameters">
             <inheritdoc />
         </member>
+        <member name="P:NightlyCode.Scripting.Control.Using.ParametersOptional">
+            <inheritdoc />
+        </member>
         <member name="T:NightlyCode.Scripting.Control.Wait">
             <summary>
             token which waits a specified timespan
@@ -499,6 +548,9 @@
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Control.While.Parameters">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Control.While.ParametersOptional">
             <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.Data.ExternalScriptMethod">
@@ -896,6 +948,40 @@
             context data for error
             </summary>
         </member>
+        <member name="M:NightlyCode.Scripting.Extensions.ArrayExtensions.GetHashCode``1(``0[])">
+            <summary>
+            Gets the hash code for the contents of the array since the default hash code
+            for an array is unique even if the contents are the same.
+            </summary>
+            <remarks>
+            See Jon Skeet (C# MVP) response in the StackOverflow thread 
+            http://stackoverflow.com/questions/263400/what-is-the-best-algorithm-for-an-overridden-system-object-gethashcode
+            </remarks>
+            <param name="array">The array to generate a hash code for.</param>
+            <returns>The hash code for the values in the array.</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Extensions.ArrayExtensions.Equals``1(``0[],``0[])">
+            <summary>
+            Compares the contents of both arrays to see if they are equal. This depends on 
+            typeparameter T having a valid override for Equals().
+            </summary>
+            <param name="firstArray">The first array to compare.</param>
+            <param name="secondArray">The second array to compare.</param>
+            <returns>True if firstArray and secondArray have equal contents.</returns>
+        </member>
+        <member name="T:NightlyCode.Scripting.Extensions.DictionaryExtensions">
+            <summary>
+            extension methods used for dictionary types
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Extensions.DictionaryExtensions.ToType(System.Collections.Generic.Dictionary{System.Object,System.Object},System.Type)">
+            <summary>
+            converts values of a dictionary to a type
+            </summary>
+            <param name="dictionary">dictionary containing property values</param>
+            <param name="targettype">type to create</param>
+            <returns>type created from dictionary</returns>
+        </member>
         <member name="T:NightlyCode.Scripting.Extensions.OperatorExtensions">
             <summary>
             extensions for comparator tokens
@@ -1149,6 +1235,9 @@
             formats <see cref="T:NightlyCode.Scripting.Control.If"/>
             </summary>
         </member>
+        <member name="M:NightlyCode.Scripting.Formatters.Tokens.IfFormatter.Format(NightlyCode.Scripting.Tokens.IScriptToken,System.Text.StringBuilder,NightlyCode.Scripting.Formatters.Tokens.IFormatterCollection,System.Int32)">
+            <inheritdoc />
+        </member>
         <member name="T:NightlyCode.Scripting.Formatters.Tokens.IFormatterCollection">
             <summary>
             collection of available formatters
@@ -1310,6 +1399,65 @@
         </member>
         <member name="M:NightlyCode.Scripting.Formatters.Tokens.VariableFormatter.Format(NightlyCode.Scripting.Tokens.IScriptToken,System.Text.StringBuilder,NightlyCode.Scripting.Formatters.Tokens.IFormatterCollection,System.Int32)">
             <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Hosts.TaskHost">
+            <summary>
+            provides methods for tasks
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Hosts.TaskHost.Run(NightlyCode.Scripting.Providers.LambdaMethod)">
+            <summary>
+            starts a new task from a lambda method
+            </summary>
+            <param name="method">method to run as task</param>
+            <returns>task object containing running method</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Hosts.TaskHost.FromResult(System.Object)">
+            <summary>
+            creates a completed task object form a result value
+            </summary>
+            <param name="result">value to wrap as task result</param>
+            <returns>task object</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Hosts.TaskHost.FromResult``1(``0)">
+            <summary>
+            creates a completed task object form a result value
+            </summary>
+            <param name="result">value to wrap as task result</param>
+            <returns>task object</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Hosts.TaskHost.WaitAll(System.Collections.Generic.IEnumerable{System.Threading.Tasks.Task})">
+            <summary>
+            waits for all tasks to complete
+            </summary>
+            <param name="tasks">tasks to wait for</param>
+        </member>
+        <member name="T:NightlyCode.Scripting.Hosts.TypeHost">
+            <summary>
+            provides methods to interact with types in scripts
+            </summary>
+            <remarks>
+            handle with caution since type interaction can easily break security measures
+            </remarks>
+        </member>
+        <member name="M:NightlyCode.Scripting.Hosts.TypeHost.#ctor(NightlyCode.Scripting.Parser.ITypeProvider)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Hosts.TypeHost"/>
+            </summary>
+            <param name="typeProvider">type provider containing script type information</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Hosts.TypeHost.TypeProvider">
+            <summary>
+            type provider to use
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Hosts.TypeHost.Create(System.String,System.Collections.Generic.Dictionary{System.Object,System.Object})">
+            <summary>
+            creates a new type instance from a dictionary
+            </summary>
+            <param name="typename">name of type to create</param>
+            <param name="dictionary">dictionary values containing values for instance properties</param>
+            <returns>created type</returns>
         </member>
         <member name="T:NightlyCode.Scripting.IScript">
             <summary>
@@ -1880,7 +2028,7 @@
             operations used when calling methods dynamically
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Operations.MethodOperations.MatchesParameterCount(System.Reflection.MethodBase,NightlyCode.Scripting.Tokens.IScriptToken[],System.Boolean)">
+        <member name="M:NightlyCode.Scripting.Operations.MethodOperations.MatchesParameterCount(System.Reflection.MethodBase,System.Int32,System.Boolean)">
             <summary>
             determines whether a method could be called using the provided parameters 
             </summary>
@@ -1888,7 +2036,7 @@
             this does not determine whether the parameter types actually matches, it only determines whether the parameter count matches
             </remarks>
             <param name="method">method to check</param>
-            <param name="parameters">specified script parameters</param>
+            <param name="parametercount">number of parameters</param>
             <param name="isextension">determines whether the method is an extension method</param>
             <returns>true if method count matches, false otherwise</returns>
         </member>
@@ -2383,11 +2531,6 @@
             <param name="variables">variables valid for this script (flagged as read-only)</param>
             <returns>script parsed from code</returns>
         </member>
-        <member name="E:NightlyCode.Scripting.Parser.IScriptParser.TokenParsed">
-            <summary>
-            triggered when a token was parsed
-            </summary>
-        </member>
         <member name="T:NightlyCode.Scripting.Parser.ITypeInstanceProvider">
             <summary>
             interface for a provider of type-instances
@@ -2475,6 +2618,13 @@
             <summary>
             provides named variables to script
             </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.IVariableProvider.Item(System.String)">
+            <summary>
+            indexer to variable provider
+            </summary>
+            <param name="name">name of variable</param>
+            <returns>value of variable</returns>
         </member>
         <member name="M:NightlyCode.Scripting.Parser.IVariableProvider.GetVariable(System.String)">
             <summary>
@@ -2594,6 +2744,136 @@
             variables to use when parsing script
             </summary>
         </member>
+        <member name="T:NightlyCode.Scripting.Parser.Resolvers.IMethodResolver">
+            <summary>
+            resolves method calls for <see cref="T:NightlyCode.Scripting.Tokens.ScriptMethod"/> tokens
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.Resolvers.IMethodResolver.Resolve(System.Object,System.String,System.Object[],NightlyCode.Scripting.Tokens.ReferenceParameter[])">
+            <summary>
+            resolves the method to call
+            </summary>
+            <param name="host">host on which to call a method</param>
+            <param name="methodname">name of method to call</param>
+            <param name="parameters">method parameters</param>
+            <param name="referenceparameters">reference parameter information</param>
+            <returns>resolved method to call</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.Resolvers.IMethodResolver.ResolveConstructor(System.Type,System.Object[])">
+            <summary>
+            resolves a constructor to call
+            </summary>
+            <param name="type">type of which to call constructor</param>
+            <param name="parameters">parameters for constructor call</param>
+            <returns>constructor to be called</returns>
+        </member>
+        <member name="T:NightlyCode.Scripting.Parser.Resolvers.IResolvedMethod">
+            <summary>
+            method to be called
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.Resolvers.IResolvedMethod.Call(NightlyCode.Scripting.Tokens.IScriptToken,System.Object,System.Object[],NightlyCode.Scripting.ScriptContext)">
+            <summary>
+            calls a method
+            </summary>
+            <param name="methodcall">original method token</param>
+            <param name="host">host for which to call method</param>
+            <param name="parameters">parameters for method call</param>
+            <param name="context">script context</param>
+            <returns>return value of method</returns>
+        </member>
+        <member name="T:NightlyCode.Scripting.Parser.Resolvers.MethodCacheKey">
+            <summary>
+            key for a method call
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.Resolvers.MethodCacheKey.#ctor(System.Type,System.String,System.Type[],NightlyCode.Scripting.Tokens.ReferenceParameter[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Parser.Resolvers.MethodCacheKey"/>
+            </summary>
+            <param name="hostType">type of host to call method on</param>
+            <param name="methodName">method to call</param>
+            <param name="parameterTypes">parameter value types</param>
+            <param name="referenceInformation">information about reference parameters (optional)</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.Resolvers.MethodCacheKey.#ctor(System.Type,System.Type[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Parser.Resolvers.MethodCacheKey"/>
+            </summary>
+            <param name="hostType">type of host to call method on</param>
+            <param name="parameterTypes">parameter value types</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.Resolvers.MethodCacheKey.HostType">
+            <summary>
+            type of host to call method on
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.Resolvers.MethodCacheKey.MethodName">
+            <summary>
+            method to call
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.Resolvers.MethodCacheKey.ParameterTypes">
+            <summary>
+            parameter value types
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.Resolvers.MethodCacheKey.ReferenceInformation">
+            <summary>
+            information about reference parameters
+            </summary>
+        </member>
+        <member name="T:NightlyCode.Scripting.Parser.Resolvers.MethodResolver">
+            <summary>
+            default method provider
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.Resolvers.MethodResolver.#ctor(NightlyCode.Scripting.Parser.IExtensionProvider)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Parser.Resolvers.MethodResolver"/>
+            </summary>
+            <param name="extensions">access to extension methods</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.Resolvers.MethodResolver.EnableCaching">
+            <summary>
+            determines whether to cache resolved methods for later calls
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.Resolvers.MethodResolver.Resolve(System.Object,System.String,System.Object[],NightlyCode.Scripting.Tokens.ReferenceParameter[])">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.Resolvers.MethodResolver.ResolveConstructor(System.Type,System.Object[])">
+            <inheritdoc />
+        </member>
+        <member name="T:NightlyCode.Scripting.Parser.Resolvers.ResolvedMethod">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.Resolvers.ResolvedMethod.#ctor(System.Reflection.MethodInfo,NightlyCode.Scripting.Tokens.ReferenceParameter[],System.Boolean)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Parser.Resolvers.ResolvedMethod"/>
+            </summary>
+            <param name="method">method to call</param>
+            <param name="referenceParameters">reference parameter information</param>
+            <param name="isExtension">determines whether invocation is an extension method</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.Resolvers.ResolvedMethod.Method">
+            <summary>
+            method to call
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.Resolvers.ResolvedMethod.IsExtension">
+            <summary>
+            determines whether invocation is an extension method
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.Resolvers.ResolvedMethod.ReferenceParameters">
+            <summary>
+            reference parameter information
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.Resolvers.ResolvedMethod.Call(NightlyCode.Scripting.Tokens.IScriptToken,System.Object,System.Object[],NightlyCode.Scripting.ScriptContext)">
+            <inheritdoc />
+        </member>
         <member name="T:NightlyCode.Scripting.Parser.ScriptParser">
             <summary>
             parses scripts from string data
@@ -2654,6 +2934,11 @@
             resolver which is used by 'import' statement to import methods
             </summary>
         </member>
+        <member name="P:NightlyCode.Scripting.Parser.ScriptParser.MethodCallResolver">
+            <summary>
+            resolves methods to call for <see cref="T:NightlyCode.Scripting.Tokens.ScriptMethod"/>s
+            </summary>
+        </member>
         <member name="P:NightlyCode.Scripting.Parser.ScriptParser.OperatorTree">
             <summary>
             tree containing all supported operators
@@ -2663,9 +2948,6 @@
             <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Parser.ScriptParser.ParseAsync(System.String,NightlyCode.Scripting.Data.Variable[])">
-            <inheritdoc />
-        </member>
-        <member name="E:NightlyCode.Scripting.Parser.ScriptParser.TokenParsed">
             <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.Parser.TokenType">
@@ -2756,13 +3038,6 @@
             <param name="parentprovider">parent variable context</param>
             <param name="initialvalues">variables to be contained initially in pool</param>
         </member>
-        <member name="P:NightlyCode.Scripting.Parser.VariableContext.Item(System.String)">
-            <summary>
-            indexer for hosts
-            </summary>
-            <param name="name">name of host to get</param>
-            <returns>host instance</returns>
-        </member>
         <member name="M:NightlyCode.Scripting.Parser.VariableContext.Clear">
             <inheritdoc />
         </member>
@@ -2789,6 +3064,9 @@
             </summary>
             <param name="parentprovider">parent variable scope</param>
             <param name="variables">variables to provide</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Parser.VariableProvider.Item(System.String)">
+            <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Parser.VariableProvider.ReplaceVariable(System.String,System.Object)">
             <summary>
@@ -2887,34 +3165,12 @@
             <param name="parameters">resource name</param>
             <returns>script method stored in resource</returns>
         </member>
-        <member name="T:NightlyCode.Scripting.Providers.TaskMethodProvider">
-            <summary>
-            provides methods for tasks
-            </summary>
-        </member>
-        <member name="M:NightlyCode.Scripting.Providers.TaskMethodProvider.WaitAll(System.Collections.Generic.IEnumerable{System.Threading.Tasks.Task})">
-            <summary>
-            waits for all tasks to complete
-            </summary>
-            <param name="tasks">tasks to wait for</param>
-        </member>
-        <member name="T:NightlyCode.Scripting.Providers.TaskProvider">
-            <summary>
-            provides a method to execute in a thread
-            </summary>
-        </member>
-        <member name="P:NightlyCode.Scripting.Providers.TaskProvider.ProvidedType">
-            <inheritdoc />
-        </member>
-        <member name="M:NightlyCode.Scripting.Providers.TaskProvider.Create(NightlyCode.Scripting.Tokens.IScriptToken[],NightlyCode.Scripting.ScriptContext)">
-            <inheritdoc />
-        </member>
         <member name="T:NightlyCode.Scripting.Providers.TypeInstanceProvider">
             <summary>
             provides instances of arbitrary types
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Providers.TypeInstanceProvider.#ctor(System.Type)">
+        <member name="M:NightlyCode.Scripting.Providers.TypeInstanceProvider.#ctor(System.Type,NightlyCode.Scripting.Parser.Resolvers.IMethodResolver)">
             <summary>
             creates a new <see cref="T:NightlyCode.Scripting.Providers.TypeInstanceProvider"/>
             </summary>
@@ -3031,10 +3287,16 @@
         <member name="P:NightlyCode.Scripting.Tokens.Await.Literal">
             <inheritdoc />
         </member>
-        <member name="M:NightlyCode.Scripting.Tokens.Await.Execute(NightlyCode.Scripting.ScriptContext)">
+        <member name="M:NightlyCode.Scripting.Tokens.Await.ExecuteToken(NightlyCode.Scripting.ScriptContext)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Tokens.Await.Parameters">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.Await.ParametersOptional">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.Await.ToString">
             <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.Tokens.Comment">
@@ -3079,6 +3341,9 @@
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Tokens.Comment.TextIndex">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.Comment.TokenLength">
             <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.Tokens.DictionaryToken">
@@ -3147,6 +3412,9 @@
         <member name="P:NightlyCode.Scripting.Tokens.ExpliciteTypeCast.Parameters">
             <inheritdoc />
         </member>
+        <member name="P:NightlyCode.Scripting.Tokens.ExpliciteTypeCast.ParametersOptional">
+            <inheritdoc />
+        </member>
         <member name="T:NightlyCode.Scripting.Tokens.ICodePositionToken">
             <summary>
             token which contains information about its position in original source code
@@ -3160,6 +3428,11 @@
         <member name="P:NightlyCode.Scripting.Tokens.ICodePositionToken.TextIndex">
             <summary>
             index in text where token starts
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.ICodePositionToken.TokenLength">
+            <summary>
+            length of token in code
             </summary>
         </member>
         <member name="T:NightlyCode.Scripting.Tokens.ImpliciteTypeCast">
@@ -3204,6 +3477,11 @@
         <member name="P:NightlyCode.Scripting.Tokens.IParameterContainer.Parameters">
             <summary>
             evaluated condition
+            </summary>
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.IParameterContainer.ParametersOptional">
+            <summary>
+            determines whether specification of parameters is optional
             </summary>
         </member>
         <member name="T:NightlyCode.Scripting.Tokens.IScriptToken">
@@ -3251,6 +3529,15 @@
             creates a new instance of a type
             </summary>
         </member>
+        <member name="M:NightlyCode.Scripting.Tokens.NewInstance.#ctor(System.String,System.Type,NightlyCode.Scripting.Parser.ITypeInstanceProvider,NightlyCode.Scripting.Tokens.IScriptToken[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Tokens.NewInstance"/>
+            </summary>
+            <param name="typename">name of type to instanciate like specified in code</param>
+            <param name="type">type information to instanciate</param>
+            <param name="provider">type provider to use</param>
+            <param name="parameters">parameters for constructor</param>
+        </member>
         <member name="P:NightlyCode.Scripting.Tokens.NewInstance.TypeName">
             <summary>
             name of type in script
@@ -3274,6 +3561,9 @@
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Tokens.NewInstance.Parameters">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.NewInstance.ParametersOptional">
             <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.Tokens.NewLine">
@@ -3304,7 +3594,7 @@
         <member name="P:NightlyCode.Scripting.Tokens.Reference.Literal">
             <inheritdoc />
         </member>
-        <member name="M:NightlyCode.Scripting.Tokens.Reference.Execute(NightlyCode.Scripting.ScriptContext)">
+        <member name="M:NightlyCode.Scripting.Tokens.Reference.ExecuteToken(NightlyCode.Scripting.ScriptContext)">
             <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Tokens.Reference.Assign(NightlyCode.Scripting.Tokens.IScriptToken,NightlyCode.Scripting.ScriptContext)">
@@ -3377,6 +3667,9 @@
         <member name="P:NightlyCode.Scripting.Tokens.ScriptIndexer.Parameters">
             <inheritdoc />
         </member>
+        <member name="P:NightlyCode.Scripting.Tokens.ScriptIndexer.ParametersOptional">
+            <inheritdoc />
+        </member>
         <member name="P:NightlyCode.Scripting.Tokens.ScriptIndexer.Literal">
             <inheritdoc />
         </member>
@@ -3428,11 +3721,11 @@
             calls a method in a script
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Tokens.ScriptMethod.#ctor(NightlyCode.Scripting.Parser.IExtensionProvider,NightlyCode.Scripting.Tokens.IScriptToken,System.String,NightlyCode.Scripting.Tokens.IScriptToken[])">
+        <member name="M:NightlyCode.Scripting.Tokens.ScriptMethod.#ctor(NightlyCode.Scripting.Parser.Resolvers.IMethodResolver,NightlyCode.Scripting.Tokens.IScriptToken,System.String,NightlyCode.Scripting.Tokens.IScriptToken[])">
             <summary>
             creates a new <see cref="T:NightlyCode.Scripting.Tokens.ScriptMethod"/>
             </summary>
-            <param name="extensions">pool containing known hosts</param>
+            <param name="resolver">resolves method calls</param>
             <param name="hosttoken">host of method to be called</param>
             <param name="methodname">name of method to call</param>
             <param name="parameters">parameters for method call</param>
@@ -3448,6 +3741,9 @@
             </summary>
         </member>
         <member name="P:NightlyCode.Scripting.Tokens.ScriptMethod.Parameters">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.ScriptMethod.ParametersOptional">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Tokens.ScriptMethod.Literal">
@@ -3502,6 +3798,9 @@
         <member name="P:NightlyCode.Scripting.Tokens.ScriptParameter.Parameters">
             <inheritdoc />
         </member>
+        <member name="P:NightlyCode.Scripting.Tokens.ScriptParameter.ParametersOptional">
+            <inheritdoc />
+        </member>
         <member name="T:NightlyCode.Scripting.Tokens.ScriptToken">
             <summary>
             base implementation of a script token with basic error handling
@@ -3523,6 +3822,9 @@
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Tokens.ScriptToken.TextIndex">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.ScriptToken.TokenLength">
             <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.Tokens.ScriptValue">

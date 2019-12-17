@@ -39,5 +39,8 @@ namespace NightlyCode.Scripting.Control {
 
         /// <inheritdoc />
         public IEnumerable<IScriptToken> Parameters => parameters;
+
+        /// <inheritdoc />
+        public bool ParametersOptional => false;
     }
 }

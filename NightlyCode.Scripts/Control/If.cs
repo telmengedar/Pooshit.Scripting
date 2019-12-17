@@ -34,6 +34,9 @@ namespace NightlyCode.Scripting.Control {
             get { yield return condition; }
         }
 
+        /// <inheritdoc />
+        public bool ParametersOptional => false;
+
         /// <summary>
         /// body to execute if condition is met
         /// </summary>
@@ -42,12 +45,12 @@ namespace NightlyCode.Scripting.Control {
         /// <summary>
         /// body to execute when condition is not met
         /// </summary>
-        public IScriptToken Else { get; internal set; }
+        public Else Else { get; internal set; }
 
         /// <inheritdoc />
         public override string ToString() {
             if (Else != null)
-                return $"if({condition}) {Body} else {Else}";
+                return $"if({condition}) {Body} {Else}";
             return $"if({condition}) {Body}";
         }
     }

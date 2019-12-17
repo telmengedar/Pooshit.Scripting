@@ -51,9 +51,12 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        public int LineNumber { get; set; }
+        public int LineNumber { get; internal set; }
 
         /// <inheritdoc />
-        public int TextIndex { get; set; }
+        public int TextIndex { get; internal set; }
+
+        /// <inheritdoc />
+        public int TokenLength { get; internal set; }
     }
 }

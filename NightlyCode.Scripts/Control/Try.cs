@@ -37,13 +37,13 @@ namespace NightlyCode.Scripting.Control {
         /// <summary>
         /// body to execute when condition is not met
         /// </summary>
-        public IScriptToken Catch { get; internal set; }
+        public Catch Catch { get; internal set; }
 
         /// <inheritdoc />
         public override string ToString()
         {
             if (Catch != null)
-                return $"try {Body} catch {Catch}";
+                return $"try {Body} {Catch}";
             return $"try {Body}";
         }
     }

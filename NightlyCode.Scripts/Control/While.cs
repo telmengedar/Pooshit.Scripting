@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
@@ -59,5 +58,8 @@ namespace NightlyCode.Scripting.Control {
         public IEnumerable<IScriptToken> Parameters {
             get { yield return condition; }
         }
+
+        /// <inheritdoc />
+        public bool ParametersOptional => false;
     }
 }

@@ -5,7 +5,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// parameter to use in a reference call
     /// </summary>
-    class ReferenceParameter {
+    public class ReferenceParameter {
 
         /// <summary>
         /// creates a new <see cref="ReferenceParameter"/>

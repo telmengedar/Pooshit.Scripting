@@ -8,6 +8,13 @@ namespace NightlyCode.Scripting.Parser {
     public interface IVariableProvider {
 
         /// <summary>
+        /// indexer to variable provider
+        /// </summary>
+        /// <param name="name">name of variable</param>
+        /// <returns>value of variable</returns>
+        object this[string name] { get; set; }
+
+        /// <summary>
         /// get value of a variable
         /// </summary>
         /// <param name="name">name of variable</param>

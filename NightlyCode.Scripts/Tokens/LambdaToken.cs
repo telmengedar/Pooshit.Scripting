@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using NightlyCode.Scripting.Control;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Operations;
@@ -12,6 +13,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// </summary>
     public class LambdaToken : IOperator, IBinaryToken {
         IScriptToken lhs;
+        IScriptToken rhs;
 
         /// <inheritdoc />
         public string Literal => "=>";
@@ -39,7 +41,15 @@ namespace NightlyCode.Scripting.Tokens {
         /// <summary>
         /// expression to execute
         /// </summary>
-        public IScriptToken Rhs { get; set; }
+        public IScriptToken Rhs {
+            get => rhs;
+            set {
+                if (value is StatementBlock block)
+                    // ensure that method block is true for return to be evaluated correctly
+                    block.MethodBlock = true;
+                rhs = value;
+            }
+        }
 
         /// <inheritdoc />
         public object Execute(ScriptContext context) {

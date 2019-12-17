@@ -20,16 +20,19 @@ namespace NightlyCode.Scripting.Formatters.Tokens {
             resulttext.Append(token.Literal);
 
             if (token is IParameterContainer parametertoken && parametertoken.Parameters != null) {
-                resulttext.Append('(');
-                if (parametertoken.Parameters.Any()) {
-                    foreach (IScriptToken parameter in parametertoken.Parameters) {
-                        formatters[parameter].FormatToken(parameter, resulttext, formatters, depth);
-                        resulttext.Append(", ");
-                    }
-                    resulttext.Length -= 2;
-                }
+                if (!parametertoken.ParametersOptional || parametertoken.Parameters.Any()) {
+                    resulttext.Append('(');
+                    if (parametertoken.Parameters.Any()) {
+                        foreach (IScriptToken parameter in parametertoken.Parameters) {
+                            formatters[parameter].FormatToken(parameter, resulttext, formatters, depth);
+                            resulttext.Append(", ");
+                        }
 
-                resulttext.Append(')');
+                        resulttext.Length -= 2;
+                    }
+
+                    resulttext.Append(')');
+                }
             }
 
             

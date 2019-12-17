@@ -1,22 +1,32 @@
-﻿using NightlyCode.Scripting.Parser;
-using NightlyCode.Scripting.Tokens;
+﻿using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
 
     /// <summary>
     /// token containing body for an <see cref="If"/> statement of which condition is not met
     /// </summary>
-    class Else : ControlToken {
+    public class Else : ControlToken {
+
+        /// <summary>
+        /// creates a new <see cref="Else"/>
+        /// </summary>
+        internal Else() {
+        }
 
         /// <inheritdoc />
         public override string Literal => "else";
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
-            throw new System.NotImplementedException();
+            return Body.Execute(context);
         }
 
         /// <inheritdoc />
         public override IScriptToken Body { get; internal set; }
+
+        /// <inheritdoc />
+        public override string ToString() {
+            return $"else {Body}";
+        }
     }
 }

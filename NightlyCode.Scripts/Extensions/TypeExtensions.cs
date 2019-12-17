@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Reflection;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
@@ -29,6 +31,23 @@ namespace NightlyCode.Scripting.Extensions {
             else {
                 // try to load type dynamically
                 Type type = Type.GetType(typename);
+
+                if (!typename.Contains(","))
+                {
+                    foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+                    {
+                        type = assembly.GetTypes().FirstOrDefault(t => t.FullName == typename || t.Name == typename);
+                        if (type != null)
+                            return type;
+                    }
+
+                    foreach (AssemblyName assembly in Assembly.GetExecutingAssembly().GetReferencedAssemblies()) {
+                        type = Assembly.Load(assembly).GetTypes().FirstOrDefault(t => t.FullName == typename || t.Name == typename);
+                        if (type != null)
+                            return type;
+                    }
+                }
+
                 if (type == null)
                     throw new ScriptRuntimeException($"Unknown type '{typename}'", token);
 

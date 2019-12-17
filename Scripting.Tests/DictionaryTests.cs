@@ -192,5 +192,45 @@ namespace Scripting.Tests {
             Assert.AreEqual(60, script.Execute());
         }
 
+        [Test, Parallelizable]
+        public void PureDictionaryScript() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "{",
+                "  \"Host\": \"bla\",",
+                "  \"Port\": 9090",
+                "}"
+            ));
+
+            Assert.AreEqual(9090, script.Execute<Dictionary<object, object>>()["Port"]);
+        }
+
+        [Test, Parallelizable]
+        public void PureDictionaryScriptPrependedByComment()
+        {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "/* comment */",
+                "{",
+                "  \"Host\": \"bla\",",
+                "  \"Port\": 9090",
+                "}"
+            ));
+
+            Assert.AreEqual(9090, script.Execute<Dictionary<object, object>>()["Port"]);
+        }
+
+        [Test, Parallelizable]
+        public void DictionaryWithEntryComments()
+        {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "/* comment */",
+                "{",
+                "  \"Host\": \"bla\", // this is the host",
+                "  \"Port\": 9090 // and this might be the port",
+                "}"
+            ));
+
+            Assert.AreEqual(9090, script.Execute<Dictionary<object, object>>()["Port"]);
+        }
+
     }
 }

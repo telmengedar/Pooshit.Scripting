@@ -5,7 +5,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// a reference to an assignable token
     /// </summary>
-    public class Reference : IAssignableToken {
+    public class Reference : ScriptToken, IAssignableToken {
         IAssignableToken argument;
 
         /// <summary>
@@ -17,10 +17,10 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <inheritdoc />
-        public string Literal => "ref";
+        public override string Literal => "ref";
 
         /// <inheritdoc />
-        public object Execute(ScriptContext context) {
+        protected override object ExecuteToken(ScriptContext context) {
             return argument.Execute(context);
         }
 

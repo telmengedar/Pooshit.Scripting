@@ -49,7 +49,7 @@ namespace Scripting.Tests {
         [TestCase("try throw(\"Error\") catch return $exception")]
         [Parallelizable]
         public void ControlTokensDisabled(string code) {
-            MetricVisitor visitor=new MetricVisitor();
+            MetricVisitor visitor = new MetricVisitor();
             IScriptParser enabledparser = new ScriptParser();
             IScriptParser disabledparser = new ScriptParser {
                 ControlTokensEnabled = false

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Extern;
@@ -60,9 +62,12 @@ namespace NightlyCode.Scripting.Tokens {
                 typename = typename.Substring(0, typename.Length - 2);
 
             Type type = TypeProvider.DetermineType(this, typename);
+            Type elementtype = null;
 
-            if (isarray)
+            if (isarray) {
+                elementtype = type;
                 type = typeof(IEnumerable<>).MakeGenericType(type);
+            }
 
             object value;
             if(context.Variables.ContainsVariable(Variable.Name)||(context.Arguments.ContainsVariable(Variable.Name)))
@@ -79,13 +84,31 @@ namespace NightlyCode.Scripting.Tokens {
                 return null;
             }
 
-            if (!type.IsInstanceOfType(value))
+            if (!type.IsInstanceOfType(value)) {
                 try {
-                    value=value = Converter.Convert(value, type);
+                    if (isarray) {
+                        if (value is IEnumerable enumeration) {
+                            object[] items = enumeration.Cast<object>().ToArray();
+                            Array array = Array.CreateInstance(elementtype, items.Length);
+                            int index = 0;
+                            foreach (object item in items)
+                                array.SetValue(Converter.Convert(item, elementtype), index++);
+                            value = array;
+                        }
+                        else {
+                            Array array = Array.CreateInstance(elementtype, 1);
+                            array.SetValue(Converter.Convert(value, elementtype), 0);
+                            value = array;
+                        }
+                    }
+                    else {
+                        value = Converter.Convert(value, type);
+                    }
                 }
                 catch (Exception e) {
                     throw new ScriptRuntimeException($"Unable to convert parameter '{value}' to '{typename}'", this, e);
                 }
+            }
 
             ((VariableProvider)context.Arguments).ReplaceVariable(Variable.Name, value);
             return value;
@@ -100,5 +123,8 @@ namespace NightlyCode.Scripting.Tokens {
                     yield return DefaultValue;
             }
         }
+
+        /// <inheritdoc />
+        public bool ParametersOptional => false;
     }
 }

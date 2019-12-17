@@ -39,6 +39,9 @@ namespace NightlyCode.Scripting.Control {
             get { yield return condition; }
         }
 
+        /// <inheritdoc />
+        public bool ParametersOptional => false;
+
         /// <summary>
         /// cases for switch branch
         /// </summary>

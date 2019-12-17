@@ -18,17 +18,6 @@ namespace NightlyCode.Scripting.Parser {
             : base(parentprovider, initialvalues) {
         }
 
-        /// <summary>
-        /// indexer for hosts
-        /// </summary>
-        /// <param name="name">name of host to get</param>
-        /// <returns>host instance</returns>
-        public object this[string name]
-        {
-            get => GetVariable(name);
-            set => SetVariable(name, value);
-        }
-
         /// <inheritdoc />
         public void Clear() {
             Values.Clear();

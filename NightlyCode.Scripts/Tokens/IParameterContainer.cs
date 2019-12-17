@@ -11,5 +11,10 @@ namespace NightlyCode.Scripting.Tokens {
         /// evaluated condition
         /// </summary>
         IEnumerable<IScriptToken> Parameters { get; }
+
+        /// <summary>
+        /// determines whether specification of parameters is optional
+        /// </summary>
+        bool ParametersOptional { get; }
     }
 }

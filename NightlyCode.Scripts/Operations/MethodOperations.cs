@@ -177,10 +177,10 @@ namespace NightlyCode.Scripting.Operations {
         /// this does not determine whether the parameter types actually matches, it only determines whether the parameter count matches
         /// </remarks>
         /// <param name="method">method to check</param>
-        /// <param name="parameters">specified script parameters</param>
+        /// <param name="parametercount">number of parameters</param>
         /// <param name="isextension">determines whether the method is an extension method</param>
         /// <returns>true if method count matches, false otherwise</returns>
-        public static bool MatchesParameterCount(MethodBase method, IScriptToken[] parameters, bool isextension = false) {
+        public static bool MatchesParameterCount(MethodBase method, int parametercount, bool isextension = false) {
             ParameterInfo[] methodparameters = method.GetParameters();
             bool hasparams = methodparameters.Length > 0 && Attribute.IsDefined(methodparameters.Last(), typeof(ParamArrayAttribute));
             int minimumcount = methodparameters.Count(p => !p.HasDefaultValue);
@@ -190,13 +190,13 @@ namespace NightlyCode.Scripting.Operations {
                 // extension methods have their first parameter specified by script engine
                 --minimumcount;
 
-            if (parameters.Length < minimumcount)
+            if (parametercount < minimumcount)
                 return false;
 
             if (hasparams)
                 return true;
 
-            return parameters.Length <= methodparameters.Length;
+            return parametercount <= methodparameters.Length;
         }
 
         /// <summary>
@@ -225,9 +225,8 @@ namespace NightlyCode.Scripting.Operations {
             }
         }
 
-        public static object CallMethod(IScriptToken methodcall, object host, MethodInfo method, object[] parameters, ScriptContext context, IEnumerable<ReferenceParameter> refparameters=null, bool extension=false, ParameterInfo[] targetparameters=null) {
-            if(targetparameters==null)
-                targetparameters = method.GetParameters();
+        public static object CallMethod(IScriptToken methodcall, object host, MethodInfo method, object[] parameters, ScriptContext context, IEnumerable<ReferenceParameter> refparameters=null, bool extension=false) {
+            ParameterInfo[] targetparameters = method.GetParameters();
 
             object[] callparameters;
             try {
@@ -307,45 +306,13 @@ namespace NightlyCode.Scripting.Operations {
                     return Converter.Convert(value, targettype);
             }
             else if (value is Dictionary<object, object> dictionary) {
-                return ConvertDictionary(dictionary, targettype);
+                return dictionary.ToType(targettype);
             }
             else if (targettype == typeof(string))
                 return Convert.ToString(value, CultureInfo.InvariantCulture);
             else return Converter.Convert(value, targettype);
 
             return null;
-        }
-
-        static object ConvertDictionary(Dictionary<object, object> dictionary, Type targettype) {
-            object value = Activator.CreateInstance(targettype, true);
-            foreach (KeyValuePair<object, object> property in dictionary) {
-                string propertyname = property.Key.ToString();
-                PropertyInfo propertyinfo = targettype.GetProperty(propertyname, BindingFlags.Instance | BindingFlags.IgnoreCase | BindingFlags.Public);
-                if(propertyinfo==null)
-                    continue;
-
-                if (property.Value is Dictionary<object, object> subdictionary && propertyinfo.PropertyType != typeof(Dictionary<object, object>)) {
-                    propertyinfo.SetValue(value, ConvertDictionary(subdictionary, propertyinfo.PropertyType));
-                }
-                else if (propertyinfo.PropertyType.IsArray) {
-                    Array arrayvalue;
-                    Type elementtype = propertyinfo.PropertyType.GetElementType();
-                    if (property.Value is Array sourcearray) {
-                        arrayvalue = Array.CreateInstance(elementtype,sourcearray.Length);
-                        for (int i = 0; i < sourcearray.Length; ++i)
-                            arrayvalue.SetValue(Converter.Convert(sourcearray.GetValue(i), elementtype), i);
-                    }
-                    else {
-                        arrayvalue = Array.CreateInstance(propertyinfo.PropertyType.GetElementType(),1);
-                        arrayvalue.SetValue(Converter.Convert(property.Value, elementtype), 0);
-                    }
-
-                    propertyinfo.SetValue(value, arrayvalue);
-                }
-                else propertyinfo.SetValue(value, Converter.Convert(property.Value, propertyinfo.PropertyType, true));
-            }
-
-            return value;
         }
 
         public static IEnumerable<object> CreateParameters(object staticparameter, ParameterInfo[] targetparameters, object[] sourceparameters)

@@ -87,5 +87,8 @@ namespace NightlyCode.Scripting.Control {
                 yield return collection;
             }
         }
+
+        /// <inheritdoc />
+        public bool ParametersOptional => false;
     }
 }

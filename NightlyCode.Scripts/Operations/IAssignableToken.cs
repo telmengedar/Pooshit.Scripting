@@ -5,7 +5,7 @@ namespace NightlyCode.Scripting.Operations {
     /// <summary>
     /// token to which a value can be assigned
     /// </summary>
-    interface IAssignableToken : IScriptToken {
+    public interface IAssignableToken : IScriptToken {
 
         /// <summary>
         /// assigns a value to this token

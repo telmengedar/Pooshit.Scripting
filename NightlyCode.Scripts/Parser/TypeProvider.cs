@@ -1,11 +1,17 @@
 ﻿using System.Collections.Generic;
+using NightlyCode.Scripting.Parser.Resolvers;
 using NightlyCode.Scripting.Providers;
 
 namespace NightlyCode.Scripting.Parser {
 
     /// <inheritdoc />
-    class TypeProvider : ITypeProvider {
+    public class TypeProvider : ITypeProvider {
+        IMethodResolver resolver;
         readonly Dictionary<string, ITypeInstanceProvider> types=new Dictionary<string, ITypeInstanceProvider>();
+
+        public TypeProvider(IMethodResolver resolver) {
+            this.resolver = resolver ?? new MethodResolver(null);
+        }
 
         /// <inheritdoc />
         public ITypeInstanceProvider GetType(string name) {
@@ -22,7 +28,7 @@ namespace NightlyCode.Scripting.Parser {
         public void AddType<T>(string name=null) {
             if (name == null)
                 name = typeof(T).Name.ToLower();
-            AddType(name, new TypeInstanceProvider(typeof(T)));
+            AddType(name, new TypeInstanceProvider(typeof(T), resolver));
         }
 
         /// <inheritdoc />

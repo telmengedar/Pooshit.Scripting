@@ -66,6 +66,7 @@ namespace NightlyCode.Scripting.Tokens {
 
                 if (type.IsInstanceOfType(value))
                     return value;
+
                 return null;
             }
             
@@ -90,5 +91,8 @@ namespace NightlyCode.Scripting.Tokens {
                     yield return IsDynamic;
             }
         }
+
+        /// <inheritdoc />
+        public bool ParametersOptional => false;
     }
 }

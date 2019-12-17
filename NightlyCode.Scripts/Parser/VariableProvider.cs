@@ -23,6 +23,12 @@ namespace NightlyCode.Scripting.Parser {
                 values[variable.Name] = variable.Value;
         }
 
+        /// <inheritdoc />
+        public object this[string name] {
+            get => GetVariable(name);
+            set => values[name] = value;
+        }
+
         /// <summary>
         /// replaces a variable value
         /// </summary>

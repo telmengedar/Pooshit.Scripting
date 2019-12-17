@@ -35,6 +35,9 @@ namespace NightlyCode.Scripting.Tokens {
         public IEnumerable<IScriptToken> Parameters => parameters;
 
         /// <inheritdoc />
+        public bool ParametersOptional => false;
+
+        /// <inheritdoc />
         public override string Literal => "[]";
 
         /// <inheritdoc />

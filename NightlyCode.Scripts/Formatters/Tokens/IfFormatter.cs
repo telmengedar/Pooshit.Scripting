@@ -8,6 +8,8 @@ namespace NightlyCode.Scripting.Formatters.Tokens {
     /// formats <see cref="If"/>
     /// </summary>
     public class IfFormatter : TokenFormatter {
+
+        /// <inheritdoc />
         protected override void Format(IScriptToken token, StringBuilder resulttext, IFormatterCollection formatters, int depth = 0) {
             If iftoken = (If) token;
             resulttext.Append("if(");
@@ -18,9 +20,7 @@ namespace NightlyCode.Scripting.Formatters.Tokens {
             FormatBody(iftoken.Body, resulttext, formatters, depth);
             if (iftoken.Else != null) {
                 resulttext.AppendLine();
-                AppendIntendation(resulttext, depth);
-                resulttext.Append("else");
-                FormatBody(iftoken.Else, resulttext, formatters, depth);
+                formatters[iftoken.Else].FormatToken(iftoken.Else, resulttext, formatters, depth);
             }
         }
     }

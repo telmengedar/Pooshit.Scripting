@@ -32,10 +32,11 @@ namespace NightlyCode.Scripting.Tokens {
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
-            if (context.Arguments?.ContainsVariable(Name) ?? false)
-                return context.Arguments.GetVariable(Name);
+            IVariableProvider provider = context.Arguments.GetProvider(Name);
+            if (provider != null)
+                return provider.GetVariable(Name);
 
-            IVariableProvider provider = context.Variables.GetProvider(Name);
+            provider = context.Variables.GetProvider(Name);
             if (provider == null)
                 throw new ScriptRuntimeException($"Variable {Name} not declared", this);
 
