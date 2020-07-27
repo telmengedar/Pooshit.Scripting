@@ -13,7 +13,7 @@ namespace Scripting.Tests {
 
         [SetUp]
         public void StartUp() {
-            parser = new ScriptParser(new Variable("test", this));
+            parser = new ScriptParser();
         }
 
         public string Enumeration(IEnumerable<string> parameters) {
@@ -23,7 +23,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void EnumerationParameterCall() {
             IScript script = parser.Parse("test.enumeration([\"hello\",\"world\"])");
-            Assert.AreEqual("hello;world", script.Execute());
+            Assert.AreEqual("hello;world", script.Execute(new VariableProvider(new Variable("test", this))));
         }
     }
 }

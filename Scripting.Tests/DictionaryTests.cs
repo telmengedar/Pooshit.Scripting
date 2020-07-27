@@ -111,9 +111,9 @@ namespace Scripting.Tests {
                 "  \"count\": 7,",
                 "  \"numbers\":[1,2,3]",
                 "})"
-            ), new Variable("host", this));
+            ));
 
-            Assert.DoesNotThrow(() => script.Execute());
+            Assert.DoesNotThrow(() => script.Execute(new VariableProvider(new Variable("host", this))));
         }
 
         [Test, Parallelizable]
@@ -148,7 +148,7 @@ namespace Scripting.Tests {
                 "}"
             ));
 
-            Dictionary<object,object> result = script.Execute<Dictionary<object, object>>();
+            Dictionary<object, object> result = script.Execute<Dictionary<object, object>>();
             Assert.NotNull(result);
             Assert.AreEqual(60, result["number"]);
         }
@@ -205,8 +205,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void PureDictionaryScriptPrependedByComment()
-        {
+        public void PureDictionaryScriptPrependedByComment() {
             IScript script = parser.Parse(ScriptCode.Create(
                 "/* comment */",
                 "{",
@@ -219,8 +218,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void DictionaryWithEntryComments()
-        {
+        public void DictionaryWithEntryComments() {
             IScript script = parser.Parse(ScriptCode.Create(
                 "/* comment */",
                 "{",

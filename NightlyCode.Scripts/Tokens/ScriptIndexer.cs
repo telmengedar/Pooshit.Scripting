@@ -13,8 +13,6 @@ namespace NightlyCode.Scripting.Tokens {
     /// indexer call on an object
     /// </summary>
     public class ScriptIndexer : AssignableToken, IParameterContainer {
-        readonly IScriptToken hosttoken;
-        readonly IScriptToken[] parameters;
 
         /// <summary>
         /// creates a new <see cref="ScriptIndexer"/>
@@ -22,17 +20,22 @@ namespace NightlyCode.Scripting.Tokens {
         /// <param name="hosttoken">token representing host</param>
         /// <param name="parameters">parameters for indexer call</param>
         public ScriptIndexer(IScriptToken hosttoken, IScriptToken[] parameters) {
-            this.hosttoken = hosttoken;
-            this.parameters = parameters;
+            Host = hosttoken;
+            Parameters = parameters;
         }
 
         /// <summary>
         /// host to call indexer on
         /// </summary>
-        public IScriptToken Host => hosttoken;
+        public IScriptToken Host { get; }
 
         /// <inheritdoc />
-        public IEnumerable<IScriptToken> Parameters => parameters;
+        IEnumerable<IScriptToken> IParameterContainer.Parameters => Parameters;
+
+        /// <summary>
+        /// access to parameters of indexer
+        /// </summary>
+        public IScriptToken[] Parameters { get; }
 
         /// <inheritdoc />
         public bool ParametersOptional => false;
@@ -42,25 +45,33 @@ namespace NightlyCode.Scripting.Tokens {
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
-            object host = hosttoken.Execute(context);
+            object host = Host.Execute(context);
 
-            PropertyInfo[] indexer = host.GetType().GetProperties().Where(p => p.GetIndexParameters().Length == parameters.Length).ToArray();
-            if (indexer.Length == 0) {
-                if (parameters.Length == 1)
-                {
-                    if (host is Array array)
-                        return array.GetValue(Converter.Convert<int>(parameters[0].Execute(context)));
-                    if (host is IEnumerable enumerable)
-                        return enumerable.Cast<object>().Skip(Converter.Convert<int>(parameters[0].Execute(context))).First();
+            PropertyInfo[] indexer = host.GetType().GetProperties().Where(p => {
+                ParameterInfo[] parameters = p.GetIndexParameters();
+                if(parameters.Length == 0)
+                    return false;
+
+                if(Attribute.IsDefined(parameters.Last(), typeof(ParamArrayAttribute)))
+                    return Parameters.Length >= parameters.Length - 1;
+                return parameters.Length == Parameters.Length;
+            }).ToArray();
+
+            if(indexer.Length == 0) {
+                if(Parameters.Length == 1) {
+                    if(host is Array array)
+                        return array.GetValue(Converter.Convert<int>(Parameters[0].Execute(context)));
+                    if(host is IEnumerable enumerable)
+                        return enumerable.Cast<object>().Skip(Converter.Convert<int>(Parameters[0].Execute(context))).First();
                 }
 
                 throw new ScriptRuntimeException($"No indexer methods found on {host}", this);
             }
 
-            object[] parametervalues = parameters.Select(p => p.Execute(context)).ToArray();
-            Tuple<MethodInfo, int>[] evaluated = indexer.Select(i => MethodOperations.GetMethodMatchValue(i.GetMethod, parametervalues)).Where(e=>e.Item2>=0).ToArray();
+            object[] parametervalues = Parameters.Select(p => p.Execute(context)).ToArray();
+            Tuple<MethodInfo, int>[] evaluated = indexer.Select(i => MethodOperations.GetMethodMatchValue(i.GetMethod, parametervalues)).Where(e => e.Item2 >= 0).ToArray();
 
-            if (evaluated.Length == 0)
+            if(evaluated.Length == 0)
                 throw new ScriptRuntimeException($"No index getter found on '{host.GetType().Name}' which matched the specified parameters '{string.Join(", ", parametervalues)}'", this);
 
             MethodInfo method = evaluated.OrderBy(m => m.Item2).Select(m => m.Item1).First();
@@ -69,21 +80,21 @@ namespace NightlyCode.Scripting.Tokens {
 
         /// <inheritdoc />
         protected override object AssignToken(IScriptToken token, ScriptContext context) {
-            object host = hosttoken.Execute(context);
-            if (parameters.Length == 1) {
-                if (host is Array array) {
+            object host = Host.Execute(context);
+            if(Parameters.Length == 1) {
+                if(host is Array array) {
                     object value = token.Execute(context);
-                    array.SetValue(value, Converter.Convert<int>(parameters[0].Execute(context)));
+                    array.SetValue(value, Converter.Convert<int>(Parameters[0].Execute(context)));
                     return value;
                 }
             }
 
-            PropertyInfo[] indexer = host.GetType().GetProperties().Where(p => p.GetIndexParameters().Length == parameters.Length).ToArray();
+            PropertyInfo[] indexer = host.GetType().GetProperties().Where(p => p.GetIndexParameters().Length == Parameters.Length).ToArray();
 
-            object[] parametervalues = parameters.Select(p => p.Execute(context)).Concat(new[] {token.Execute(context)}).ToArray();
-            Tuple<MethodInfo, int>[] evaluated = indexer.Select(i => MethodOperations.GetMethodMatchValue(i.SetMethod, parametervalues)).Where(e=>e.Item2>=0).OrderBy(m=>m.Item2).ToArray();
+            object[] parametervalues = Parameters.Select(p => p.Execute(context)).Concat(new[] { token.Execute(context) }).ToArray();
+            Tuple<MethodInfo, int>[] evaluated = indexer.Select(i => MethodOperations.GetMethodMatchValue(i.SetMethod, parametervalues)).Where(e => e.Item2 >= 0).OrderBy(m => m.Item2).ToArray();
 
-            if (evaluated.Length == 0)
+            if(evaluated.Length == 0)
                 throw new ScriptRuntimeException($"No index setter found on '{host.GetType().Name}' which matched the specified parameters '{string.Join(", ", parametervalues)}'", this);
 
             return MethodOperations.CallMethod(this, host, evaluated[0].Item1, parametervalues, context);
@@ -91,7 +102,7 @@ namespace NightlyCode.Scripting.Tokens {
 
         /// <inheritdoc />
         public override string ToString() {
-            return $"{hosttoken}[{string.Join<IScriptToken>(", ", parameters)}]";
+            return $"{Host}[{string.Join<IScriptToken>(", ", Parameters)}]";
         }
     }
 }

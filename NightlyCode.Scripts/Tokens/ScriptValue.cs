@@ -6,34 +6,33 @@ namespace NightlyCode.Scripting.Tokens {
     /// value in a script command
     /// </summary>
     public class ScriptValue : ScriptToken {
-        readonly object value;
 
         /// <summary>
         /// creates a new <see cref="ScriptParser"/>
         /// </summary>
         /// <param name="value">value</param>
-        internal ScriptValue(object value) {
-            this.value = value;
+        public ScriptValue(object value) {
+            Value = value;
         }
 
         /// <summary>
         /// contained value
         /// </summary>
-        public object Value => value;
+        public object Value { get; }
 
         /// <inheritdoc />
         public override string Literal => "value";
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
-            return value;
+            return Value;
         }
 
         /// <inheritdoc />
         public override string ToString() {
-            if (value is string)
-                return $"\"{value}\"";
-            return value?.ToString() ?? "null";
+            if(Value is string)
+                return $"\"{Value}\"";
+            return Value?.ToString() ?? "null";
         }
     }
 }

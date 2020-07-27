@@ -7,8 +7,8 @@ namespace NightlyCode.Scripting.Visitors {
     /// extracts parameters from a script which are not provided by the script itself
     /// </summary>
     public class ParameterExtractor : ScriptVisitor {
-        readonly HashSet<string> existing=new HashSet<string>();
-        readonly HashSet<ParameterInfo> parameters=new HashSet<ParameterInfo>();
+        readonly HashSet<string> existing = new HashSet<string>();
+        readonly HashSet<ParameterInfo> parameters = new HashSet<ParameterInfo>();
 
         /// <summary>
         /// detected parameters
@@ -24,22 +24,10 @@ namespace NightlyCode.Scripting.Visitors {
 
         /// <inheritdoc />
         public override void VisitScriptParameter(ScriptParameter parameter) {
-            if (existing.Contains(parameter.Variable.Name))
+            if(existing.Contains(parameter.Variable.Name))
                 return;
             parameters.Add(new ParameterInfo(parameter.Variable.Name, parameter.DefaultValue != null));
             existing.Add(parameter.Variable.Name);
-        }
-
-        /// <inheritdoc />
-        public override void VisitVariable(ScriptVariable variable) {
-            base.VisitVariable(variable);
-            if (existing.Contains(variable.Name))
-                return;
-
-            if (!variable.IsResolved) {
-                parameters.Add(new ParameterInfo(variable.Name, false));
-                existing.Add(variable.Name);
-            }
         }
     }
 }

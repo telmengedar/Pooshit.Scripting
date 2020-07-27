@@ -16,32 +16,28 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void Subtraction()
-        {
+        public void Subtraction() {
             Assert.AreEqual(-1, parser.Parse("3-4").Execute());
         }
 
         [Test, Parallelizable]
-        public void Division()
-        {
+        public void Division() {
             Assert.AreEqual(3, parser.Parse("12/4").Execute());
         }
 
         [Test, Parallelizable]
-        public void Multiplication()
-        {
+        public void Multiplication() {
             Assert.AreEqual(12, parser.Parse("3*4").Execute());
         }
 
         [Test, Parallelizable]
-        public void Modulo()
-        {
+        public void Modulo() {
             Assert.AreEqual(1, parser.Parse("5%4").Execute());
         }
 
         [Test, Parallelizable]
         public void OperatorPriority() {
-            Assert.AreEqual(5+12-3*2+6/8%5, parser.Parse("5+12-3*2+6/8%5").Execute());
+            Assert.AreEqual(5 + 12 - 3 * 2 + 6 / 8 % 5, parser.Parse("5+12-3*2+6/8%5").Execute());
         }
 
         [Test, Parallelizable]
@@ -50,8 +46,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void OperationWithPostAndPrecrements()
-        {
+        public void OperationWithPostAndPrecrements() {
             IScript script = parser.Parse(
                 "$value=5\n" +
                 "++$value+$value++ + --$value+$value--\n"
@@ -71,8 +66,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void SubAssign()
-        {
+        public void SubAssign() {
             IScript script = parser.Parse(
                 "$value=5\n" +
                 "$value-=3\n" +
@@ -82,8 +76,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void MulAssign()
-        {
+        public void MulAssign() {
             IScript script = parser.Parse(
                 "$value=5\n" +
                 "$value*=3\n" +
@@ -93,8 +86,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void DivAssign()
-        {
+        public void DivAssign() {
             IScript script = parser.Parse(
                 "$value=10\n" +
                 "$value/=2\n" +
@@ -104,8 +96,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void ModAssign()
-        {
+        public void ModAssign() {
             IScript script = parser.Parse(
                 "$value=10\n" +
                 "$value%=8\n" +
@@ -115,8 +106,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void ShlAssign()
-        {
+        public void ShlAssign() {
             IScript script = parser.Parse(
                 "$value=10\n" +
                 "$value<<=2\n" +
@@ -126,8 +116,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void ShrAssign()
-        {
+        public void ShrAssign() {
             IScript script = parser.Parse(
                 "$value=10\n" +
                 "$value>>=1\n" +
@@ -137,8 +126,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void AndAssign()
-        {
+        public void AndAssign() {
             IScript script = parser.Parse(
                 "$value=10\n" +
                 "$value&=2\n" +
@@ -148,8 +136,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void OrAssign()
-        {
+        public void OrAssign() {
             IScript script = parser.Parse(
                 "$value=10\n" +
                 "$value|=7\n" +
@@ -159,14 +146,13 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void XorAssign()
-        {
+        public void XorAssign() {
             IScript script = parser.Parse(
                 "$value=10\n" +
                 "$value^=80\n" +
                 "$value"
             );
-            Assert.AreEqual(10^80, script.Execute());
+            Assert.AreEqual(10 ^ 80, script.Execute());
         }
 
         [Test, Parallelizable]
@@ -179,10 +165,8 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void AddTimespanToDatetime() {
-            IScript script = parser.Parse(
-                "$date+$time", new Variable("date", DateTime.Now), new Variable("time", TimeSpan.FromHours(1.0))
-            );
-            Assert.DoesNotThrow(()=>script.Execute());
+            IScript script = parser.Parse("$date+$time");
+            Assert.DoesNotThrow(() => script.Execute(new VariableProvider(new Variable("date", DateTime.Now), new Variable("time", TimeSpan.FromHours(1.0)))));
         }
     }
 }

@@ -29,13 +29,14 @@ namespace NightlyCode.Scripting.Providers {
         /// <param name="arguments">arguments for lamda</param>
         /// <returns>execution result</returns>
         public object Invoke(params object[] arguments) {
-            if (parameters.Length != arguments.Length)
+            if(parameters.Length != arguments.Length)
                 throw new ScriptRuntimeException($"Argument count doesn't match up parameter count:\n{string.Join(", ", parameters)}", expression);
 
-            for (int i = 0; i < parameters.Length; ++i)
-                context.Variables.SetVariable(parameters[i], arguments[i]);
+            ScriptContext lambdacontext = new ScriptContext(context);
+            for(int i = 0; i < parameters.Length; ++i)
+                lambdacontext.Arguments[parameters[i]] = arguments[i];
 
-            return expression.Execute(context);
+            return expression.Execute(lambdacontext);
         }
     }
 }

@@ -16,7 +16,6 @@ namespace Scripting.Tests {
         [OneTimeSetUp]
         public void Setup() {
             parser.Types.AddType<ComplexType>("ComplexType");
-            parser.GlobalVariables["type"] = new TypeHost(parser.Types);
         }
 
         [Test, Parallelizable]
@@ -32,13 +31,13 @@ namespace Scripting.Tests {
                 "})"
             ));
 
-            ComplexType result = script.Execute() as ComplexType;
+            ComplexType result = script.Execute(new VariableProvider(new Variable("type", new TypeHost(parser.Types)))) as ComplexType;
             Assert.NotNull(result);
             Assert.AreEqual("Name", result.Parameter.Name);
             Assert.AreEqual("Test", result.Parameter.Value);
             Assert.AreEqual(23, result.Count);
             Assert.NotNull(result.Numbers);
-            Assert.That(new[] {1, 4, 9, 14}.SequenceEqual(result.Numbers));
+            Assert.That(new[] { 1, 4, 9, 14 }.SequenceEqual(result.Numbers));
         }
     }
 }

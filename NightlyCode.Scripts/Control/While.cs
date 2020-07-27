@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using NightlyCode.Scripting.Extensions;
-using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
@@ -24,24 +23,22 @@ namespace NightlyCode.Scripting.Control {
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
-            ScriptContext loopcontext = new ScriptContext(new VariableContext(context.Variables), context.Arguments, context.CancellationToken);
-            while (condition.Execute(loopcontext).ToBoolean()) {
+            ScriptContext loopcontext = new ScriptContext(context);
+            while(condition.Execute(loopcontext).ToBoolean()) {
                 loopcontext.CancellationToken.ThrowIfCancellationRequested();
 
-                object value=Body.Execute(loopcontext);
-                if (value is Return)
+                object value = Body.Execute(loopcontext);
+                if(value is Return)
                     return value;
-                if (value is Break breaktoken)
-                {
+                if(value is Break breaktoken) {
                     int depth = breaktoken.Depth.Execute<int>(loopcontext);
-                    if (depth <= 1)
+                    if(depth <= 1)
                         return null;
                     return new Break(new ScriptValue(depth - 1));
                 }
-                if (value is Continue continuetoken)
-                {
+                if(value is Continue continuetoken) {
                     int depth = continuetoken.Depth.Execute<int>(loopcontext);
-                    if (depth <= 1)
+                    if(depth <= 1)
                         continue;
 
                     return new Continue(new ScriptValue(depth - 1));

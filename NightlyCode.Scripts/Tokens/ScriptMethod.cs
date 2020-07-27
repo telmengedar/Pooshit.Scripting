@@ -12,7 +12,6 @@ namespace NightlyCode.Scripting.Tokens {
     /// </summary>
     public class ScriptMethod : ScriptToken, IParameterContainer {
         readonly IMethodResolver resolver;
-        readonly IScriptToken[] parameters;
 
         /// <summary>
         /// creates a new <see cref="ScriptMethod"/>
@@ -24,14 +23,14 @@ namespace NightlyCode.Scripting.Tokens {
         public ScriptMethod(IMethodResolver resolver, IScriptToken hosttoken, string methodname, IScriptToken[] parameters) {
             Host = hosttoken;
             MethodName = methodname.ToLower();
-            this.parameters = parameters;
+            this.Parameters = parameters;
             this.resolver = resolver;
         }
 
         /// <summary>
         /// host to call method on
         /// </summary>
-        public IScriptToken Host {get; }
+        public IScriptToken Host { get; }
 
         /// <summary>
         /// name of method to call
@@ -39,7 +38,12 @@ namespace NightlyCode.Scripting.Tokens {
         public string MethodName { get; }
 
         /// <inheritdoc />
-        public IEnumerable<IScriptToken> Parameters => parameters;
+        IEnumerable<IScriptToken> IParameterContainer.Parameters => Parameters;
+
+        /// <summary>
+        /// direct access to parameters for this method call
+        /// </summary>
+        public IScriptToken[] Parameters { get; }
 
         /// <inheritdoc />
         public bool ParametersOptional => false;
@@ -50,23 +54,23 @@ namespace NightlyCode.Scripting.Tokens {
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
             object host = Host.Execute(context);
-            if (host == null)
+            if(host == null)
                 throw new ScriptRuntimeException($"'{Host}' results in null", this);
 
-            if (host is IExternalMethod externmethod && MethodName.ToLower() == "invoke") {
+            if(host is IExternalMethod externmethod && MethodName.ToLower() == "invoke") {
                 try {
                     return externmethod.Invoke(context.Arguments, Parameters.Select(a => a.Execute(context)).ToArray());
                 }
-                catch (Exception e) {
+                catch(Exception e) {
                     throw new ScriptRuntimeException($"Error calling external method '{externmethod}'", this, e);
                 }
             }
 
-            object[] parametervalues = parameters.Select(p => p.Execute(context)).ToArray();
+            object[] parametervalues = Parameters.Select(p => p.Execute(context)).ToArray();
 
-            List<ReferenceParameter> references=new List<ReferenceParameter>();
-            for (int i = 0; i < parameters.Length; ++i) {
-                if (!(parameters[i] is Reference r))
+            List<ReferenceParameter> references = new List<ReferenceParameter>();
+            for(int i = 0; i < Parameters.Length; ++i) {
+                if(!(Parameters[i] is Reference r))
                     continue;
                 references.Add(new ReferenceParameter(i, r));
             }
@@ -75,17 +79,17 @@ namespace NightlyCode.Scripting.Tokens {
                 IResolvedMethod method = resolver.Resolve(host, MethodName, parametervalues, references.ToArray());
                 return method.Call(this, host, parametervalues, context);
             }
-            catch (ScriptRuntimeException e) {
+            catch(ScriptRuntimeException e) {
                 throw new ScriptRuntimeException(e.Message, this, e.InnerException);
             }
-            catch (Exception e) {
+            catch(Exception e) {
                 throw new ScriptRuntimeException($"Unable to call {host.GetType().Name}.{MethodName}({string.Join(", ", parametervalues)})", this, e);
             }
         }
 
         /// <inheritdoc />
         public override string ToString() {
-            return $"{Host}.{MethodName}({string.Join(",", parameters.Select(p => p.ToString()))})";
+            return $"{Host}.{MethodName}({string.Join(",", Parameters.Select(p => p.ToString()))})";
         }
     }
 }

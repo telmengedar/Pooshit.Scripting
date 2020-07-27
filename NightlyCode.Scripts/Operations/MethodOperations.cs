@@ -310,7 +310,24 @@ namespace NightlyCode.Scripting.Operations {
             }
             else if (targettype == typeof(string))
                 return Convert.ToString(value, CultureInfo.InvariantCulture);
-            else return Converter.Convert(value, targettype);
+            else {
+                MethodInfo implicitcast = targettype.GetMethods(BindingFlags.Public | BindingFlags.Static)
+                    .Where(m => {
+                        if (m.Name != "op_Implicit" || m.ReturnType != targettype)
+                            return false;
+
+                        ParameterInfo[] parameters = m.GetParameters();
+                        if (parameters.Length != 1)
+                            return false;
+
+                        return parameters[0].ParameterType == value.GetType();
+                    }).FirstOrDefault();
+
+                if (implicitcast != null)
+                    return implicitcast.Invoke(null, new[] {value});
+                    
+                return Converter.Convert(value, targettype);
+            }
 
             return null;
         }

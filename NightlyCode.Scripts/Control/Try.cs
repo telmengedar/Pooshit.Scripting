@@ -1,6 +1,4 @@
 ﻿using System;
-using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
@@ -21,10 +19,11 @@ namespace NightlyCode.Scripting.Control {
             try {
                 return Body.Execute(context);
             }
-            catch (Exception e) {
-                if (Catch != null) {
-                    VariableProvider handlerarguments = new VariableProvider(context.Arguments, new Variable("exception", e));
-                    return Catch?.Execute(new ScriptContext(context.Variables, handlerarguments, context.CancellationToken));
+            catch(Exception e) {
+                if(Catch != null) {
+                    ScriptContext catchcontext = new ScriptContext(context);
+                    catchcontext.Arguments["exception"] = e;
+                    return Catch?.Execute(catchcontext);
                 }
             }
 
@@ -40,9 +39,8 @@ namespace NightlyCode.Scripting.Control {
         public Catch Catch { get; internal set; }
 
         /// <inheritdoc />
-        public override string ToString()
-        {
-            if (Catch != null)
+        public override string ToString() {
+            if(Catch != null)
                 return $"try {Body} {Catch}";
             return $"try {Body}";
         }

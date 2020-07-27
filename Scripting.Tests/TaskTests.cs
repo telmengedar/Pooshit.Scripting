@@ -11,7 +11,7 @@ namespace Scripting.Tests {
 
     [TestFixture, Parallelizable]
     public class TaskTests {
-        readonly IScriptParser parser = new ScriptParser(new Variable("task", new TaskHost()));
+        readonly IScriptParser parser = new ScriptParser();
 
         public Task TaskMethod() {
             return Task.Run(() => throw new Exception("Bullshit"));
@@ -26,9 +26,9 @@ namespace Scripting.Tests {
                 "$result"
             ));
 
-            Assert.AreEqual(5, script.Execute());
+            Assert.AreEqual(5, script.Execute(new VariableProvider(new Variable("task", new TaskHost()))));
         }
-        
+
         [Test, Parallelizable]
         public void ExecuteMultipleTasksInParallel() {
 
@@ -44,7 +44,7 @@ namespace Scripting.Tests {
                 "task.waitall($tasks.toarray())",
                 "$result"
             ));
-            int result = script.Execute<int>();
+            int result = script.Execute<int>(new VariableProvider(new Variable("task", new TaskHost())));
             Assert.Less(100, result);
         }
 
@@ -56,7 +56,7 @@ namespace Scripting.Tests {
                 "})",
                 "await($t)"
             ));
-            int result = script.Execute<int>();
+            int result = script.Execute<int>(new VariableProvider(new Variable("task", new TaskHost())));
             Assert.AreEqual(11, result);
         }
 
@@ -69,22 +69,22 @@ namespace Scripting.Tests {
                 "$result=await($t)"
             ));
             try {
-                script.Execute();
+                script.Execute(new VariableProvider(new Variable("task", new TaskHost())));
                 Assert.Fail("No Exception was thrown");
             }
-            catch (Exception e) {
+            catch(Exception e) {
                 Assert.AreEqual("Bullshit", e.Message);
             }
         }
 
         [Test, Parallelizable]
         public void AwaitMethodGetsInnerException() {
-            IScript script = parser.Parse("$result=await(this.taskmethod())", new Variable("this", this));
+            IScript script = parser.Parse("$result=await(this.taskmethod())");
             try {
-                script.Execute();
+                script.Execute(new VariableProvider(new Variable("this", this)));
                 Assert.Fail("No Exception was thrown");
             }
-            catch (Exception e) {
+            catch(Exception e) {
                 Assert.AreEqual("Unable to execute 'await($this.taskmethod())'\nBullshit", e.Message);
             }
         }

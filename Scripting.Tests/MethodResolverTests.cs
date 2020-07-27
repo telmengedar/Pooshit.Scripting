@@ -21,16 +21,16 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void CachingMethodsHasSomeEffect() {
-            IScriptParser parser = new ScriptParser(new Variable("host", this));
-            ((MethodResolver) ((ScriptParser) parser).MethodCallResolver).EnableCaching = false;
+            IScriptParser parser = new ScriptParser();
+            ((MethodResolver)((ScriptParser)parser).MethodCallResolver).EnableCaching = false;
             IScript script1 = parser.Parse("$host.someweirdmethod(122,111,null,\"weird\")");
             IScript script2 = parser.Parse("$host.someweirdmethod(\"weird\",null,\"2019-10-02\",\"2019-10-03\")");
             TimeSpan expected = new TimeSpan(1, 0, 0, 0);
 
             DateTime start = DateTime.Now;
-            for (int i = 0; i < 1024; ++i) {
-                Assert.AreEqual(233, script1.Execute());
-                Assert.AreEqual(expected, script2.Execute());
+            for(int i = 0; i < 1024; ++i) {
+                Assert.AreEqual(233, script1.Execute(new VariableProvider(new Variable("host", this))));
+                Assert.AreEqual(expected, script2.Execute(new VariableProvider(new Variable("host", this))));
             }
             TimeSpan withoutcache = DateTime.Now - start;
             Console.WriteLine($"Without cache: {withoutcache}");
@@ -38,10 +38,9 @@ namespace Scripting.Tests {
             ((MethodResolver)((ScriptParser)parser).MethodCallResolver).EnableCaching = true;
 
             start = DateTime.Now;
-            for (int i = 0; i < 1024; ++i)
-            {
-                Assert.AreEqual(233, script1.Execute());
-                Assert.AreEqual(expected, script2.Execute());
+            for(int i = 0; i < 1024; ++i) {
+                Assert.AreEqual(233, script1.Execute(new VariableProvider(new Variable("host", this))));
+                Assert.AreEqual(expected, script2.Execute(new VariableProvider(new Variable("host", this))));
             }
             TimeSpan withcache = DateTime.Now - start;
             Console.WriteLine($"With cache: {withcache}");
@@ -51,15 +50,14 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void CachingConstructorsHasSomeEffect()
-        {
+        public void CachingConstructorsHasSomeEffect() {
             IScriptParser parser = new ScriptParser();
             parser.Types.AddType<ComplexType>();
             ((MethodResolver)((ScriptParser)parser).MethodCallResolver).EnableCaching = false;
             IScript script = parser.Parse("$value=new complextype({\"name\":\"name\",\"value\":\"3\"}, 7)");
 
             DateTime start = DateTime.Now;
-            for (int i = 0; i < 1024; ++i) {
+            for(int i = 0; i < 1024; ++i) {
                 script.Execute();
             }
             TimeSpan withoutcache = DateTime.Now - start;
@@ -68,8 +66,7 @@ namespace Scripting.Tests {
             ((MethodResolver)((ScriptParser)parser).MethodCallResolver).EnableCaching = true;
 
             start = DateTime.Now;
-            for (int i = 0; i < 1024; ++i)
-            {
+            for(int i = 0; i < 1024; ++i) {
                 script.Execute();
             }
             TimeSpan withcache = DateTime.Now - start;

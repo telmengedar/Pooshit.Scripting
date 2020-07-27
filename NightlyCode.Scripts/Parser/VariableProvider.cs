@@ -8,25 +8,32 @@ namespace NightlyCode.Scripting.Parser {
     /// <summary>
     /// basic implementation of a variable provider used if no custom provider is specified
     /// </summary>
-    class VariableProvider : IVariableProvider {
-        readonly Dictionary<string, object> values = new Dictionary<string, object>();
+    public class VariableProvider : IVariableProvider {
         readonly IVariableProvider parentprovider;
+
+        /// <summary>
+        /// creates a new <see cref="VariableProvider"/>
+        /// </summary>
+        /// <param name="variables">variables to provide</param>
+        public VariableProvider(params Variable[] variables)
+        : this(null, variables) {
+        }
 
         /// <summary>
         /// creates a new <see cref="VariableProvider"/>
         /// </summary>
         /// <param name="parentprovider">parent variable scope</param>
         /// <param name="variables">variables to provide</param>
-        public VariableProvider(IVariableProvider parentprovider = null, params Variable[] variables) {
+        public VariableProvider(IVariableProvider parentprovider, params Variable[] variables) {
             this.parentprovider = parentprovider;
-            foreach (Variable variable in variables)
-                values[variable.Name] = variable.Value;
+            foreach(Variable variable in variables)
+                Values[variable.Name] = variable.Value;
         }
 
         /// <inheritdoc />
         public object this[string name] {
             get => GetVariable(name);
-            set => values[name] = value;
+            set => Values[name] = value;
         }
 
         /// <summary>
@@ -35,25 +42,30 @@ namespace NightlyCode.Scripting.Parser {
         /// <param name="name">name of variable</param>
         /// <param name="value">value to write</param>
         internal void ReplaceVariable(string name, object value) {
-            values[name] = value;
+            Values[name] = value;
         }
 
         /// <summary>
         /// access to value lookup
         /// </summary>
-        protected Dictionary<string, object> Values => values;
+        protected Dictionary<string, object> Values { get; } = new Dictionary<string, object>();
 
         /// <inheritdoc />
         public object GetVariable(string name) {
-            if (!ContainsVariable(name))
+            if(!ContainsVariable(name))
                 throw new ScriptRuntimeException($"Variable {name} not found", null);
 
-            return values[name];
+            return Values[name];
         }
 
         /// <inheritdoc />
         public bool ContainsVariable(string name) {
-            return values.ContainsKey(name);
+            return Values.ContainsKey(name);
+        }
+
+        /// <inheritdoc />
+        public bool ContainsVariableInHierarchy(string name) {
+            return Values.ContainsKey(name) || (parentprovider?.ContainsVariable(name) ?? false);
         }
 
         /// <summary>
@@ -62,7 +74,7 @@ namespace NightlyCode.Scripting.Parser {
         /// <param name="variable">name of variable to check for</param>
         /// <returns>this if this provider contains this variable, null otherwise</returns>
         public IVariableProvider GetProvider(string variable) {
-            if (ContainsVariable(variable))
+            if(ContainsVariable(variable))
                 return this;
             return parentprovider?.GetProvider(variable);
         }
@@ -70,9 +82,9 @@ namespace NightlyCode.Scripting.Parser {
         /// <inheritdoc />
         public IEnumerable<string> Variables {
             get {
-                if (parentprovider != null)
-                    return values.Keys.Concat(parentprovider.Variables);
-                return values.Keys;
+                if(parentprovider != null)
+                    return Values.Keys.Concat(parentprovider.Variables);
+                return Values.Keys;
             }
         }
     }

@@ -1,5 +1,4 @@
-﻿using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Parser;
+﻿using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
 
 namespace Scripting.Tests {
@@ -9,7 +8,7 @@ namespace Scripting.Tests {
         readonly IScriptParser parser;
 
         public HostVariableTests() {
-            parser = new ScriptParser(new Variable("host", this));
+            parser = new ScriptParser();
         }
 
         [Test, Parallelizable]

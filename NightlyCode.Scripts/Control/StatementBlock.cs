@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
@@ -16,7 +15,7 @@ namespace NightlyCode.Scripting.Control {
         /// </summary>
         /// <param name="statements">statements in block</param>
         /// <param name="methodblock">determines whether this is the main block of a method</param>
-        internal StatementBlock(IScriptToken[] statements, bool methodblock=false) {
+        internal StatementBlock(IScriptToken[] statements, bool methodblock = false) {
             this.statements = statements;
             MethodBlock = methodblock;
         }
@@ -37,45 +36,43 @@ namespace NightlyCode.Scripting.Control {
             try {
                 return ExecuteBlock(context);
             }
-            catch (OperationCanceledException) {
+            catch(OperationCanceledException) {
                 throw;
             }
-            catch (ScriptException) {
+            catch(ScriptException) {
                 throw;
             }
-            catch (Exception e) {
+            catch(Exception e) {
                 throw new ScriptRuntimeException(e.Message, this, e);
             }
         }
 
         object ExecuteBlock(ScriptContext context) {
-            ScriptContext blockcontext = new ScriptContext(new VariableContext(context.Variables), context.Arguments, context.CancellationToken);
+            ScriptContext blockcontext = new ScriptContext(context);
             object result = null;
-            foreach (IScriptToken statement in statements)
-            {
+            foreach(IScriptToken statement in statements) {
                 blockcontext.CancellationToken.ThrowIfCancellationRequested();
 
                 try {
                     result = statement.Execute(blockcontext);
                 }
-                catch (OperationCanceledException) {
+                catch(OperationCanceledException) {
                     throw;
                 }
-                catch (ScriptException) {
+                catch(ScriptException) {
                     throw;
                 }
-                catch (Exception e) {
+                catch(Exception e) {
                     throw new ScriptRuntimeException($"Unable to execute '{statement}': {e.Message}", this, e);
                 }
 
-                if (result is Return @return)
-                {
-                    if (MethodBlock)
+                if(result is Return @return) {
+                    if(MethodBlock)
                         return @return.Value?.Execute(blockcontext);
                     return @return;
                 }
 
-                if (result is Break || result is Continue)
+                if(result is Break || result is Continue)
                     return result;
 
             }
@@ -92,7 +89,7 @@ namespace NightlyCode.Scripting.Control {
         public int LineNumber { get; internal set; }
 
         /// <inheritdoc />
-        public int TextIndex { get; internal set;}
+        public int TextIndex { get; internal set; }
 
         /// <inheritdoc />
         public int TokenLength { get; internal set; }

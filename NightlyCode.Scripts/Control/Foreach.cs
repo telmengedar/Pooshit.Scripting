@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 using NightlyCode.Scripting.Extensions;
 
@@ -40,34 +39,35 @@ namespace NightlyCode.Scripting.Control {
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
-            ScriptContext loopcontext=new ScriptContext(new VariableContext(context.Variables), context.Arguments, context.CancellationToken);
+            ScriptContext loopcontext = new ScriptContext(context);
 
             object collectionvalue = collection.Execute(loopcontext);
-            if (collectionvalue is IEnumerable enumeration) {
-                foreach (object value in enumeration.Cast<object>()) {
+            if(collectionvalue is IEnumerable enumeration) {
+                foreach(object value in enumeration.Cast<object>()) {
                     context.CancellationToken.ThrowIfCancellationRequested();
 
                     variable.Assign(new ScriptValue(value), loopcontext);
                     object bodyvalue = Body?.Execute(loopcontext);
-                    if (bodyvalue is Return)
+                    if(bodyvalue is Return)
                         return bodyvalue;
-                    if (bodyvalue is Break breaktoken) {
+                    if(bodyvalue is Break breaktoken) {
                         int depth = breaktoken.Depth.Execute<int>(loopcontext);
-                        if (depth <= 1)
+                        if(depth <= 1)
                             return null;
                         return new Break(new ScriptValue(depth - 1));
                     }
 
-                    if (value is Continue continuetoken) {
+                    if(value is Continue continuetoken) {
                         int depth = continuetoken.Depth.Execute<int>(loopcontext);
-                        if (depth <= 1)
+                        if(depth <= 1)
                             continue;
 
                         return new Continue(new ScriptValue(depth - 1));
                     }
                 }
             }
-            else throw new ScriptRuntimeException("Foreach value is not a collection", collection);
+            else
+                throw new ScriptRuntimeException("Foreach value is not a collection", collection);
 
             return null;
         }

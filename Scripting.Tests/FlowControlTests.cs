@@ -31,7 +31,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void TestFor() {
             IScript script = parser.Parse(
-                "$result=0;"+
+                "$result=0;" +
                 "for($i=0,$i<10,++$i)" +
                 "  $result=$result+$i*10;" +
                 "$result"
@@ -58,13 +58,12 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void ForWithCommentBeforeBody()
-        {
+        public void ForWithCommentBeforeBody() {
             IScript script = parser.Parse(
                 "$result=0\n" +
                 "for($i=0,$i<10,++$i)\n" +
-                "  // increment result\n"+
-                "  ++$result\n"+
+                "  // increment result\n" +
+                "  ++$result\n" +
                 "$result"
             );
             Assert.AreEqual(10, script.Execute());
@@ -93,59 +92,6 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void TestSwitch() {
-            IScript script = parser.Parse(
-                "$condition=7;" +
-                "switch($condition)" +
-                "case(2)" +
-                "  $result=0;" +
-                "case(7)" +
-                "  $result=9;" +
-                "case(11)" +
-                "  $result=2;" +
-                "$result"
-            );
-
-            Assert.AreEqual(9, script.Execute());
-        }
-
-        [Test, Parallelizable]
-        public void SwitchWithDefault()
-        {
-            IScript script = parser.Parse(
-                "$condition=3;" +
-                "switch($condition)" +
-                "case(2)" +
-                "  $result=0;" +
-                "case(7)" +
-                "  $result=9;" +
-                "case(11)" +
-                "  $result=2;" +
-                "default"+
-                "  $result=200;"+
-                "$result"
-            );
-
-            Assert.AreEqual(200, script.Execute());
-        }
-
-        [Test, Parallelizable]
-        public void SwitchMultipleCaseCondition()
-        {
-            IScript script = parser.Parse(
-                "$condition=11;" +
-                "switch($condition)" +
-                "case(2,7,11)" +
-                "  $result=32;" +
-                "default" +
-                "  $result=200;" +
-                "$result"
-            );
-
-            Assert.AreEqual(32, script.Execute());
-        }
-
-        [Test, Parallelizable]
         public void IfWithStatementBlockTrue() {
             IScript script = parser.Parse(
                 "$result=0;" +
@@ -159,8 +105,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void IfWithStatementBlockFalse()
-        {
+        public void IfWithStatementBlockFalse() {
             IScript script = parser.Parse(
                 "$result=0;" +
                 "if(false) {" +
@@ -187,24 +132,23 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void WhileWithNestedIf() {
-            IScript script= parser.Parse(
-                "$result=0;"+
-                "while($result<100) {"+
-                "  if($result&1==1) {"+
-                "    $result=$result<<1;"+
-                "  }"+
-                "  else {"+
-                "    $result=$result+3;"+
-                "  }"+
-                "}"+
+            IScript script = parser.Parse(
+                "$result=0;" +
+                "while($result<100) {" +
+                "  if($result&1==1) {" +
+                "    $result=$result<<1;" +
+                "  }" +
+                "  else {" +
+                "    $result=$result+3;" +
+                "  }" +
+                "}" +
                 "$result;"
             );
             Assert.AreEqual(186, script.Execute());
         }
 
         [Test, Parallelizable]
-        public void WhileWithNestedIfWithoutTerminators()
-        {
+        public void WhileWithNestedIfWithoutTerminators() {
             IScript script = parser.Parse(
                 "$result=0\n" +
                 "while($result<100) {" +
@@ -233,8 +177,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void ReturnVoid()
-        {
+        public void ReturnVoid() {
             IScript script = parser.Parse(
                 "$result=0\n" +
                 "$result=15\n" +
@@ -246,15 +189,14 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void ReturnInInnerBlock()
-        {
+        public void ReturnInInnerBlock() {
             IScript script = parser.Parse(
                 "$result=0;" +
                 "foreach($i,[1,2,3,4,5,6,7,8,9]) {" +
-                "  if($result>=10)"+
-                "    return($result)\n"+
+                "  if($result>=10)" +
+                "    return($result)\n" +
                 "  $result=$result+$i;" +
-                "}"+
+                "}" +
                 "$result"
             );
             Assert.AreEqual(10, script.Execute());
@@ -317,10 +259,10 @@ namespace Scripting.Tests {
             IScript script = parser.Parse(
                 "$result=0;" +
                 "for($i=0,$i<64,++$i) {" +
-                "  if($i==10)"+
-                "    break;"+
+                "  if($i==10)" +
+                "    break;" +
                 "  $result=$i;" +
-                "}"+
+                "}" +
                 "$result;"
             );
             Assert.AreEqual(9, script.Execute());
@@ -329,11 +271,11 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void ContinueFor() {
             IScript script = parser.Parse(
-                "$result=0\n"+
-                "for($i=0,$i<10,++$i) {"+
-                "  if($i&1==1) continue\n"+
-                "  $result+=$i\n"+
-                "}"+
+                "$result=0\n" +
+                "for($i=0,$i<10,++$i) {" +
+                "  if($i&1==1) continue\n" +
+                "  $result+=$i\n" +
+                "}" +
                 "$result"
             );
             Assert.AreEqual(20, script.Execute());
@@ -344,11 +286,11 @@ namespace Scripting.Tests {
             IScript script = parser.Parse(
                 "$result=0\n" +
                 "for($i=0,$i<4,++$i) {" +
-                "  for($k=0,$k<4,++$k) {"+
+                "  for($k=0,$k<4,++$k) {" +
                 "    if($i&1==1 && $k>2) continue(2)\n" +
                 "    $result+=$k\n" +
-                "  }"+
-                "  ++$result\n"+
+                "  }" +
+                "  ++$result\n" +
                 "}" +
                 "$result"
             );
@@ -363,7 +305,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void IfWithPendingStatements() {
-            Assert.DoesNotThrow(()=>parser.Parse("$i=0\nif($i) {\n$i++\n}"));
+            Assert.DoesNotThrow(() => parser.Parse("$i=0\nif($i) {\n$i++\n}"));
         }
 
     }

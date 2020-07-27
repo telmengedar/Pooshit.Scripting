@@ -13,7 +13,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void DictionaryAccess() {
-            IScriptParser parser = new ScriptParser(new Variable("dic", new Dictionary<string, string[]>()));
+            IScriptParser parser = new ScriptParser();
             IScript script = parser.Parse(
                 "$k=\"key\"\n" +
                 "dic[\"key\"]=[\"value1\",\"value2\",\"value3\"]\n" +
@@ -23,7 +23,7 @@ namespace Scripting.Tests {
                 "$result"
             );
 
-            Assert.AreEqual("value1,value2,value3,", script.Execute());
+            Assert.AreEqual("value1,value2,value3,", script.Execute(new VariableProvider(new Variable("dic", new Dictionary<string, string[]>()))));
         }
 
         [Test, Parallelizable]
@@ -55,7 +55,7 @@ namespace Scripting.Tests {
                 "$firstelement"
             ));
 
-            Assert.AreEqual(5, script.Execute(new Variable("input", new[] {5, 9, 1})));
+            Assert.AreEqual(5, script.Execute(new VariableProvider(new Variable("input", new[] { 5, 9, 1 }))));
         }
 
         [Test, Parallelizable]
@@ -70,7 +70,7 @@ namespace Scripting.Tests {
                 "$firstelement"
             ));
 
-            Assert.AreEqual(1, script.Execute(new Variable("input", new[] {5, 9, 1})));
+            Assert.AreEqual(1, script.Execute(new VariableProvider(new Variable("input", new[] { 5, 9, 1 }))));
         }
 
     }

@@ -22,7 +22,7 @@ namespace Scripting.Tests {
 
             CancellationTokenSource tokensource = new CancellationTokenSource();
 
-            Task execution = script.ExecuteAsync(tokensource.Token);
+            Task execution = script.ExecuteAsync(null, tokensource.Token);
 
             tokensource.CancelAfter(1000);
 
@@ -46,7 +46,7 @@ namespace Scripting.Tests {
                 "}"
             ));
 
-            Assert.AreEqual(42, script.Execute(new Variable("log", 42)));
+            Assert.AreEqual(42, script.Execute(new VariableProvider(new Variable("log", 42))));
         }
     }
 }

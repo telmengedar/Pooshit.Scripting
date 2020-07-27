@@ -23,26 +23,24 @@ namespace Scripting.Tests {
         }
 
         [Test]
-        public void Postcrement()
-        {
-            TestHost testhost=new TestHost();
-            ScriptParser parser = new ScriptParser(new Variable("host", testhost));
+        public void Postcrement() {
+            TestHost testhost = new TestHost();
+            ScriptParser parser = new ScriptParser();
             IScript script = parser.Parse(
                 "host[\"value\"]=5\n" +
                 "host[\"value\"]++");
-            Assert.AreEqual(5, script.Execute());
+            Assert.AreEqual(5, script.Execute(new VariableProvider(new Variable("host", testhost))));
             Assert.AreEqual(6, testhost["value"]);
         }
 
         [Test]
-        public void Precrement()
-        {
+        public void Precrement() {
             TestHost testhost = new TestHost();
-            ScriptParser parser = new ScriptParser(new Variable("host", testhost));
+            ScriptParser parser = new ScriptParser();
             IScript script = parser.Parse(
                 "host[\"value\"]=5\n" +
                 "++host[\"value\"]");
-            Assert.AreEqual(6, script.Execute());
+            Assert.AreEqual(6, script.Execute(new VariableProvider(new Variable("host", testhost))));
             Assert.AreEqual(6, testhost["value"]);
         }
     }

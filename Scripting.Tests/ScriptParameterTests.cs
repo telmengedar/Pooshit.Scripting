@@ -14,8 +14,8 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void DetectOptionalScriptParameter() {
-            IScript script = parser.Parse("parameter($parameter, \"int\", 0) method.call($parameter)", new Variable("method"));
-            ParameterExtractor extractor=new ParameterExtractor();
+            IScript script = parser.Parse("parameter($parameter, \"int\", 0) method.call($parameter)");
+            ParameterExtractor extractor = new ParameterExtractor();
             extractor.Visit(script);
             Assert.AreEqual(1, extractor.Parameters.Count());
             Assert.AreEqual("parameter", extractor.Parameters.First().Name);
@@ -23,52 +23,14 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        public void DetectScriptParameter() {
-            IScript script = parser.Parse("method.call($parameter)", new Variable("method"));
-            ParameterExtractor extractor=new ParameterExtractor();
-            extractor.Visit(script);
-            Assert.AreEqual(1, extractor.Parameters.Count());
-            Assert.AreEqual("parameter", extractor.Parameters.First().Name);
-            Assert.AreEqual(false, extractor.Parameters.First().IsOptional);
-        }
-
-        [Test, Parallelizable]
         public void DetectVariableInitialization() {
             IScript script = parser.Parse(ScriptCode.Create(
                 "$parameter=8",
                 "method.call($parameter)"
-            ), new Variable("method"));
-            ParameterExtractor extractor=new ParameterExtractor();
+            ));
+            ParameterExtractor extractor = new ParameterExtractor();
             extractor.Visit(script);
             Assert.That(!extractor.Parameters.Any());
-        }
-
-        [Test, Parallelizable]
-        public void DetectParameterAfterVariableInitializationInInnerBlock() {
-            IScript script = parser.Parse(ScriptCode.Create(
-                "if(20) {",
-                "  $parameter=8",
-                "}",
-                "method.call($parameter)"
-            ), new Variable("method"));
-            ParameterExtractor extractor=new ParameterExtractor();
-            extractor.Visit(script);
-            Assert.AreEqual(1, extractor.Parameters.Count());
-            Assert.AreEqual("parameter", extractor.Parameters.First().Name);
-            Assert.AreEqual(false, extractor.Parameters.First().IsOptional);
-        }
-
-        [Test, Parallelizable]
-        public void DetectImplicitParameterInSwitch() {
-            IScript script = parser.Parse(ScriptCode.Create(
-                "switch($condition)",
-                "case(1) { return (4) }"
-            ));
-            ParameterExtractor extractor=new ParameterExtractor();
-            extractor.Visit(script);
-            Assert.AreEqual(1, extractor.Parameters.Count());
-            Assert.AreEqual("condition", extractor.Parameters.First().Name);
-            Assert.AreEqual(false, extractor.Parameters.First().IsOptional);
         }
 
         [Test, Parallelizable]
@@ -80,7 +42,7 @@ namespace Scripting.Tests {
                 "catch {",
                 "   return($exception.message)",
                 "}"
-            ), new Variable("method"));
+            ));
 
             ParameterExtractor extractor = new ParameterExtractor();
             extractor.Visit(script);
@@ -94,7 +56,7 @@ namespace Scripting.Tests {
                 "  method.call(3)",
                 "catch",
                 "  return($exception.message)"
-            ), new Variable("method"));
+            ));
 
             ParameterExtractor extractor = new ParameterExtractor();
             extractor.Visit(script);

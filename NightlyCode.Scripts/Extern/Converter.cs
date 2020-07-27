@@ -178,8 +178,7 @@ namespace NightlyCode.Scripting.Extern {
                 return value.ToBoolean();
 
             ConversionKey key = new ConversionKey(value.GetType(), targettype);
-            Func<object, object> specificconverter;
-            if(specificconverters.TryGetValue(key, out specificconverter))
+            if(specificconverters.TryGetValue(key, out Func<object, object> specificconverter))
                 return specificconverter(value);
 
 
@@ -194,6 +193,10 @@ namespace NightlyCode.Scripting.Extern {
                 return new NullableConverter(targettype).ConvertFrom(Convert(value, targettype.GetGenericArguments()[0], true));
 #endif
             }
+
+            if (targettype == typeof(string))
+                return value.ToString();
+
             return System.Convert.ChangeType(value, targettype, CultureInfo.InvariantCulture);
         }
 

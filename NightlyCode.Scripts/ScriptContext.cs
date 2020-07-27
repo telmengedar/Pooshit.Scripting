@@ -11,29 +11,28 @@ namespace NightlyCode.Scripting {
         /// <summary>
         /// creates a new <see cref="ScriptContext"/>
         /// </summary>
-        /// <param name="variables">global script variables</param>
+        /// <param name="context">context to base this context on</param>
+        public ScriptContext(ScriptContext context)
+        : this(new VariableProvider(context.Arguments), context.CancellationToken) {
+        }
+
+        /// <summary>
+        /// creates a new <see cref="ScriptContext"/>
+        /// </summary>
         /// <param name="arguments">arguments provided at runtime</param>
-        public ScriptContext(IVariableContext variables, IVariableProvider arguments) {
-            Variables = variables;
+        public ScriptContext(IVariableProvider arguments) {
             Arguments = arguments;
         }
 
         /// <summary>
         /// creates a new <see cref="ScriptContext"/>
         /// </summary>
-        /// <param name="variables">global script variables</param>
         /// <param name="arguments">arguments provided at runtime</param>
         /// <param name="cancellationToken">cancellation token used to abort script execution (optional)</param>
-        public ScriptContext(IVariableContext variables, IVariableProvider arguments, CancellationToken cancellationToken) 
-        : this(variables, arguments)
-        {
+        public ScriptContext(IVariableProvider arguments, CancellationToken cancellationToken)
+        : this(arguments) {
             CancellationToken = cancellationToken;
         }
-
-        /// <summary>
-        /// global script variables
-        /// </summary>
-        public IVariableContext Variables { get; }
 
         /// <summary>
         /// arguments provided at runtime

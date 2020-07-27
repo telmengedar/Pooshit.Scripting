@@ -29,6 +29,13 @@ namespace NightlyCode.Scripting.Parser {
         bool ContainsVariable(string name);
 
         /// <summary>
+        /// determines whether the context contains a variable with the specified name in any of the providers in hierarchy
+        /// </summary>
+        /// <param name="name">name of variable to check for</param>
+        /// <returns>true if variable is in this context, false otherwise</returns>
+        bool ContainsVariableInHierarchy(string name);
+
+        /// <summary>
         /// get provider in chain which contains a variable with the specified name
         /// </summary>
         /// <param name="variable">name of variable to check for</param>

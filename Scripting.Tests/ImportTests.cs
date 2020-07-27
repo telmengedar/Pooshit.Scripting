@@ -12,7 +12,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void ExecuteImportedScript() {
-            ScriptParser parser=new ScriptParser();
+            ScriptParser parser = new ScriptParser();
             parser.MethodResolver = new ResourceScriptMethodProvider(typeof(ImportTests).Assembly, parser);
             IScript script = parser.Parse(
                 ScriptCode.Create(
@@ -25,7 +25,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void ImplicitExecute() {
-            ScriptParser parser=new ScriptParser();
+            ScriptParser parser = new ScriptParser();
             parser.MethodResolver = new ResourceScriptMethodProvider(typeof(ImportTests).Assembly, parser);
             IScript script = parser.Parse(
                 ScriptCode.Create(
@@ -39,7 +39,7 @@ namespace Scripting.Tests {
         [TestCase("Scripting.Tests.Scripts.External.initialization.ns")]
         [Parallelizable]
         public void ImportAndExecuteExternal(string resource) {
-            ScriptParser parser=new ScriptParser();
+            ScriptParser parser = new ScriptParser();
             parser.MethodResolver = new ResourceScriptMethodProvider(typeof(ImportTests).Assembly, parser);
             IScript script = parser.Parse(
                 ScriptCode.Create(
@@ -47,7 +47,7 @@ namespace Scripting.Tests {
                     "$method()"
                 ));
 
-            Assert.DoesNotThrow(() => script.Execute(new Variable("script", resource)));
+            Assert.DoesNotThrow(() => script.Execute(new VariableProvider(new Variable("script", resource))));
         }
 
         [Test, Parallelizable]

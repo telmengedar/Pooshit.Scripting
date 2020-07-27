@@ -18,11 +18,6 @@ namespace NightlyCode.Scripting.Tokens {
         }
 
         /// <summary>
-        /// determines whether the variable was resolved by the parser
-        /// </summary>
-        public bool IsResolved { get; set; } = true;
-
-        /// <summary>
         /// name of variable
         /// </summary>
         public string Name { get; }
@@ -33,11 +28,11 @@ namespace NightlyCode.Scripting.Tokens {
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
             IVariableProvider provider = context.Arguments.GetProvider(Name);
-            if (provider != null)
+            if(provider != null)
                 return provider.GetVariable(Name);
 
-            provider = context.Variables.GetProvider(Name);
-            if (provider == null)
+            provider = context.Arguments.GetProvider(Name);
+            if(provider == null)
                 throw new ScriptRuntimeException($"Variable {Name} not declared", this);
 
             return provider.GetVariable(Name);
@@ -45,16 +40,13 @@ namespace NightlyCode.Scripting.Tokens {
 
         /// <inheritdoc />
         protected override object AssignToken(IScriptToken token, ScriptContext context) {
-            IVariableProvider provider = context.Variables.GetProvider(Name);
-            if (provider == null)
+            IVariableProvider provider = context.Arguments.GetProvider(Name);
+            if(provider == null)
                 // auto declare variable in current scope if variable is not found
-                provider = context.Variables;
-
-            if (!(provider is IVariableContext variablecontext))
-                throw new ScriptRuntimeException($"Variable {Name} not writable", this);
+                provider = context.Arguments;
 
             object value = token.Execute(context);
-            variablecontext.SetVariable(Name, value);
+            provider[Name] = value;
             return value;
         }
 

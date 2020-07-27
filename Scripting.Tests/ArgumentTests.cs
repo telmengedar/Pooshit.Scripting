@@ -20,7 +20,7 @@ namespace Scripting.Tests {
                 "$result"
             );
 
-            Assert.AreEqual(expected, script.Execute(new Variable("argument", argument)));
+            Assert.AreEqual(expected, script.Execute(new VariableProvider(new Variable("argument", argument))));
         }
     }
 }

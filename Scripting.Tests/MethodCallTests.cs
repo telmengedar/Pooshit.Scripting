@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading.Tasks;
+using System.Xml.Linq;
 using NightlyCode.Scripting;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Extensions;
@@ -16,8 +18,7 @@ namespace Scripting.Tests {
             return $"{prefix}:{parameter.Name}={parameter.Value}";
         }
 
-        public string MethodWithArrayParameters(string prefix, params Parameter[] parameters)
-        {
+        public string MethodWithArrayParameters(string prefix, params Parameter[] parameters) {
             return $"{prefix}:{string.Join<Parameter>(",", parameters)}";
         }
 
@@ -37,8 +38,7 @@ namespace Scripting.Tests {
             return "int";
         }
 
-        public string InterfaceParameter(IParameter parameter)
-        {
+        public string InterfaceParameter(IParameter parameter) {
             return "parameter";
         }
 
@@ -75,75 +75,71 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void CallMethodWithArrayParameters() {
-            IScript script = parser.Parse("$test.methodwitharrayparameters(\"success\", [$test.parameter(\"n\", \"1\"),$test.parameter(\"m\", \"7\")])", new Variable("test", this));
-            Assert.AreEqual("success:n=1,m=7", script.Execute());
+            IScript script = parser.Parse("$test.methodwitharrayparameters(\"success\", [$test.parameter(\"n\", \"1\"),$test.parameter(\"m\", \"7\")])");
+            Assert.AreEqual("success:n=1,m=7", script.Execute(new VariableProvider(new Variable("test", this))));
         }
 
         [Test, Parallelizable]
-        public void CallMethodWithParamsArray()
-        {
-            IScript script = parser.Parse("$test.methodwitharrayparameters(\"success\", $test.parameter(\"n\", \"1\"),$test.parameter(\"m\", \"7\"))", new Variable("test", this));
-            Assert.AreEqual("success:n=1,m=7", script.Execute());
+        public void CallMethodWithParamsArray() {
+            IScript script = parser.Parse("$test.methodwitharrayparameters(\"success\", $test.parameter(\"n\", \"1\"),$test.parameter(\"m\", \"7\"))");
+            Assert.AreEqual("success:n=1,m=7", script.Execute(new VariableProvider(new Variable("test", this))));
         }
 
         [Test, Parallelizable]
         public void CallParamsArrayWithoutArguments() {
-            IScript script = parser.Parse("$test.methodwitharrayparameters(\"success\")", new Variable("test", this));
-            Assert.AreEqual("success:", script.Execute());
+            IScript script = parser.Parse("$test.methodwitharrayparameters(\"success\")");
+            Assert.AreEqual("success:", script.Execute(new VariableProvider(new Variable("test", this))));
         }
 
         [Test, Parallelizable]
         public void CallMethodWithDefaultParameters() {
-            IScript script = parser.Parse("$test.methodwithdefaults(\"max\")", new Variable("test", this));
-            Assert.AreEqual(" max ", script.Execute());
+            IScript script = parser.Parse("$test.methodwithdefaults(\"max\")");
+            Assert.AreEqual(" max ", script.Execute(new VariableProvider(new Variable("test", this))));
         }
 
         [Test, Parallelizable]
         public void ConvertGuidToStringOnCall() {
-            IScript script = parser.Parse("$test.methodwithdefaults($guid)", new Variable("test", this), new Variable("guid", Guid.Empty));
-            Assert.AreEqual($" {Guid.Empty} ", script.Execute());
+            IScript script = parser.Parse("$test.methodwithdefaults($guid)");
+            Assert.AreEqual($" {Guid.Empty} ", script.Execute(new VariableProvider(new Variable("test", this), new Variable("guid", Guid.Empty))));
         }
 
         [Test, Parallelizable]
         public void CallMethodSpecifyingDefaults() {
-            IScript script = parser.Parse("$test.methodwithdefaults(\"max\", \"dr\")", new Variable("test", this));
-            Assert.AreEqual("dr max ", script.Execute());
+            IScript script = parser.Parse("$test.methodwithdefaults(\"max\", \"dr\")");
+            Assert.AreEqual("dr max ", script.Execute(new VariableProvider(new Variable("test", this))));
         }
 
         [Test, Parallelizable]
         public void CallMethodSpecifyingDefaultsAndParams() {
-            IScript script = parser.Parse("$test.methodwithdefaults(\"max\", \"dr\", \"k.\", \"möllemann\")", new Variable("test", this));
-            Assert.AreEqual("dr max k. möllemann", script.Execute());
+            IScript script = parser.Parse("$test.methodwithdefaults(\"max\", \"dr\", \"k.\", \"möllemann\")");
+            Assert.AreEqual("dr max k. möllemann", script.Execute(new VariableProvider(new Variable("test", this))));
         }
 
         [Test, Parallelizable]
         public void CallAmbigiousMethod() {
-            IScript script = parser.Parse("$test.ambigious(50)", new Variable("test", this));
-            Assert.AreEqual("int", script.Execute());
+            IScript script = parser.Parse("$test.ambigious(50)");
+            Assert.AreEqual("int", script.Execute(new VariableProvider(new Variable("test", this))));
         }
 
         [Test, Parallelizable]
-        public void CallAmbigiousMethodWithFloat()
-        {
-            IScript script = parser.Parse("$test.ambigious(50.3)", new Variable("test", this));
-            Assert.AreEqual("string", script.Execute());
+        public void CallAmbigiousMethodWithFloat() {
+            IScript script = parser.Parse("$test.ambigious(50.3)");
+            Assert.AreEqual("string", script.Execute(new VariableProvider(new Variable("test", this))));
         }
 
         [Test, Parallelizable]
-        public void CallInterfaceParameter()
-        {
-            IScript script = parser.Parse("$test.interfaceparameter($test.parameter(\"key\",\"value\"))", new Variable("test", this));
-            Assert.AreEqual("parameter", script.Execute());
+        public void CallInterfaceParameter() {
+            IScript script = parser.Parse("$test.interfaceparameter($test.parameter(\"key\",\"value\"))");
+            Assert.AreEqual("parameter", script.Execute(new VariableProvider(new Variable("test", this))));
         }
 
         [Test, Parallelizable]
-        public void CallEnumParameter()
-        {
-            IScript script = parser.Parse("$test.enumparameter(\"second\")", new Variable("test", this));
-            Assert.AreEqual("enum", script.Execute());
+        public void CallEnumParameter() {
+            IScript script = parser.Parse("$test.enumparameter(\"second\")");
+            Assert.AreEqual("enum", script.Execute(new VariableProvider(new Variable("test", this))));
         }
 
-        [Test, Parallelizable]
+        [Parallelizable]
         [TestCase("'a'")]
         [TestCase("7")]
         [TestCase("7u")]
@@ -151,16 +147,15 @@ namespace Scripting.Tests {
         [TestCase("7ul")]
         [TestCase("7s")]
         [TestCase("7us")]
-        public void CallAmbigiousMethodInt(string parameter)
-        {
-            IScript script = parser.Parse($"$test.ambigious({parameter})", new Variable("test", this));
-            Assert.AreEqual("int", script.Execute());
+        public void CallAmbigiousMethodInt(string parameter) {
+            IScript script = parser.Parse($"$test.ambigious({parameter})");
+            Assert.AreEqual("int", script.Execute(new VariableProvider(new Variable("test", this))));
         }
 
         [Test, Parallelizable]
         public void CallAmbigiousMethodByteArray() {
-            IScript script = parser.Parse("$test.ambigious([1,2,3,4,5])", new Variable("test", this));
-            Assert.AreEqual("bytearray", script.Execute());
+            IScript script = parser.Parse("$test.ambigious([1,2,3,4,5])");
+            Assert.AreEqual("bytearray", script.Execute(new VariableProvider(new Variable("test", this))));
         }
 
         [Test, Parallelizable]
@@ -169,21 +164,20 @@ namespace Scripting.Tests {
                 "$variable=0",
                 "$test.refparameter(ref($variable))",
                 "return($variable)"
-            ), new Variable("test", this));
+            ));
 
-            Assert.AreEqual(42, script.Execute());
+            Assert.AreEqual(42, script.Execute(new VariableProvider(new Variable("test", this))));
         }
 
         [Test, Parallelizable]
-        public void CallMethodWithOutParameter()
-        {
+        public void CallMethodWithOutParameter() {
             IScript script = parser.Parse(ScriptCode.Create(
                 "$variable=0",
                 "$test.outparameter(ref($variable))",
                 "return($variable)"
-            ), new Variable("test", this));
+            ));
 
-            Assert.AreEqual(42, script.Execute());
+            Assert.AreEqual(42, script.Execute(new VariableProvider(new Variable("test", this))));
         }
 
         [Test, Parallelizable]
@@ -200,9 +194,8 @@ namespace Scripting.Tests {
                     "    \"name\": \"m\",",
                     "    \"value\": 7",
                     "  }",
-                    ")"),
-                new Variable("test", this));
-            Assert.AreEqual("success:n=1,m=7", script.Execute());
+                    ")"));
+            Assert.AreEqual("success:n=1,m=7", script.Execute(new VariableProvider(new Variable("test", this))));
         }
 
         [Test, Parallelizable]
@@ -215,33 +208,39 @@ namespace Scripting.Tests {
                     "    \"name\": \"n\",",
                     "    \"value\": 42",
                     "  }",
-                    ")"),
-                new Variable("test", this));
-            Assert.AreEqual("success:n=42", script.Execute());
+                    ")"));
+            Assert.AreEqual("success:n=42", script.Execute(new VariableProvider(new Variable("test", this))));
         }
 
         [Test, Parallelizable]
         public void AutoConvertStringToGuid() {
             // 4cac6f34-ab34-48e5-bc5c-a0a23d282846
 
-            IScript script = parser.Parse("$test.guidparameter(\"4cac6f34-ab34-48e5-bc5c-a0a23d282846\")", new Variable("test", this));
-            Assert.AreEqual("4cac6f34-ab34-48e5-bc5c-a0a23d282846", script.Execute());
+            IScript script = parser.Parse("$test.guidparameter(\"4cac6f34-ab34-48e5-bc5c-a0a23d282846\")");
+            Assert.AreEqual("4cac6f34-ab34-48e5-bc5c-a0a23d282846", script.Execute(new VariableProvider(new Variable("test", this))));
         }
 
         [Test, Parallelizable]
         public void AutoConvertStringToNullableGuid() {
             // 4cac6f34-ab34-48e5-bc5c-a0a23d282846
 
-            IScript script = parser.Parse("$test.nullableguidparameter(\"4cac6f34-ab34-48e5-bc5c-a0a23d282846\")", new Variable("test", this));
-            Assert.AreEqual("4cac6f34-ab34-48e5-bc5c-a0a23d282846", script.Execute());
+            IScript script = parser.Parse("$test.nullableguidparameter(\"4cac6f34-ab34-48e5-bc5c-a0a23d282846\")");
+            Assert.AreEqual("4cac6f34-ab34-48e5-bc5c-a0a23d282846", script.Execute(new VariableProvider(new Variable("test", this))));
         }
 
         [Test, Parallelizable]
         public void CallNullableMixedWithDefaults() {
             // 4cac6f34-ab34-48e5-bc5c-a0a23d282846
 
-            IScript script = parser.Parse("$test.randomlistmethod(false, \"4cac6f34-ab34-48e5-bc5c-a0a23d282846\", null, [1,2])", new Variable("test", this));
-            Assert.DoesNotThrow(()=>script.Execute());
+            IScript script = parser.Parse("$test.randomlistmethod(false, \"4cac6f34-ab34-48e5-bc5c-a0a23d282846\", null, [1,2])");
+            Assert.DoesNotThrow(() => script.Execute(new VariableProvider(new Variable("test", this))));
+        }
+
+        [Test, Parallelizable]
+        public async Task ParameterUsingImplicitOperator() {
+            XElement element = new XElement("root", new XElement("child"));
+            IScript script = await parser.ParseAsync("$child=$node.element(\"child\")\nreturn($child.name)");
+            Assert.AreEqual("child", await script.ExecuteAsync<string>(new VariableProvider(new Variable("node", element))));
         }
     }
 }

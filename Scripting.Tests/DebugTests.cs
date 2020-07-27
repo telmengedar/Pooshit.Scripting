@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
 using NightlyCode.Scripting;
-using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
@@ -16,25 +14,11 @@ namespace Scripting.Tests {
     /// </summary>
     [TestFixture, Parallelizable]
     public class DebugTests {
-        readonly IScriptParser parser = new ScriptParser(new Variable("lockedvar"));
-
-        [Test, Parallelizable]
-        public void SimpleAssignmentFailure() {
-            IScript script = parser.Parse("$lockedvar=4");
-            try {
-                script.Execute();
-                Assert.Fail("Script should fail with runtime exception");
-            }
-            catch (ScriptRuntimeException e) {
-                Console.WriteLine(e.CreateStackTrace());
-                Assert.That(e.Token is ICodePositionToken);
-                Assert.AreEqual(1, ((ICodePositionToken) e.Token).LineNumber);
-            }
-        }
+        readonly IScriptParser parser = new ScriptParser();
 
         [Test, Parallelizable]
         public void ExternalMethodFail() {
-            ((ScriptParser) parser).MethodResolver = new ResourceScriptMethodProvider(typeof(DebugTests).Assembly, parser);
+            ((ScriptParser)parser).MethodResolver = new ResourceScriptMethodProvider(typeof(DebugTests).Assembly, parser);
 
             IScript script = parser.Parse(ScriptCode.Create(
                 "// import method which fails in the end",
@@ -47,10 +31,10 @@ namespace Scripting.Tests {
                 script.Execute();
                 Assert.Fail("Script should fail with runtime exception");
             }
-            catch (ScriptRuntimeException e) {
+            catch(ScriptRuntimeException e) {
                 Console.WriteLine(e.CreateStackTrace());
                 Assert.That(e.Token is ICodePositionToken);
-                Assert.AreEqual(4, ((ICodePositionToken) e.Token).LineNumber);
+                Assert.AreEqual(4, ((ICodePositionToken)e.Token).LineNumber);
             }
         }
     }

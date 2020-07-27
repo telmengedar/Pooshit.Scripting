@@ -994,6 +994,14 @@
             <param name="operator">operator to sort</param>
             <returns>number used in sorting algorithm</returns>
         </member>
+        <member name="M:NightlyCode.Scripting.Extensions.OperatorExtensions.IsEqual(System.Object,System.Object)">
+            <summary>
+            determines whether an arbitrary value is equal to another
+            </summary>
+            <param name="value">value to compare</param>
+            <param name="rhs">value to compare this value to for equality</param>
+            <returns>true when the two values are considered to be equal, false otherwise</returns>
+        </member>
         <member name="T:NightlyCode.Scripting.Extensions.ScriptCode">
             <summary>
             helper method for script code
@@ -1465,34 +1473,34 @@
             </summary>
             <remarks>does the same as <see cref="T:NightlyCode.Scripting.Tokens.IScriptToken"/> but has a more clear name</remarks>
         </member>
-        <member name="M:NightlyCode.Scripting.IScript.Execute(NightlyCode.Scripting.Data.Variable[])">
+        <member name="M:NightlyCode.Scripting.IScript.Execute(NightlyCode.Scripting.Parser.IVariableProvider)">
             <summary>
             executes the script and returns the result
             </summary>
             <returns>script result</returns>
         </member>
-        <member name="M:NightlyCode.Scripting.IScript.ExecuteAsync(System.Threading.CancellationToken,NightlyCode.Scripting.Data.Variable[])">
-            <summary>
-            executes the script and returns the result
-            </summary>
-            <returns>script result</returns>
-        </member>
-        <member name="M:NightlyCode.Scripting.IScript.Execute``1(NightlyCode.Scripting.Data.Variable[])">
+        <member name="M:NightlyCode.Scripting.IScript.Execute``1(NightlyCode.Scripting.Parser.IVariableProvider)">
             <summary>
             executes the script and returns a typed result
             </summary>
             <remarks>
-            this just executes <see cref="M:NightlyCode.Scripting.IScript.Execute(NightlyCode.Scripting.Data.Variable[])"/> and tries to convert the result
+            this just executes <see cref="M:NightlyCode.Scripting.IScript.Execute(NightlyCode.Scripting.Parser.IVariableProvider)"/> and tries to convert the result
             </remarks>
             <typeparam name="T">type of result to return</typeparam>
             <returns>result of script execution</returns>
         </member>
-        <member name="M:NightlyCode.Scripting.IScript.ExecuteAsync``1(System.Threading.CancellationToken,NightlyCode.Scripting.Data.Variable[])">
+        <member name="M:NightlyCode.Scripting.IScript.ExecuteAsync(NightlyCode.Scripting.Parser.IVariableProvider,System.Threading.CancellationToken)">
+            <summary>
+            executes the script and returns the result
+            </summary>
+            <returns>script result</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.IScript.ExecuteAsync``1(NightlyCode.Scripting.Parser.IVariableProvider,System.Threading.CancellationToken)">
             <summary>
             executes the script and returns a typed result
             </summary>
             <remarks>
-            this just executes <see cref="M:NightlyCode.Scripting.IScript.Execute(NightlyCode.Scripting.Data.Variable[])"/> and tries to convert the result
+            this just executes <see cref="M:NightlyCode.Scripting.IScript.Execute(NightlyCode.Scripting.Parser.IVariableProvider)"/> and tries to convert the result
             </remarks>
             <typeparam name="T">type of result to return</typeparam>
             <returns>result of script execution</returns>
@@ -2510,25 +2518,18 @@
             access to types which can be created using 'new' keyword
             </summary>
         </member>
-        <member name="P:NightlyCode.Scripting.Parser.IScriptParser.GlobalVariables">
-            <summary>
-            variables available to script
-            </summary>
-        </member>
-        <member name="M:NightlyCode.Scripting.Parser.IScriptParser.Parse(System.String,NightlyCode.Scripting.Data.Variable[])">
+        <member name="M:NightlyCode.Scripting.Parser.IScriptParser.Parse(System.String)">
             <summary>
             parses a script for execution
             </summary>
             <param name="data">data to parse</param>
-            <param name="variables">variables valid for this script (flagged as read-only)</param>
             <returns>script which can get executed</returns>
         </member>
-        <member name="M:NightlyCode.Scripting.Parser.IScriptParser.ParseAsync(System.String,NightlyCode.Scripting.Data.Variable[])">
+        <member name="M:NightlyCode.Scripting.Parser.IScriptParser.ParseAsync(System.String)">
             <summary>
             parses a script for execution in a task
             </summary>
             <param name="data">script code to parse</param>
-            <param name="variables">variables valid for this script (flagged as read-only)</param>
             <returns>script parsed from code</returns>
         </member>
         <member name="T:NightlyCode.Scripting.Parser.ITypeInstanceProvider">
@@ -2597,23 +2598,6 @@
             types provdided
             </summary>
         </member>
-        <member name="T:NightlyCode.Scripting.Parser.IVariableContext">
-            <summary>
-            provides a context which contains writable variables
-            </summary>
-        </member>
-        <member name="M:NightlyCode.Scripting.Parser.IVariableContext.Clear">
-            <summary>
-            clears all variable entries
-            </summary>
-        </member>
-        <member name="M:NightlyCode.Scripting.Parser.IVariableContext.SetVariable(System.String,System.Object)">
-            <summary>
-            set a value of a variable
-            </summary>
-            <param name="name">variable name</param>
-            <param name="value">value to set</param>
-        </member>
         <member name="T:NightlyCode.Scripting.Parser.IVariableProvider">
             <summary>
             provides named variables to script
@@ -2636,6 +2620,13 @@
         <member name="M:NightlyCode.Scripting.Parser.IVariableProvider.ContainsVariable(System.String)">
             <summary>
             determines whether the context contains a variable with the specified name
+            </summary>
+            <param name="name">name of variable to check for</param>
+            <returns>true if variable is in this context, false otherwise</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.IVariableProvider.ContainsVariableInHierarchy(System.String)">
+            <summary>
+            determines whether the context contains a variable with the specified name in any of the providers in hierarchy
             </summary>
             <param name="name">name of variable to check for</param>
             <returns>true if variable is in this context, false otherwise</returns>
@@ -2879,17 +2870,10 @@
             parses scripts from string data
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Parser.ScriptParser.#ctor(NightlyCode.Scripting.Parser.IVariableProvider)">
+        <member name="M:NightlyCode.Scripting.Parser.ScriptParser.#ctor">
             <summary>
             creates a new <see cref="T:NightlyCode.Scripting.Parser.ScriptParser"/>
             </summary>
-            <param name="globalvariables">provider for global variables</param>
-        </member>
-        <member name="M:NightlyCode.Scripting.Parser.ScriptParser.#ctor(NightlyCode.Scripting.Data.Variable[])">
-            <summary>
-            creates a new <see cref="T:NightlyCode.Scripting.Parser.ScriptParser"/>
-            </summary>
-            <param name="variables">global variables of script parser</param>
         </member>
         <member name="P:NightlyCode.Scripting.Parser.ScriptParser.TypeInstanceProvidersEnabled">
             <summary>
@@ -2916,9 +2900,6 @@
             determines whether meta tokens are included in parsed script
             </summary>
         </member>
-        <member name="P:NightlyCode.Scripting.Parser.ScriptParser.GlobalVariables">
-            <inheritdoc />
-        </member>
         <member name="P:NightlyCode.Scripting.Parser.ScriptParser.Extensions">
             <summary>
             access to extensions available to script environment
@@ -2944,10 +2925,10 @@
             tree containing all supported operators
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Parser.ScriptParser.Parse(System.String,NightlyCode.Scripting.Data.Variable[])">
+        <member name="M:NightlyCode.Scripting.Parser.ScriptParser.Parse(System.String)">
             <inheritdoc />
         </member>
-        <member name="M:NightlyCode.Scripting.Parser.ScriptParser.ParseAsync(System.String,NightlyCode.Scripting.Data.Variable[])">
+        <member name="M:NightlyCode.Scripting.Parser.ScriptParser.ParseAsync(System.String)">
             <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.Parser.TokenType">
@@ -3026,37 +3007,16 @@
         <member name="P:NightlyCode.Scripting.Parser.TypeProvider.ProvidedTypes">
             <inheritdoc />
         </member>
-        <member name="T:NightlyCode.Scripting.Parser.VariableContext">
-            <summary>
-            simple lookup for variables
-            </summary>
-        </member>
-        <member name="M:NightlyCode.Scripting.Parser.VariableContext.#ctor(NightlyCode.Scripting.Parser.IVariableProvider,NightlyCode.Scripting.Data.Variable[])">
-            <summary>
-            creates a new <see cref="T:NightlyCode.Scripting.Parser.VariableContext"/>
-            </summary>
-            <param name="parentprovider">parent variable context</param>
-            <param name="initialvalues">variables to be contained initially in pool</param>
-        </member>
-        <member name="M:NightlyCode.Scripting.Parser.VariableContext.Clear">
-            <inheritdoc />
-        </member>
-        <member name="M:NightlyCode.Scripting.Parser.VariableContext.SetVariable(System.String,System.Object)">
-            <inheritdoc />
-        </member>
-        <member name="M:NightlyCode.Scripting.Parser.VariableContext.RemoveVariable(System.String)">
-            <summary>
-            removes a variable from this context
-            </summary>
-            <param name="name">name of variable to remove</param>
-        </member>
-        <member name="M:NightlyCode.Scripting.Parser.VariableContext.System#IDisposable#Dispose">
-            <inheritdoc />
-        </member>
         <member name="T:NightlyCode.Scripting.Parser.VariableProvider">
             <summary>
             basic implementation of a variable provider used if no custom provider is specified
             </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.VariableProvider.#ctor(NightlyCode.Scripting.Data.Variable[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Parser.VariableProvider"/>
+            </summary>
+            <param name="variables">variables to provide</param>
         </member>
         <member name="M:NightlyCode.Scripting.Parser.VariableProvider.#ctor(NightlyCode.Scripting.Parser.IVariableProvider,NightlyCode.Scripting.Data.Variable[])">
             <summary>
@@ -3084,6 +3044,9 @@
             <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Parser.VariableProvider.ContainsVariable(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.VariableProvider.ContainsVariableInHierarchy(System.String)">
             <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Parser.VariableProvider.GetProvider(System.String)">
@@ -3190,14 +3153,13 @@
             script parsed by <see cref="T:NightlyCode.Scripting.Parser.ScriptParser"/>
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Script.#ctor(NightlyCode.Scripting.Tokens.IScriptToken,NightlyCode.Scripting.Parser.IVariableProvider)">
+        <member name="M:NightlyCode.Scripting.Script.#ctor(NightlyCode.Scripting.Tokens.IScriptToken)">
             <summary>
             creates a new <see cref="T:NightlyCode.Scripting.Script"/>
             </summary>
             <param name="script">root token of script to be executed</param>
-            <param name="scriptvariables">access to script variables</param>
         </member>
-        <member name="M:NightlyCode.Scripting.Script.ExecuteAsync``1(System.Threading.CancellationToken,NightlyCode.Scripting.Data.Variable[])">
+        <member name="M:NightlyCode.Scripting.Script.ExecuteAsync``1(NightlyCode.Scripting.Parser.IVariableProvider,System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
         <member name="P:NightlyCode.Scripting.Script.Body">
@@ -3205,13 +3167,13 @@
             script body
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.Script.Execute(NightlyCode.Scripting.Data.Variable[])">
+        <member name="M:NightlyCode.Scripting.Script.Execute(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
-        <member name="M:NightlyCode.Scripting.Script.ExecuteAsync(System.Threading.CancellationToken,NightlyCode.Scripting.Data.Variable[])">
+        <member name="M:NightlyCode.Scripting.Script.ExecuteAsync(NightlyCode.Scripting.Parser.IVariableProvider,System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
-        <member name="M:NightlyCode.Scripting.Script.Execute``1(NightlyCode.Scripting.Data.Variable[])">
+        <member name="M:NightlyCode.Scripting.Script.Execute``1(NightlyCode.Scripting.Parser.IVariableProvider)">
             <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.ScriptContext">
@@ -3219,25 +3181,24 @@
             context for script execution
             </summary>
         </member>
-        <member name="M:NightlyCode.Scripting.ScriptContext.#ctor(NightlyCode.Scripting.Parser.IVariableContext,NightlyCode.Scripting.Parser.IVariableProvider)">
+        <member name="M:NightlyCode.Scripting.ScriptContext.#ctor(NightlyCode.Scripting.ScriptContext)">
             <summary>
             creates a new <see cref="T:NightlyCode.Scripting.ScriptContext"/>
             </summary>
-            <param name="variables">global script variables</param>
+            <param name="context">context to base this context on</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.ScriptContext.#ctor(NightlyCode.Scripting.Parser.IVariableProvider)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.ScriptContext"/>
+            </summary>
             <param name="arguments">arguments provided at runtime</param>
         </member>
-        <member name="M:NightlyCode.Scripting.ScriptContext.#ctor(NightlyCode.Scripting.Parser.IVariableContext,NightlyCode.Scripting.Parser.IVariableProvider,System.Threading.CancellationToken)">
+        <member name="M:NightlyCode.Scripting.ScriptContext.#ctor(NightlyCode.Scripting.Parser.IVariableProvider,System.Threading.CancellationToken)">
             <summary>
             creates a new <see cref="T:NightlyCode.Scripting.ScriptContext"/>
             </summary>
-            <param name="variables">global script variables</param>
             <param name="arguments">arguments provided at runtime</param>
             <param name="cancellationToken">cancellation token used to abort script execution (optional)</param>
-        </member>
-        <member name="P:NightlyCode.Scripting.ScriptContext.Variables">
-            <summary>
-            global script variables
-            </summary>
         </member>
         <member name="P:NightlyCode.Scripting.ScriptContext.Arguments">
             <summary>
@@ -3664,8 +3625,13 @@
             host to call indexer on
             </summary>
         </member>
-        <member name="P:NightlyCode.Scripting.Tokens.ScriptIndexer.Parameters">
+        <member name="P:NightlyCode.Scripting.Tokens.ScriptIndexer.NightlyCode#Scripting#Tokens#IParameterContainer#Parameters">
             <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.ScriptIndexer.Parameters">
+            <summary>
+            access to parameters of indexer
+            </summary>
         </member>
         <member name="P:NightlyCode.Scripting.Tokens.ScriptIndexer.ParametersOptional">
             <inheritdoc />
@@ -3740,8 +3706,13 @@
             name of method to call
             </summary>
         </member>
-        <member name="P:NightlyCode.Scripting.Tokens.ScriptMethod.Parameters">
+        <member name="P:NightlyCode.Scripting.Tokens.ScriptMethod.NightlyCode#Scripting#Tokens#IParameterContainer#Parameters">
             <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.ScriptMethod.Parameters">
+            <summary>
+            direct access to parameters for this method call
+            </summary>
         </member>
         <member name="P:NightlyCode.Scripting.Tokens.ScriptMethod.ParametersOptional">
             <inheritdoc />
@@ -3862,11 +3833,6 @@
             creates a new <see cref="T:NightlyCode.Scripting.Tokens.ScriptVariable"/>
             </summary>
             <param name="name">name of variable</param>
-        </member>
-        <member name="P:NightlyCode.Scripting.Tokens.ScriptVariable.IsResolved">
-            <summary>
-            determines whether the variable was resolved by the parser
-            </summary>
         </member>
         <member name="P:NightlyCode.Scripting.Tokens.ScriptVariable.Name">
             <summary>
@@ -3998,9 +3964,6 @@
             <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Visitors.ParameterExtractor.VisitScriptParameter(NightlyCode.Scripting.Tokens.ScriptParameter)">
-            <inheritdoc />
-        </member>
-        <member name="M:NightlyCode.Scripting.Visitors.ParameterExtractor.VisitVariable(NightlyCode.Scripting.Tokens.ScriptVariable)">
             <inheritdoc />
         </member>
         <member name="T:NightlyCode.Scripting.Visitors.ParameterInfo">

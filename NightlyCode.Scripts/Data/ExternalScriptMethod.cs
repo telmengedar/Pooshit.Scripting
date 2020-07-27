@@ -25,7 +25,7 @@ namespace NightlyCode.Scripting.Data {
 
         /// <inheritdoc />
         public object Invoke(IVariableProvider parentvariables, params object[] arguments) {
-            return script.Execute(new Variable("arguments", arguments));
+            return script.Execute(new VariableProvider(new Variable("arguments", arguments)));
         }
 
         /// <inheritdoc />

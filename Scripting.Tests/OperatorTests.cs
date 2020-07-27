@@ -7,7 +7,7 @@ namespace Scripting.Tests {
 
     [TestFixture, Parallelizable]
     public class OperatorTests {
-        readonly IScriptParser parser=new ScriptParser();
+        readonly IScriptParser parser = new ScriptParser();
 
         public Operator GetOperator(Operator op) {
             return op;
@@ -33,14 +33,14 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void CompareEnumWithString() {
-            IScript script = parser.Parse("$operator!=\"Not\"", new Variable("operator", Operator.Not));
-            Assert.DoesNotThrow(() => script.Execute());
+            IScript script = parser.Parse("$operator!=\"Not\"");
+            Assert.DoesNotThrow(() => script.Execute(new VariableProvider(new Variable("operator", Operator.Not))));
         }
 
         [Test, Parallelizable]
         public void CompareEnumWithInt() {
-            IScript script = parser.Parse("$operator!=0", new Variable("operator", Operator.Not));
-            Assert.DoesNotThrow(() => script.Execute());
+            IScript script = parser.Parse("$operator!=0");
+            Assert.DoesNotThrow(() => script.Execute(new VariableProvider(new Variable("operator", Operator.Not))));
         }
 
         [TestCase("2", "\"3\"", "23")]
@@ -54,7 +54,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void ChangeOperators() {
-            ScriptParser changedparser=new ScriptParser();
+            ScriptParser changedparser = new ScriptParser();
             changedparser.OperatorTree.Clear();
 
             changedparser.OperatorTree.Add("=", Operator.Equal);

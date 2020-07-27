@@ -1,5 +1,4 @@
 ﻿using System.Threading.Tasks;
-using NightlyCode.Scripting.Data;
 
 namespace NightlyCode.Scripting.Parser {
 
@@ -19,24 +18,17 @@ namespace NightlyCode.Scripting.Parser {
         ITypeProvider Types { get; }
 
         /// <summary>
-        /// variables available to script
-        /// </summary>
-        IVariableProvider GlobalVariables { get; }
-
-        /// <summary>
         /// parses a script for execution
         /// </summary>
         /// <param name="data">data to parse</param>
-        /// <param name="variables">variables valid for this script (flagged as read-only)</param>
         /// <returns>script which can get executed</returns>
-        IScript Parse(string data, params Variable[] variables);
+        IScript Parse(string data);
 
         /// <summary>
         /// parses a script for execution in a task
         /// </summary>
         /// <param name="data">script code to parse</param>
-        /// <param name="variables">variables valid for this script (flagged as read-only)</param>
         /// <returns>script parsed from code</returns>
-        Task<IScript> ParseAsync(string data, params Variable[] variables);
+        Task<IScript> ParseAsync(string data);
     }
 }

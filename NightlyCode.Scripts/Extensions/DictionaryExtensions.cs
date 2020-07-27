@@ -16,39 +16,41 @@ namespace NightlyCode.Scripting.Extensions {
         /// <param name="dictionary">dictionary containing property values</param>
         /// <param name="targettype">type to create</param>
         /// <returns>type created from dictionary</returns>
-        public static object ToType(this Dictionary<object, object> dictionary, Type targettype)
-        {
+        public static object ToType(this Dictionary<object, object> dictionary, Type targettype) {
             object value = Activator.CreateInstance(targettype, true);
-            foreach (KeyValuePair<object, object> property in dictionary)
-            {
+            foreach(KeyValuePair<object, object> property in dictionary) {
                 string propertyname = property.Key.ToString();
                 PropertyInfo propertyinfo = targettype.GetProperty(propertyname, BindingFlags.Instance | BindingFlags.IgnoreCase | BindingFlags.Public);
-                if (propertyinfo == null)
+                if(propertyinfo == null)
                     continue;
 
-                if (property.Value is Dictionary<object, object> subdictionary && propertyinfo.PropertyType != typeof(Dictionary<object, object>))
-                {
+                if(property.Value is Dictionary<object, object> subdictionary && propertyinfo.PropertyType != typeof(Dictionary<object, object>)) {
                     propertyinfo.SetValue(value, ToType(subdictionary, propertyinfo.PropertyType));
                 }
-                else if (propertyinfo.PropertyType.IsArray)
-                {
+                else if(propertyinfo.PropertyType.IsArray) {
                     Array arrayvalue;
                     Type elementtype = propertyinfo.PropertyType.GetElementType();
-                    if (property.Value is Array sourcearray)
-                    {
+                    if(property.Value is Array sourcearray) {
                         arrayvalue = Array.CreateInstance(elementtype, sourcearray.Length);
-                        for (int i = 0; i < sourcearray.Length; ++i)
-                            arrayvalue.SetValue(Converter.Convert(sourcearray.GetValue(i), elementtype), i);
+                        for(int i = 0; i < sourcearray.Length; ++i) {
+                            if(sourcearray.GetValue(i) is Dictionary<object, object> itemdictionary)
+                                arrayvalue.SetValue(itemdictionary.ToType(elementtype), i);
+                            else
+                                arrayvalue.SetValue(Converter.Convert(sourcearray.GetValue(i), elementtype), i);
+                        }
                     }
-                    else
-                    {
+                    else {
                         arrayvalue = Array.CreateInstance(propertyinfo.PropertyType.GetElementType(), 1);
-                        arrayvalue.SetValue(Converter.Convert(property.Value, elementtype), 0);
+                        if(property.Value is Dictionary<object, object> itemdictionary)
+                            arrayvalue.SetValue(itemdictionary.ToType(elementtype), 0);
+                        else
+                            arrayvalue.SetValue(Converter.Convert(property.Value, elementtype), 0);
                     }
 
                     propertyinfo.SetValue(value, arrayvalue);
                 }
-                else propertyinfo.SetValue(value, Converter.Convert(property.Value, propertyinfo.PropertyType, true));
+                else
+                    propertyinfo.SetValue(value, Converter.Convert(property.Value, propertyinfo.PropertyType, true));
             }
 
             return value;

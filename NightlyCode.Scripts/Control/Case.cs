@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
@@ -35,15 +36,14 @@ namespace NightlyCode.Scripting.Control {
         /// <param name="context">script execution context</param>
         /// <returns>true if case matches value, false otherwise</returns>
         public bool Matches(object value, ScriptContext context) {
-            return conditions.Any(c => c.Execute(context).Equals(value));
+            return conditions.Any(c => value.IsEqual(c.Execute(context)));
         }
 
         /// <inheritdoc />
         public override string Literal => "case";
 
         /// <inheritdoc />
-        protected override object ExecuteToken(ScriptContext context)
-        {
+        protected override object ExecuteToken(ScriptContext context) {
             return Body.Execute(context);
         }
 
@@ -61,7 +61,7 @@ namespace NightlyCode.Scripting.Control {
                 if(IsDefault)
                     yield break;
 
-                foreach (IScriptToken parameter in conditions)
+                foreach(IScriptToken parameter in conditions)
                     yield return parameter;
             }
         }

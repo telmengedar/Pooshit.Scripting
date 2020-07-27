@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using NightlyCode.Scripting.Extensions;
-using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Control {
@@ -30,26 +29,25 @@ namespace NightlyCode.Scripting.Control {
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
-            VariableContext loopvariables = new VariableContext(context.Variables);
-            ScriptContext forcontext = new ScriptContext(loopvariables, context.Arguments, context.CancellationToken);
+            ScriptContext forcontext = new ScriptContext(context);
             initializer?.Execute(forcontext);
 
-            while (condition.Execute(forcontext).ToBoolean()) {
+            while(condition.Execute(forcontext).ToBoolean()) {
                 forcontext.CancellationToken.ThrowIfCancellationRequested();
 
-                object value=Body?.Execute(forcontext);
-                if (value is Return)
+                object value = Body?.Execute(forcontext);
+                if(value is Return)
                     return value;
-                if (value is Break breaktoken) {
+                if(value is Break breaktoken) {
                     int depth = breaktoken.Depth.Execute<int>(forcontext);
-                    if(depth<=1)
+                    if(depth <= 1)
                         return null;
                     return new Break(new ScriptValue(depth - 1));
                 }
 
-                if (value is Continue continuetoken) {
+                if(value is Continue continuetoken) {
                     int depth = continuetoken.Depth.Execute<int>(forcontext);
-                    if (depth <= 1) {
+                    if(depth <= 1) {
                         step?.Execute(forcontext);
                         continue;
                     }
@@ -74,11 +72,11 @@ namespace NightlyCode.Scripting.Control {
         /// <inheritdoc />
         public IEnumerable<IScriptToken> Parameters {
             get {
-                if (initializer != null)
+                if(initializer != null)
                     yield return initializer;
-                if (condition != null)
+                if(condition != null)
                     yield return condition;
-                if (step != null)
+                if(step != null)
                     yield return step;
             }
         }

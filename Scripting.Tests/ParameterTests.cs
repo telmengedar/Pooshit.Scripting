@@ -15,12 +15,12 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void PutFloatingPointToIntegerType() {
             IScript script = parser.Parse("parameter($input, \"int\") return($input)");
-            Assert.AreEqual(12, script.Execute(new Variable("input", 12.23)));
+            Assert.AreEqual(12, script.Execute(new VariableProvider(new Variable("input", 12.23))));
         }
 
         [Test, Parallelizable]
         public void SpecifyUnknownType() {
-            Assert.Throws<ScriptParserException>(()=>parser.Parse("parameter($input, \"ont\") return($input)"));
+            Assert.Throws<ScriptParserException>(() => parser.Parse("parameter($input, \"ont\") return($input)"));
         }
 
         [Test, Parallelizable]
@@ -33,7 +33,7 @@ namespace Scripting.Tests {
                 "return($result)"
             ));
 
-            Assert.AreEqual(6, script.Execute(new Variable("collection", new[] {1, 2, 3})));
+            Assert.AreEqual(6, script.Execute(new VariableProvider(new Variable("collection", new[] { 1, 2, 3 }))));
         }
 
         [Test, Parallelizable]
@@ -46,11 +46,11 @@ namespace Scripting.Tests {
                 "return($result)"
             ));
 
-            Assert.AreEqual(6, script.Execute(new Variable("collection", new[] {
+            Assert.AreEqual(6, script.Execute(new VariableProvider(new Variable("collection", new[] {
                 new Variable("first", 1),
                 new Variable("second", 2),
                 new Variable("third", 3)
-            })));
+            }))));
         }
 
         [Test, Parallelizable]
@@ -60,7 +60,7 @@ namespace Scripting.Tests {
                 "return($value*$value)"
             ));
 
-            Assert.AreEqual(9, script.Execute(new Variable("value", 3)));
+            Assert.AreEqual(9, script.Execute(new VariableProvider(new Variable("value", 3))));
         }
 
         [Test, Parallelizable]
@@ -80,7 +80,7 @@ namespace Scripting.Tests {
                 "return($value)"
             ));
 
-            Assert.AreEqual(typeof(int[]), script.Execute(new Variable("value", new object[] {1, 2, 3})).GetType());
+            Assert.AreEqual(typeof(int[]), script.Execute(new VariableProvider(new Variable("value", new object[] { 1, 2, 3 }))).GetType());
         }
 
         [Test, Parallelizable]
@@ -90,7 +90,7 @@ namespace Scripting.Tests {
                 "return($value)"
             ));
 
-            Assert.AreEqual(typeof(int[]), script.Execute(new Variable("value", new object[] {1, 2, 3}.Select(v => v))).GetType());
+            Assert.AreEqual(typeof(int[]), script.Execute(new VariableProvider(new Variable("value", new object[] { 1, 2, 3 }.Select(v => v)))).GetType());
         }
     }
 }
