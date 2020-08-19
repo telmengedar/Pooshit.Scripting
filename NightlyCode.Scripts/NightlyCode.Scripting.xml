@@ -3018,7 +3018,20 @@
             </summary>
             <param name="variables">variables to provide</param>
         </member>
+        <member name="M:NightlyCode.Scripting.Parser.VariableProvider.#ctor(System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Parser.VariableProvider"/>
+            </summary>
+            <param name="variables">variables to provide</param>
+        </member>
         <member name="M:NightlyCode.Scripting.Parser.VariableProvider.#ctor(NightlyCode.Scripting.Parser.IVariableProvider,NightlyCode.Scripting.Data.Variable[])">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Parser.VariableProvider"/>
+            </summary>
+            <param name="parentprovider">parent variable scope</param>
+            <param name="variables">variables to provide</param>
+        </member>
+        <member name="M:NightlyCode.Scripting.Parser.VariableProvider.#ctor(NightlyCode.Scripting.Parser.IVariableProvider,System.Collections.Generic.Dictionary{System.String,System.Object})">
             <summary>
             creates a new <see cref="T:NightlyCode.Scripting.Parser.VariableProvider"/>
             </summary>
@@ -3511,6 +3524,11 @@
             <remarks>
             when in doubt use typeof(object)
             </remarks>
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.NewInstance.Initializer">
+            <summary>
+            initializer used to set initial properties of object
+            </summary>
         </member>
         <member name="P:NightlyCode.Scripting.Tokens.NewInstance.Literal">
             <inheritdoc />

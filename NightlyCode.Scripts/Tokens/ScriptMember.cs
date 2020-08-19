@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Extern;
 using NightlyCode.Scripting.Operations;
 
@@ -11,7 +14,7 @@ namespace NightlyCode.Scripting.Tokens {
     /// <summary>
     /// reads a value from a host member
     /// </summary>
-    public class ScriptMember : AssignableToken, ICodePositionToken {
+    public class ScriptMember : AssignableToken {
         readonly IScriptToken hosttoken;
         readonly string membername;
 
@@ -42,8 +45,16 @@ namespace NightlyCode.Scripting.Tokens {
         protected override object ExecuteToken(ScriptContext context) {
             object host = hosttoken.Execute(context);
 
-            if (host is Dictionary<object, object> dictionary)
+            if (host is IDictionary dictionary) {
+                if (!dictionary.Contains(Member)) {
+                    object key = dictionary.Keys.Cast<object>().FirstOrDefault(k => (k is string skey) && string.Compare(skey.ToLower(), Member, CultureInfo.InvariantCulture, CompareOptions.IgnoreCase) == 0);
+                    if (key == null) 
+                        throw new ScriptRuntimeException($"A key with the name of {membername} was not found in dictionary", this);
+                    return dictionary[key];
+                }
                 return dictionary[Member];
+            }
+                
 
             string member = membername.ToLower();
             PropertyInfo property = host.GetType().GetProperties().FirstOrDefault(p => p.Name.ToLower() == member);
@@ -69,9 +80,24 @@ namespace NightlyCode.Scripting.Tokens {
             }
         }
 
-        object SetProperty(object host, PropertyInfo property, IScriptToken valuetoken, ScriptContext context)
-        {
-            object targetvalue = Converter.Convert(valuetoken.Execute(context), property.PropertyType);
+        object SetProperty(object host, PropertyInfo property, IScriptToken valuetoken, ScriptContext context) {
+            object targetvalue=null;
+            object value = valuetoken.Execute(context);
+
+            if (value != null) {
+                if (property.PropertyType.IsArray) {
+                    if (value is IEnumerable collection) {
+                        object[] values = value as object[] ?? collection.Cast<object>().ToArray();
+                        targetvalue = Array.CreateInstance(property.PropertyType.GetElementType(), values.Length);
+                        for (int i = 0; i < values.Length; ++i)
+                            ((Array) targetvalue).SetValue(values[i] is Dictionary<object, object> dic ? dic.ToType(property.PropertyType.GetElementType()) : Converter.Convert(values[i], property.PropertyType.GetElementType()), i);
+                    }
+                }
+                else {
+                    targetvalue = value is Dictionary<object, object> dic ? dic.ToType(property.PropertyType) : Converter.Convert(value, property.PropertyType);
+                }
+            }
+
             try
             {
                 property.SetValue(host, targetvalue, null);
@@ -102,7 +128,7 @@ namespace NightlyCode.Scripting.Tokens {
         /// <inheritdoc />
         protected override object AssignToken(IScriptToken token, ScriptContext context) {
             object host = hosttoken.Execute(context);
-            if (host is Dictionary<object, object> dictionary)
+            if (host is IDictionary dictionary)
                 return dictionary[Member] = token.Execute(context);
 
             string member = membername.ToLower();

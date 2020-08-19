@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
 
 namespace NightlyCode.Scripting.Tokens {
@@ -39,13 +40,27 @@ namespace NightlyCode.Scripting.Tokens {
         /// </remarks>
         public Type Type { get; }
 
+        /// <summary>
+        /// initializer used to set initial properties of object
+        /// </summary>
+        public IScriptToken Initializer { get; set; }
+
         /// <inheritdoc />
         public override string Literal => "new";
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
             try {
-                return provider.Create(parameters, context);
+                object instance = provider.Create(parameters, context);
+
+                if (Initializer != null) {
+                    object init = Initializer.Execute(context);
+                    if (init is Dictionary<object, object> dic)
+                        return dic.FillType(instance);
+                    throw new ArgumentException("Invalid object initializer value");
+                }
+
+                return instance;
             }
             catch (ScriptRuntimeException e) {
                 throw new ScriptRuntimeException(e.Message, this, e.InnerException);

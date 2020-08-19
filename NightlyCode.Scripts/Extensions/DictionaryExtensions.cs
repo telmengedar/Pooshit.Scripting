@@ -18,6 +18,12 @@ namespace NightlyCode.Scripting.Extensions {
         /// <returns>type created from dictionary</returns>
         public static object ToType(this Dictionary<object, object> dictionary, Type targettype) {
             object value = Activator.CreateInstance(targettype, true);
+            return FillType(dictionary, value);
+        }
+
+
+        public static object FillType(this Dictionary<object, object> dictionary, object value) {
+            Type targettype = value.GetType();
             foreach(KeyValuePair<object, object> property in dictionary) {
                 string propertyname = property.Key.ToString();
                 PropertyInfo propertyinfo = targettype.GetProperty(propertyname, BindingFlags.Instance | BindingFlags.IgnoreCase | BindingFlags.Public);

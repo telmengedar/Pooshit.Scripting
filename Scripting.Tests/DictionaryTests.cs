@@ -15,6 +15,7 @@ namespace Scripting.Tests {
         [OneTimeSetUp]
         public void SetUp() {
             parser.Types.AddType<List<object>>("list");
+            parser.Types.AddType<ComplexType>();
         }
 
         public void CallComplex(ComplexType argument) {
@@ -230,5 +231,66 @@ namespace Scripting.Tests {
             Assert.AreEqual(9090, script.Execute<Dictionary<object, object>>()["Port"]);
         }
 
+        [Test, Parallelizable]
+        public void ObjectInitializer() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "return(new ComplexType {",
+                "  \"Parameter\": {",
+                "    \"Name\" : \"Hello\",",
+                "    \"Value\": \"World\"",
+                "  },",
+                "  \"Count\"  : 3,",
+                "  \"Numbers\": [1,2,3]",
+                "})"
+            ));
+
+            ComplexType result = script.Execute<ComplexType>();
+            Assert.NotNull(result.Parameter);
+            Assert.AreEqual("Hello", result.Parameter.Name);
+            Assert.AreEqual("World", result.Parameter.Value);
+            Assert.AreEqual(3, result.Count);
+            Assert.AreEqual(3, result.Numbers.Length);
+            Assert.AreEqual(1, result.Numbers[0]);
+            Assert.AreEqual(2, result.Numbers[1]);
+            Assert.AreEqual(3, result.Numbers[2]);
+        }
+
+        [Test, Parallelizable]
+        public void PropertySetter() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$t=new ComplexType()",
+                "$t.Parameter= {",
+                "    \"Name\" : \"Hello\",",
+                "    \"Value\": \"World\"",
+                "}",
+                "$t.Parameters=[{},{},{}]",
+                "return($t)"
+            ));
+
+            ComplexType result = script.Execute<ComplexType>();
+            Assert.NotNull(result.Parameter);
+            Assert.AreEqual("Hello", result.Parameter.Name);
+            Assert.AreEqual("World", result.Parameter.Value);
+            Assert.NotNull(result.Parameters);
+            Assert.AreEqual(3, result.Parameters.Length);
+        }
+
+        [Test, Parallelizable]
+        public void AccessDictionaryMember() {
+            Dictionary<string, object> dictionary = new Dictionary<string, object> {
+                ["Result"] = 8
+            };
+            IScript script = parser.Parse("return($state.result)");
+            Assert.AreEqual(8, script.Execute(new VariableProvider(new Variable("state", dictionary))));
+        }
+
+        [Test,Parallelizable]
+        public void SetDictionaryMemberAsProperty() {
+            Dictionary<string, object> dictionary = new Dictionary<string, object>();
+            IScript script = parser.Parse("$state.result=8");
+            script.Execute(new VariableProvider(new Variable("state", dictionary)));
+            Assert.AreEqual(8, dictionary["result"]);
+
+        }
     }
 }

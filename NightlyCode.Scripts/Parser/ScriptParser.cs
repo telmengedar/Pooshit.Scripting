@@ -425,10 +425,21 @@ namespace NightlyCode.Scripting.Parser {
                     throw new ScriptParserException(typestart, index, startline, $"Unknown type {type}");
 
                 // setting a parent to non null forces the parser to interpret '{' as statement block and not as dictionary
-                return new NewInstance(type, typeprovider.ProvidedType, typeprovider, ParseControlParameters(null, data, ref index, ref linenumber)) {
+                SkipWhitespaces(data, ref index, ref linenumber);
+
+                IScriptToken initializer = null;
+                if (data[index] == '{') {
+                    ++index;
+                    initializer = ParseDictionary(null, data, ref index, ref linenumber);
+                }
+
+                IScriptToken[] constructorparameters = initializer != null ? new IScriptToken[0] : ParseControlParameters(null, data, ref index, ref linenumber);
+
+                return new NewInstance(type, typeprovider.ProvidedType, typeprovider, constructorparameters) {
                     LineNumber = startline,
                     TextIndex = start,
-                    TokenLength = index - start
+                    TokenLength = index - start,
+                    Initializer = initializer
                 };
             }
 

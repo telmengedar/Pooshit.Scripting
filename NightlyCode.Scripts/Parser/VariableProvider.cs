@@ -22,12 +22,31 @@ namespace NightlyCode.Scripting.Parser {
         /// <summary>
         /// creates a new <see cref="VariableProvider"/>
         /// </summary>
+        /// <param name="variables">variables to provide</param>
+        public VariableProvider(Dictionary<string, object> variables)
+            : this(null, variables) {
+        }
+
+        /// <summary>
+        /// creates a new <see cref="VariableProvider"/>
+        /// </summary>
         /// <param name="parentprovider">parent variable scope</param>
         /// <param name="variables">variables to provide</param>
         public VariableProvider(IVariableProvider parentprovider, params Variable[] variables) {
             this.parentprovider = parentprovider;
             foreach(Variable variable in variables)
                 Values[variable.Name] = variable.Value;
+        }
+
+        /// <summary>
+        /// creates a new <see cref="VariableProvider"/>
+        /// </summary>
+        /// <param name="parentprovider">parent variable scope</param>
+        /// <param name="variables">variables to provide</param>
+        public VariableProvider(IVariableProvider parentprovider, Dictionary<string, object> variables) {
+            this.parentprovider = parentprovider;
+            foreach(KeyValuePair<string, object> variable in variables)
+                Values[variable.Key] = variable.Value;
         }
 
         /// <inheritdoc />

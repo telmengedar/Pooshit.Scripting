@@ -19,5 +19,7 @@
         public int Count { get; set; }
 
         public int[] Numbers { get; set; }
+
+        public Parameter[] Parameters { get; set; }
     }
 }
