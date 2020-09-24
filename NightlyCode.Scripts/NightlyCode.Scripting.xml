@@ -1475,21 +1475,43 @@
             </summary>
             <remarks>does the same as <see cref="T:NightlyCode.Scripting.Tokens.IScriptToken"/> but has a more clear name</remarks>
         </member>
+        <member name="M:NightlyCode.Scripting.IScript.Execute(System.Collections.Generic.IDictionary{System.String,System.Object})">
+            <summary>
+            executes the script and returns the result
+            </summary>
+            <returns>script result</returns>
+        </member>
         <member name="M:NightlyCode.Scripting.IScript.Execute(NightlyCode.Scripting.Parser.IVariableProvider)">
             <summary>
             executes the script and returns the result
             </summary>
             <returns>script result</returns>
         </member>
+        <member name="M:NightlyCode.Scripting.IScript.Execute``1(System.Collections.Generic.IDictionary{System.String,System.Object})">
+            <summary>
+            executes the script and returns a typed result
+            </summary>
+            <remarks>
+            this just executes <see cref="M:NightlyCode.Scripting.IScript.Execute(System.Collections.Generic.IDictionary{System.String,System.Object})"/> and tries to convert the result
+            </remarks>
+            <typeparam name="T">type of result to return</typeparam>
+            <returns>result of script execution</returns>
+        </member>
         <member name="M:NightlyCode.Scripting.IScript.Execute``1(NightlyCode.Scripting.Parser.IVariableProvider)">
             <summary>
             executes the script and returns a typed result
             </summary>
             <remarks>
-            this just executes <see cref="M:NightlyCode.Scripting.IScript.Execute(NightlyCode.Scripting.Parser.IVariableProvider)"/> and tries to convert the result
+            this just executes <see cref="M:NightlyCode.Scripting.IScript.Execute(System.Collections.Generic.IDictionary{System.String,System.Object})"/> and tries to convert the result
             </remarks>
             <typeparam name="T">type of result to return</typeparam>
             <returns>result of script execution</returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.IScript.ExecuteAsync(System.Collections.Generic.IDictionary{System.String,System.Object},System.Threading.CancellationToken)">
+            <summary>
+            executes the script and returns the result
+            </summary>
+            <returns>script result</returns>
         </member>
         <member name="M:NightlyCode.Scripting.IScript.ExecuteAsync(NightlyCode.Scripting.Parser.IVariableProvider,System.Threading.CancellationToken)">
             <summary>
@@ -1497,12 +1519,22 @@
             </summary>
             <returns>script result</returns>
         </member>
+        <member name="M:NightlyCode.Scripting.IScript.ExecuteAsync``1(System.Collections.Generic.IDictionary{System.String,System.Object},System.Threading.CancellationToken)">
+            <summary>
+            executes the script and returns a typed result
+            </summary>
+            <remarks>
+            this just executes <see cref="M:NightlyCode.Scripting.IScript.Execute(System.Collections.Generic.IDictionary{System.String,System.Object})"/> and tries to convert the result
+            </remarks>
+            <typeparam name="T">type of result to return</typeparam>
+            <returns>result of script execution</returns>
+        </member>
         <member name="M:NightlyCode.Scripting.IScript.ExecuteAsync``1(NightlyCode.Scripting.Parser.IVariableProvider,System.Threading.CancellationToken)">
             <summary>
             executes the script and returns a typed result
             </summary>
             <remarks>
-            this just executes <see cref="M:NightlyCode.Scripting.IScript.Execute(NightlyCode.Scripting.Parser.IVariableProvider)"/> and tries to convert the result
+            this just executes <see cref="M:NightlyCode.Scripting.IScript.Execute(System.Collections.Generic.IDictionary{System.String,System.Object})"/> and tries to convert the result
             </remarks>
             <typeparam name="T">type of result to return</typeparam>
             <returns>result of script execution</returns>
@@ -3202,6 +3234,9 @@
             <param name="script">root token of script to be executed</param>
             <param name="typeprovider">access to installed types</param>
         </member>
+        <member name="M:NightlyCode.Scripting.Script.ExecuteAsync``1(System.Collections.Generic.IDictionary{System.String,System.Object},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
         <member name="M:NightlyCode.Scripting.Script.ExecuteAsync``1(NightlyCode.Scripting.Parser.IVariableProvider,System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
@@ -3210,7 +3245,16 @@
             script body
             </summary>
         </member>
+        <member name="M:NightlyCode.Scripting.Script.Execute(System.Collections.Generic.IDictionary{System.String,System.Object})">
+            <inheritdoc />
+        </member>
         <member name="M:NightlyCode.Scripting.Script.Execute(NightlyCode.Scripting.Parser.IVariableProvider)">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Script.Execute``1(System.Collections.Generic.IDictionary{System.String,System.Object})">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Script.ExecuteAsync(System.Collections.Generic.IDictionary{System.String,System.Object},System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
         <member name="M:NightlyCode.Scripting.Script.ExecuteAsync(NightlyCode.Scripting.Parser.IVariableProvider,System.Threading.CancellationToken)">

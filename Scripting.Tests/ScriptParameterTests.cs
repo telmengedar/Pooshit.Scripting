@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using NightlyCode.Scripting;
-using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Visitors;

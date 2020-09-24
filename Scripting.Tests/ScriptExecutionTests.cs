@@ -22,7 +22,7 @@ namespace Scripting.Tests {
 
             CancellationTokenSource tokensource = new CancellationTokenSource();
 
-            Task execution = script.ExecuteAsync(null, tokensource.Token);
+            Task execution = script.ExecuteAsync((IVariableProvider)null, tokensource.Token);
 
             tokensource.CancelAfter(1000);
 

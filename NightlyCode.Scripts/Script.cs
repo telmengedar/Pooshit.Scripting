@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using NightlyCode.Scripting.Errors;
@@ -12,7 +13,7 @@ namespace NightlyCode.Scripting {
     /// script parsed by <see cref="ScriptParser"/>
     /// </summary>
     class Script : IScript {
-        ITypeProvider typeprovider;
+        readonly ITypeProvider typeprovider;
         readonly IScriptToken script;
 
         /// <summary>
@@ -38,6 +39,11 @@ namespace NightlyCode.Scripting {
         }
 
         /// <inheritdoc />
+        public Task<T> ExecuteAsync<T>(IDictionary<string, object> variables, CancellationToken cancellationtoken = default) {
+            return ExecuteAsync<T>(new VariableProvider(variables), cancellationtoken);
+        }
+
+        /// <inheritdoc />
         public async Task<T> ExecuteAsync<T>(IVariableProvider variables = null, CancellationToken cancellationtoken = default) {
             object result = await ExecuteAsync(variables, cancellationtoken);
             return ConvertResult<T>(result);
@@ -49,8 +55,23 @@ namespace NightlyCode.Scripting {
         public IScriptToken Body => script;
 
         /// <inheritdoc />
+        public object Execute(IDictionary<string, object> variables) {
+            return Execute(new VariableProvider(variables));
+        }
+
+        /// <inheritdoc />
         public object Execute(IVariableProvider variables = null) {
             return script.Execute(new ScriptContext(variables, typeprovider));
+        }
+
+        /// <inheritdoc />
+        public T Execute<T>(IDictionary<string, object> variables) {
+            return Execute<T>(new VariableProvider(variables));
+        }
+
+        /// <inheritdoc />
+        public Task<object> ExecuteAsync(IDictionary<string, object> variables, CancellationToken cancellationtoken = default) {
+            return ExecuteAsync(new VariableProvider(variables), cancellationtoken);
         }
 
         /// <inheritdoc />

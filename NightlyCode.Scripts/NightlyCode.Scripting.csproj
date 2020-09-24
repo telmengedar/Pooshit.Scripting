@@ -5,7 +5,7 @@
     <AssemblyName>NightlyCode.Scripting</AssemblyName>
     <RootNamespace>NightlyCode.Scripting</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.17.36-preview</Version>
+    <Version>0.17.38-preview</Version>
     <Description>Provides an environment to parse and execute scripts</Description>
     <Copyright>Toni Gottschall</Copyright>
     <PackageLicenseUrl></PackageLicenseUrl>
@@ -15,8 +15,8 @@
     <Company>NightlyCode</Company>
     <Authors>Toni Gottschall</Authors>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <AssemblyVersion>0.17.36.0</AssemblyVersion>
-    <FileVersion>0.17.36.0</FileVersion>
+    <AssemblyVersion>0.17.38.0</AssemblyVersion>
+    <FileVersion>0.17.38.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">

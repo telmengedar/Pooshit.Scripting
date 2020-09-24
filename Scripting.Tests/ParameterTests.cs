@@ -13,6 +13,14 @@ namespace Scripting.Tests {
         readonly IScriptParser parser = new ScriptParser();
 
         [Test, Parallelizable]
+        public void CustomTypeName() {
+            IScriptParser customparser=new ScriptParser();
+            customparser.Types.AddType<string>("onk");
+            IScript script = customparser.Parse("parameter($input, onk) return($input)");
+            Assert.AreEqual("haha", script.Execute(new VariableProvider(new Variable("input", "haha"))));
+        }
+
+        [Test, Parallelizable]
         public void PutFloatingPointToIntegerType() {
             IScript script = parser.Parse("parameter($input, int) return($input)");
             Assert.AreEqual(12, script.Execute(new VariableProvider(new Variable("input", 12.23))));
