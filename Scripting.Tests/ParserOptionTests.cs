@@ -1,4 +1,5 @@
 ﻿using NightlyCode.Scripting;
+using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Providers;
@@ -16,11 +17,7 @@ namespace Scripting.Tests {
                 TypeInstanceProvidersEnabled = false
             };
 
-            IScript script = parser.Parse("$collection=new list() $collection.count");
-
-            MetricVisitor visitor=new MetricVisitor();
-            visitor.Visit(script);
-            Assert.AreEqual(0, visitor.NewInstances);
+            Assert.Throws<ScriptParserException>(() => parser.Parse("$collection=new list() $collection.count"));
         }
 
         [Test, Parallelizable]
@@ -29,10 +26,7 @@ namespace Scripting.Tests {
                 TypeCastsEnabled = false
             };
 
-            IScript script = parser.Parse("$number=int(\"7\")");
-            MetricVisitor visitor=new MetricVisitor();
-            visitor.Visit(script);
-            Assert.AreEqual(0, visitor.TypeCasts);
+            Assert.Throws<ScriptParserException>(() => parser.Parse("$number=int(\"7\")"));
         }
 
         [TestCase("wait(0)")]
@@ -69,7 +63,7 @@ namespace Scripting.Tests {
             ScriptParser parser = new ScriptParser {
                 ImportsEnabled = false,
             };
-            parser.MethodResolver = new ResourceScriptMethodProvider(typeof(ImportTests).Assembly, parser);
+            parser.ImportProvider = new ResourceScriptMethodProvider(typeof(ImportTests).Assembly, parser);
 
             IScript script = parser.Parse(
                 ScriptCode.Create(

@@ -186,9 +186,10 @@ namespace NightlyCode.Scripting.Operations {
             int minimumcount = methodparameters.Count(p => !p.HasDefaultValue);
             if (hasparams)
                 --minimumcount;
+
             if (isextension)
                 // extension methods have their first parameter specified by script engine
-                --minimumcount;
+                ++parametercount;
 
             if (parametercount < minimumcount)
                 return false;

@@ -30,15 +30,25 @@ namespace NightlyCode.Scripting.Parser.Resolvers {
         public bool EnableCaching { get; set; } = true;
 
         /// <inheritdoc />
-        public IResolvedMethod Resolve(object host, string methodname, object[] parameters, ReferenceParameter[] referenceparameters) {
+        public IResolvedMethod Resolve(object host, string methodname, object[] parameters, ReferenceParameter[] referenceparameters, Type[] genericparameters=null) {
             MethodCacheKey cachekey=null;
             if (EnableCaching) {
-                cachekey = new MethodCacheKey(host?.GetType(), methodname, parameters.Select(p => p?.GetType()).ToArray(), referenceparameters);
+                cachekey = new MethodCacheKey(host?.GetType(), methodname, parameters.Select(p => p?.GetType()).ToArray(), referenceparameters, genericparameters);
                 if (methodcache.TryGetValue(cachekey, out IResolvedMethod method))
                     return method;
             }
 
-            MethodInfo[] methods = host.GetType().GetMethods().Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters.Length)).ToArray();
+            MethodInfo[] methods;
+
+            if (genericparameters == null)
+                methods = host.GetType().GetMethods().Where(m => m.Name.ToLower() == methodname && !m.IsGenericMethodDefinition && MethodOperations.MatchesParameterCount(m, parameters.Length)).ToArray();
+            else {
+                methods = host.GetType()
+                    .GetMethods()
+                    .Where(m => m.Name.ToLower() == methodname && m.IsGenericMethodDefinition && m.GetGenericArguments().Length == genericparameters.Length && MethodOperations.MatchesParameterCount(m, parameters.Length))
+                    .Select(m => m.MakeGenericMethod(genericparameters))
+                    .ToArray();
+            }
 
             Tuple<MethodInfo, int>[] evaluation = methods.Select(m => MethodOperations.GetMethodMatchValue(m, parameters)).Where(e => e.Item2 >= 0).OrderBy(m => m.Item2).ToArray();
             if (evaluation.Length > 0) {

@@ -20,10 +20,12 @@ namespace NightlyCode.Scripting.Tokens {
         /// <param name="hosttoken">host of method to be called</param>
         /// <param name="methodname">name of method to call</param>
         /// <param name="parameters">parameters for method call</param>
-        public ScriptMethod(IMethodResolver resolver, IScriptToken hosttoken, string methodname, IScriptToken[] parameters) {
+        /// <param name="genericparameters">generic parameters used for generic method templates</param>
+        public ScriptMethod(IMethodResolver resolver, IScriptToken hosttoken, string methodname, IScriptToken[] parameters, IScriptToken[] genericparameters=null) {
             Host = hosttoken;
             MethodName = methodname.ToLower();
             this.Parameters = parameters;
+            GenericParameters = genericparameters;
             this.resolver = resolver;
         }
 
@@ -45,11 +47,26 @@ namespace NightlyCode.Scripting.Tokens {
         /// </summary>
         public IScriptToken[] Parameters { get; }
 
+        /// <summary>
+        /// generic parameters for generic method templates
+        /// </summary>
+        public IScriptToken[] GenericParameters { get; }
+
         /// <inheritdoc />
         public bool ParametersOptional => false;
 
         /// <inheritdoc />
         public override string Literal => $".{MethodName}()";
+
+        Type CreateGenericParameters(ScriptContext context, IScriptToken token) {
+            object value = token.Execute(context);
+            if (value is Type type)
+                return type;
+
+            string typename = value.ToString();
+            type = context.TypeProvider.GetType(typename)?.ProvidedType;
+            return type;
+        }
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
@@ -67,7 +84,6 @@ namespace NightlyCode.Scripting.Tokens {
             }
 
             object[] parametervalues = Parameters.Select(p => p.Execute(context)).ToArray();
-
             List<ReferenceParameter> references = new List<ReferenceParameter>();
             for(int i = 0; i < Parameters.Length; ++i) {
                 if(!(Parameters[i] is Reference r))
@@ -75,8 +91,12 @@ namespace NightlyCode.Scripting.Tokens {
                 references.Add(new ReferenceParameter(i, r));
             }
 
+            Type[] genericparameters = null;
+            if (GenericParameters != null)
+                genericparameters = GenericParameters.Select(p => CreateGenericParameters(context, p)).ToArray();
+
             try {
-                IResolvedMethod method = resolver.Resolve(host, MethodName, parametervalues, references.ToArray());
+                IResolvedMethod method = resolver.Resolve(host, MethodName, parametervalues, references.ToArray(), genericparameters);
                 return method.Call(this, host, parametervalues, context);
             }
             catch(ScriptRuntimeException e) {

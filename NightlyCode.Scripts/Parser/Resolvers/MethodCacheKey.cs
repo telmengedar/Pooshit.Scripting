@@ -16,11 +16,13 @@ namespace NightlyCode.Scripting.Parser.Resolvers {
         /// <param name="methodName">method to call</param>
         /// <param name="parameterTypes">parameter value types</param>
         /// <param name="referenceInformation">information about reference parameters (optional)</param>
-        public MethodCacheKey(Type hostType, string methodName, Type[] parameterTypes, ReferenceParameter[] referenceInformation) {
+        /// <param name="genericarguments">arguments for generic method templates</param>
+        public MethodCacheKey(Type hostType, string methodName, Type[] parameterTypes, ReferenceParameter[] referenceInformation, Type[] genericarguments) {
             HostType = hostType;
             MethodName = methodName;
             ParameterTypes = parameterTypes;
             ReferenceInformation = referenceInformation;
+            GenericArguments = genericarguments;
         }
 
         /// <summary>
@@ -50,6 +52,11 @@ namespace NightlyCode.Scripting.Parser.Resolvers {
         public Type[] ParameterTypes { get; }
 
         /// <summary>
+        /// arguments for generic method templates
+        /// </summary>
+        public Type[] GenericArguments { get; }
+
+        /// <summary>
         /// information about reference parameters
         /// </summary>
         public ReferenceParameter[] ReferenceInformation { get; }
@@ -58,7 +65,8 @@ namespace NightlyCode.Scripting.Parser.Resolvers {
             return HostType == other.HostType
                    && MethodName == other.MethodName
                    && ArrayExtensions.Equals(ParameterTypes, other.ParameterTypes)
-                   && ArrayExtensions.Equals(ReferenceInformation, other.ReferenceInformation);
+                   && ArrayExtensions.Equals(ReferenceInformation, other.ReferenceInformation)
+                   && ArrayExtensions.Equals(GenericArguments, other.GenericArguments);
         }
 
         public override bool Equals(object obj) {
@@ -74,6 +82,7 @@ namespace NightlyCode.Scripting.Parser.Resolvers {
                 hashCode = (hashCode * 397) ^ (MethodName != null ? MethodName.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (ParameterTypes != null ? ArrayExtensions.GetHashCode(ParameterTypes) : 0);
                 hashCode = (hashCode * 397) ^ (ReferenceInformation != null ? ArrayExtensions.GetHashCode(ReferenceInformation) : 0);
+                hashCode = (hashCode * 397) ^ (GenericArguments != null ? ArrayExtensions.GetHashCode(GenericArguments) : 0);
                 return hashCode;
             }
         }

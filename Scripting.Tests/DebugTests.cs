@@ -18,7 +18,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void ExternalMethodFail() {
-            ((ScriptParser)parser).MethodResolver = new ResourceScriptMethodProvider(typeof(DebugTests).Assembly, parser);
+            ((ScriptParser)parser).ImportProvider = new ResourceScriptMethodProvider(typeof(DebugTests).Assembly, parser);
 
             IScript script = parser.Parse(ScriptCode.Create(
                 "// import method which fails in the end",

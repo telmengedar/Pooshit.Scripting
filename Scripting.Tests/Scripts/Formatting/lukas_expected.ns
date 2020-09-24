@@ -13,7 +13,7 @@ Change Log:
 // Methods:
 
 //---------------------------------------------------------------------------
-parameter($PositionId, "string")
+parameter($PositionId, string)
 // get all Positions that could posibly get matched with this
 
 using($backend = $symphony.connect()) {

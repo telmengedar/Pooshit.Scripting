@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using NightlyCode.Scripting.Parser.Resolvers;
 using NightlyCode.Scripting.Providers;
 
@@ -6,9 +7,13 @@ namespace NightlyCode.Scripting.Parser {
 
     /// <inheritdoc />
     public class TypeProvider : ITypeProvider {
-        IMethodResolver resolver;
+        readonly IMethodResolver resolver;
         readonly Dictionary<string, ITypeInstanceProvider> types=new Dictionary<string, ITypeInstanceProvider>();
-
+        
+        /// <summary>
+        /// creates a new <see cref="TypeProvider"/>
+        /// </summary>
+        /// <param name="resolver">provided to typeinstance provider</param>
         public TypeProvider(IMethodResolver resolver) {
             this.resolver = resolver ?? new MethodResolver(null);
         }
@@ -25,10 +30,15 @@ namespace NightlyCode.Scripting.Parser {
         }
 
         /// <inheritdoc />
+        public void AddType(Type type, string name = null) {
+            if(name == null)
+                name = type.Name.ToLower();
+            AddType(name, new TypeInstanceProvider(type, resolver));
+        }
+
+        /// <inheritdoc />
         public void AddType<T>(string name=null) {
-            if (name == null)
-                name = typeof(T).Name.ToLower();
-            AddType(name, new TypeInstanceProvider(typeof(T), resolver));
+            AddType(typeof(T), name);
         }
 
         /// <inheritdoc />

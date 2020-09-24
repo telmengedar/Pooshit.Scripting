@@ -13,7 +13,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void ExecuteImportedScript() {
             ScriptParser parser = new ScriptParser();
-            parser.MethodResolver = new ResourceScriptMethodProvider(typeof(ImportTests).Assembly, parser);
+            parser.ImportProvider = new ResourceScriptMethodProvider(typeof(ImportTests).Assembly, parser);
             IScript script = parser.Parse(
                 ScriptCode.Create(
                     "$method=import(\"Scripting.Tests.Scripts.External.increasedbyone.ns\")",
@@ -26,7 +26,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void ImplicitExecute() {
             ScriptParser parser = new ScriptParser();
-            parser.MethodResolver = new ResourceScriptMethodProvider(typeof(ImportTests).Assembly, parser);
+            parser.ImportProvider = new ResourceScriptMethodProvider(typeof(ImportTests).Assembly, parser);
             IScript script = parser.Parse(
                 ScriptCode.Create(
                     "$method=import(\"Scripting.Tests.Scripts.External.increasedbyone.ns\")",
@@ -40,7 +40,7 @@ namespace Scripting.Tests {
         [Parallelizable]
         public void ImportAndExecuteExternal(string resource) {
             ScriptParser parser = new ScriptParser();
-            parser.MethodResolver = new ResourceScriptMethodProvider(typeof(ImportTests).Assembly, parser);
+            parser.ImportProvider = new ResourceScriptMethodProvider(typeof(ImportTests).Assembly, parser);
             IScript script = parser.Parse(
                 ScriptCode.Create(
                     "$method=import($script)",

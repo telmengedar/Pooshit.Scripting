@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace NightlyCode.Scripting.Parser {
 
@@ -20,6 +21,13 @@ namespace NightlyCode.Scripting.Parser {
         /// <param name="name">name of type to add</param>
         /// <param name="provider">instance provider</param>
         void AddType(string name, ITypeInstanceProvider provider);
+
+        /// <summary>
+        /// adds an instance provider for a type
+        /// </summary>
+        /// <param name="name">name of type to add</param>
+        /// <param name="type">type to add</param>
+        void AddType(Type type, string name=null);
 
         /// <summary>
         /// adds a type using a type provider calling existing constructors

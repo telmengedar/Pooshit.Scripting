@@ -21,7 +21,7 @@ namespace NightlyCode.Scripting.Tokens {
         /// <param name="variable">parameter variable</param>
         /// <param name="type">value which expresses the parameter type</param>
         /// <param name="defaultvalue">default value to use when parameter value is not provided</param>
-        public ScriptParameter(ITypeProvider typeProvider, ScriptVariable variable, ScriptValue type, IScriptToken defaultvalue) {
+        public ScriptParameter(ITypeProvider typeProvider, ScriptVariable variable, TypeToken type, IScriptToken defaultvalue) {
             Variable = variable;
             Type = type;
             TypeProvider = typeProvider;
@@ -41,7 +41,7 @@ namespace NightlyCode.Scripting.Tokens {
         /// <summary>
         /// type parameter is forced to
         /// </summary>
-        public ScriptValue Type { get; }
+        public TypeToken Type { get; }
 
         /// <summary>
         /// default value when parameter value is not provided
@@ -53,21 +53,9 @@ namespace NightlyCode.Scripting.Tokens {
 
         /// <inheritdoc />
         protected override object ExecuteToken(ScriptContext context) {
-            string typename = Type.Execute(context)?.ToString();
-            if(typename == null)
-                throw new ScriptRuntimeException("Invalid parameter type specification", this);
-
-            bool isarray = typename.EndsWith("[]");
-            if(isarray)
-                typename = typename.Substring(0, typename.Length - 2);
-
-            Type type = TypeProvider.DetermineType(this, typename);
-            Type elementtype = null;
-
-            if(isarray) {
-                elementtype = type;
-                type = typeof(IEnumerable<>).MakeGenericType(type);
-            }
+            Type type = Type.Execute(context) as Type;
+            if (type == null)
+                throw new ScriptRuntimeException("Type token does not execute to type", null);
 
             object value;
             if(context.Arguments.ContainsVariableInHierarchy(Variable.Name))
@@ -79,6 +67,7 @@ namespace NightlyCode.Scripting.Tokens {
                     throw new ScriptRuntimeException($"Variable {Variable.Name} not provided by script call and no default value provided", this);
             }
 
+            
             if(value == null) {
                 if(type.IsValueType)
                     throw new ScriptRuntimeException("Unable to pass null to a value parameter", this);
@@ -87,13 +76,18 @@ namespace NightlyCode.Scripting.Tokens {
 
             if(!type.IsInstanceOfType(value)) {
                 try {
-                    if(isarray) {
+                    if(type.IsArray) {
+                        Type elementtype = type.GetElementType();
                         if(value is IEnumerable enumeration) {
                             object[] items = enumeration.Cast<object>().ToArray();
                             Array array = Array.CreateInstance(elementtype, items.Length);
                             int index = 0;
-                            foreach(object item in items)
-                                array.SetValue(Converter.Convert(item, elementtype), index++);
+                            foreach (object item in items) {
+                                if (item is IDictionary dic)
+                                    array.SetValue(dic.ToType(elementtype), index++);
+                                else array.SetValue(Converter.Convert(item, elementtype), index++);
+                            }
+
                             value = array;
                         }
                         else {
@@ -103,11 +97,13 @@ namespace NightlyCode.Scripting.Tokens {
                         }
                     }
                     else {
-                        value = Converter.Convert(value, type);
+                        if (value is IDictionary dic)
+                            value = dic.ToType(type);
+                        else value = Converter.Convert(value, type);
                     }
                 }
                 catch(Exception e) {
-                    throw new ScriptRuntimeException($"Unable to convert parameter '{value}' to '{typename}'", this, e);
+                    throw new ScriptRuntimeException($"Unable to convert parameter '{value}' to '{type.Name}'", this, e);
                 }
             }
 

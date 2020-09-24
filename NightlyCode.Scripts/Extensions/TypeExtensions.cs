@@ -3,7 +3,6 @@ using System.Linq;
 using System.Reflection;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Parser;
-using NightlyCode.Scripting.Tokens;
 
 namespace NightlyCode.Scripting.Extensions {
 
@@ -19,13 +18,19 @@ namespace NightlyCode.Scripting.Extensions {
         /// <param name="token">token from which type should be determined</param>
         /// <param name="typename">name of type</param>
         /// <returns>Type determined from string</returns>
-        public static Type DetermineType(this ITypeProvider provider, IScriptToken token, string typename) {
+        public static Type DetermineType(this ITypeProvider provider, string typename) {
+            bool isarray = typename.EndsWith("[]");
+            if (isarray)
+                typename = typename.Substring(0, typename.Length - 2);
+
             ITypeInstanceProvider instanceprovider = provider.GetType(typename);
             if (instanceprovider != null) {
                 Type type = instanceprovider.ProvidedType;
                 if (type == null)
-                    throw new ScriptRuntimeException($"type '{typename}' does not provide type information", token);
+                    throw new ScriptParserException(-1, -1, -1, $"type '{typename}' does not provide type information");
 
+                if (isarray)
+                    return type.MakeArrayType();
                 return type;
             }
             else {
@@ -49,8 +54,10 @@ namespace NightlyCode.Scripting.Extensions {
                 }
 
                 if (type == null)
-                    throw new ScriptRuntimeException($"Unknown type '{typename}'", token);
+                    throw new ScriptParserException(-1, -1, -1, $"Unknown type '{typename}'");
 
+                if(isarray)
+                    return type.MakeArrayType();
                 return type;
             }
         }

@@ -14,6 +14,12 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void PutFloatingPointToIntegerType() {
+            IScript script = parser.Parse("parameter($input, int) return($input)");
+            Assert.AreEqual(12, script.Execute(new VariableProvider(new Variable("input", 12.23))));
+        }
+
+        [Test, Parallelizable]
+        public void PutFloatingPointToIntegerTypeString() {
             IScript script = parser.Parse("parameter($input, \"int\") return($input)");
             Assert.AreEqual(12, script.Execute(new VariableProvider(new Variable("input", 12.23))));
         }
@@ -25,6 +31,19 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void ArrayParameter() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "parameter($collection, int[])",
+                "$result=0",
+                "foreach($number,$collection)",
+                "  $result+=$number",
+                "return($result)"
+            ));
+
+            Assert.AreEqual(6, script.Execute(new VariableProvider(new Variable("collection", new[] { 1, 2, 3 }))));
+        }
+
+        [Test, Parallelizable]
+        public void ArrayParameterString() {
             IScript script = parser.Parse(ScriptCode.Create(
                 "parameter($collection, \"int[]\")",
                 "$result=0",

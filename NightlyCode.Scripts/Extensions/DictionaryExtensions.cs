@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using NightlyCode.Scripting.Extern;
@@ -16,15 +17,21 @@ namespace NightlyCode.Scripting.Extensions {
         /// <param name="dictionary">dictionary containing property values</param>
         /// <param name="targettype">type to create</param>
         /// <returns>type created from dictionary</returns>
-        public static object ToType(this Dictionary<object, object> dictionary, Type targettype) {
+        public static object ToType(this IDictionary dictionary, Type targettype) {
             object value = Activator.CreateInstance(targettype, true);
             return FillType(dictionary, value);
         }
 
 
-        public static object FillType(this Dictionary<object, object> dictionary, object value) {
+        /// <summary>
+        /// fills a type with information stored in a dictionary
+        /// </summary>
+        /// <param name="dictionary"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static object FillType(this IDictionary dictionary, object value) {
             Type targettype = value.GetType();
-            foreach(KeyValuePair<object, object> property in dictionary) {
+            foreach(DictionaryEntry property in dictionary) {
                 string propertyname = property.Key.ToString();
                 PropertyInfo propertyinfo = targettype.GetProperty(propertyname, BindingFlags.Instance | BindingFlags.IgnoreCase | BindingFlags.Public);
                 if(propertyinfo == null)

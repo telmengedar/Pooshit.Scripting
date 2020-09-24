@@ -12,14 +12,17 @@ namespace NightlyCode.Scripting {
     /// script parsed by <see cref="ScriptParser"/>
     /// </summary>
     class Script : IScript {
+        ITypeProvider typeprovider;
         readonly IScriptToken script;
 
         /// <summary>
         /// creates a new <see cref="Script"/>
         /// </summary>
         /// <param name="script">root token of script to be executed</param>
-        internal Script(IScriptToken script) {
+        /// <param name="typeprovider">access to installed types</param>
+        internal Script(IScriptToken script, ITypeProvider typeprovider) {
             this.script = script;
+            this.typeprovider = typeprovider;
         }
 
         T ConvertResult<T>(object result) {
@@ -47,12 +50,12 @@ namespace NightlyCode.Scripting {
 
         /// <inheritdoc />
         public object Execute(IVariableProvider variables = null) {
-            return script.Execute(new ScriptContext(variables));
+            return script.Execute(new ScriptContext(variables, typeprovider));
         }
 
         /// <inheritdoc />
         public Task<object> ExecuteAsync(IVariableProvider variables = null, CancellationToken cancellationtoken = default) {
-            return Task.Run(() => script.Execute(new ScriptContext(variables, cancellationtoken)), cancellationtoken);
+            return Task.Run(() => script.Execute(new ScriptContext(variables, typeprovider, cancellationtoken)), cancellationtoken);
         }
 
         /// <inheritdoc />

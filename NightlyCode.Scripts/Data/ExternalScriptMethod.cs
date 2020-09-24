@@ -11,17 +11,10 @@ namespace NightlyCode.Scripting.Data {
         /// <summary>
         /// creates a new <see cref="ExternalScriptMethod"/>
         /// </summary>
-        /// <param name="name">name of script</param>
         /// <param name="script"></param>
-        public ExternalScriptMethod(string name, IScript script) {
+        public ExternalScriptMethod(IScript script) {
             this.script = script;
-            Name = name;
         }
-
-        /// <summary>
-        /// name of script
-        /// </summary>
-        public string Name { get; }
 
         /// <inheritdoc />
         public object Invoke(IVariableProvider parentvariables, params object[] arguments) {
@@ -30,7 +23,7 @@ namespace NightlyCode.Scripting.Data {
 
         /// <inheritdoc />
         public override string ToString() {
-            return Name;
+            return "External Script";
         }
     }
 }

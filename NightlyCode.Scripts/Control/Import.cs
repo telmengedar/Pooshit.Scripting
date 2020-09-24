@@ -8,18 +8,18 @@ using NightlyCode.Scripting.Tokens;
 namespace NightlyCode.Scripting.Control {
 
     /// <summary>
-    /// imports a script method using the <see cref="IExternalMethodProvider"/> of the parser
+    /// imports a script method using the <see cref="IImportProvider"/> of the parser
     /// </summary>
     public class Import : ScriptToken, IParameterContainer {
         readonly IScriptToken[] parameters;
-        readonly IExternalMethodProvider methodprovider;
+        readonly IImportProvider methodprovider;
 
         /// <summary>
         /// creates a new <see cref="Import"/>
         /// </summary>
         /// <param name="methodprovider"></param>
         /// <param name="key"></param>
-        public Import(IExternalMethodProvider methodprovider, params IScriptToken[] key) {
+        public Import(IImportProvider methodprovider, params IScriptToken[] key) {
             this.methodprovider = methodprovider;
             this.parameters = key;
         }

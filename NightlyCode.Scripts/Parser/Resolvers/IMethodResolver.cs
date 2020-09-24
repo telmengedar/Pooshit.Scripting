@@ -16,8 +16,9 @@ namespace NightlyCode.Scripting.Parser.Resolvers {
         /// <param name="methodname">name of method to call</param>
         /// <param name="parameters">method parameters</param>
         /// <param name="referenceparameters">reference parameter information</param>
+        /// <param name="genericparameters">parameters for generic method templates</param>
         /// <returns>resolved method to call</returns>
-        IResolvedMethod Resolve(object host, string methodname, object[] parameters, ReferenceParameter[] referenceparameters);
+        IResolvedMethod Resolve(object host, string methodname, object[] parameters, ReferenceParameter[] referenceparameters, Type[] genericparameters=null);
 
         /// <summary>
         /// resolves a constructor to call

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using NightlyCode.Scripting;
@@ -64,6 +65,10 @@ namespace Scripting.Tests {
 
         public void RandomListMethod(bool first = false, Guid? second = null, Guid? third = null, int[] last = null) {
 
+        }
+
+        public T Convert<T>(object parameter) {
+            return (T)System.Convert.ChangeType(parameter, typeof(T), CultureInfo.InvariantCulture);
         }
 
         public Parameter Parameter(string name, string value) {
@@ -241,6 +246,21 @@ namespace Scripting.Tests {
             XElement element = new XElement("root", new XElement("child"));
             IScript script = await parser.ParseAsync("$child=$node.element(\"child\")\nreturn($child.name)");
             Assert.AreEqual("child", await script.ExecuteAsync<string>(new VariableProvider(new Variable("node", element))));
+        }
+
+        [Test, Parallelizable]
+        public async Task ParameterTypePriority() {
+            IScriptParser mathparser=new ScriptParser();
+            mathparser.Extensions.AddExtensions(typeof(Math));
+            IScript roundscript = await mathparser.ParseAsync("return((3.57783).round(2))");
+            Assert.AreEqual(3.58, await roundscript.ExecuteAsync<double>());
+        }
+
+        [Test, Parallelizable]
+        public void CallGenericMethod() {
+            IScriptParser mathparser = new ScriptParser();
+            IScript script = mathparser.Parse("this.convert<string>(7.5)");
+            Assert.AreEqual("7.5", script.Execute(new VariableProvider(new Variable("this", this))));
         }
     }
 }

@@ -19,6 +19,7 @@ namespace NightlyCode.Scripting.Providers {
         /// creates a new <see cref="TypeInstanceProvider"/>
         /// </summary>
         /// <param name="type">type to create</param>
+        /// <param name="resolver">used to resolve constructor when creating types</param>
         public TypeInstanceProvider(Type type, IMethodResolver resolver) {
             this.type = type;
             this.resolver = resolver;

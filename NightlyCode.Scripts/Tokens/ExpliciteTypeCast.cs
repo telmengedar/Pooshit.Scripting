@@ -53,7 +53,7 @@ namespace NightlyCode.Scripting.Tokens {
             string typename = TargetType.Execute(context)?.ToString();
             if (typename == null)
                 throw new ScriptRuntimeException("cannot cast to null", this);
-            Type type = TypeProvider.DetermineType(this, typename);
+            Type type = TypeProvider.DetermineType(typename);
 
             object value = Value.Execute(context);
 

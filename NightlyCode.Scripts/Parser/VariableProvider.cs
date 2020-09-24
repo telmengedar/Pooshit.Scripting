@@ -23,7 +23,7 @@ namespace NightlyCode.Scripting.Parser {
         /// creates a new <see cref="VariableProvider"/>
         /// </summary>
         /// <param name="variables">variables to provide</param>
-        public VariableProvider(Dictionary<string, object> variables)
+        public VariableProvider(IDictionary<string, object> variables)
             : this(null, variables) {
         }
 
@@ -43,7 +43,7 @@ namespace NightlyCode.Scripting.Parser {
         /// </summary>
         /// <param name="parentprovider">parent variable scope</param>
         /// <param name="variables">variables to provide</param>
-        public VariableProvider(IVariableProvider parentprovider, Dictionary<string, object> variables) {
+        public VariableProvider(IVariableProvider parentprovider, IDictionary<string, object> variables) {
             this.parentprovider = parentprovider;
             foreach(KeyValuePair<string, object> variable in variables)
                 Values[variable.Key] = variable.Value;
@@ -84,7 +84,7 @@ namespace NightlyCode.Scripting.Parser {
 
         /// <inheritdoc />
         public bool ContainsVariableInHierarchy(string name) {
-            return Values.ContainsKey(name) || (parentprovider?.ContainsVariable(name) ?? false);
+            return Values.ContainsKey(name) || (parentprovider?.ContainsVariableInHierarchy(name) ?? false);
         }
 
         /// <summary>

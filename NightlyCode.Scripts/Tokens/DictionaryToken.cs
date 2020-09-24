@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using NightlyCode.Scripting.Extern;
 
 namespace NightlyCode.Scripting.Tokens {
 

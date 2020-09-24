@@ -40,5 +40,10 @@ namespace NightlyCode.Scripting.Tokens {
 
         /// <inheritdoc />
         public int TokenLength { get; internal set; }
+
+        /// <inheritdoc />
+        public override string ToString() {
+            return Literal;
+        }
     }
 }

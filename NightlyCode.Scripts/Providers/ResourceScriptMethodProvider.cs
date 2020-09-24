@@ -9,7 +9,7 @@ namespace NightlyCode.Scripting.Providers {
     /// <summary>
     /// provides script methods from assembly resources
     /// </summary>
-    public class ResourceScriptMethodProvider : IExternalMethodProvider {
+    public class ResourceScriptMethodProvider : IImportProvider {
         readonly Assembly assembly;
         readonly IScriptParser parser;
 
@@ -28,14 +28,14 @@ namespace NightlyCode.Scripting.Providers {
         /// </summary>
         /// <param name="parameters">resource name</param>
         /// <returns>script method stored in resource</returns>
-        public IExternalMethod Import(object[] parameters) {
+        public object Import(object[] parameters) {
             if (parameters.Length == 0)
                 throw new ScriptRuntimeException("A resource to import is necessary", null);
             if (parameters.Length > 1)
                 throw new ScriptRuntimeException("Too many arguments provided. Only a resource path is necessary.", null);
 
             using (StreamReader reader = new StreamReader(assembly.GetManifestResourceStream(parameters[0].ToString())))
-                return new ExternalScriptMethod(parameters[0]?.ToString(), parser.Parse(reader.ReadToEnd()));
+                return new ExternalScriptMethod(parser.Parse(reader.ReadToEnd()));
         }
     }
 }

@@ -9,7 +9,7 @@ namespace NightlyCode.Scripting.Providers {
     /// <summary>
     /// provides external methods from a file path
     /// </summary>
-    public class FileMethodProvider : IExternalMethodProvider {
+    public class FileMethodProvider : IImportProvider {
         readonly IScriptParser scriptparser;
 
         /// <summary>
@@ -25,7 +25,7 @@ namespace NightlyCode.Scripting.Providers {
         /// </summary>
         /// <param name="parameters">path to scriptfile to load and compile</param>
         /// <returns>compiled script as a external method</returns>
-        public IExternalMethod Import(object[] parameters) {
+        public object Import(object[] parameters) {
             if (parameters.Length == 0)
                 throw new ScriptRuntimeException("A script file to import is necessary", null);
             if (parameters.Length > 1)
@@ -35,7 +35,7 @@ namespace NightlyCode.Scripting.Providers {
             if (!File.Exists(fullpath))
                 throw new FileNotFoundException("External script not found", fullpath);
 
-            return new ExternalScriptMethod(parameters[0]?.ToString(), scriptparser.Parse(File.ReadAllText(fullpath)));
+            return new ExternalScriptMethod(scriptparser.Parse(File.ReadAllText(fullpath)));
         }
     }
 }

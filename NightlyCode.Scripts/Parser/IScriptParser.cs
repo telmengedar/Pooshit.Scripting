@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using NightlyCode.Scripting.Providers;
 
 namespace NightlyCode.Scripting.Parser {
 
@@ -16,6 +17,11 @@ namespace NightlyCode.Scripting.Parser {
         /// access to types which can be created using 'new' keyword
         /// </summary>
         ITypeProvider Types { get; }
+
+        /// <summary>
+        /// resolver which is used by 'import' statement to import methods
+        /// </summary>
+        IImportProvider ImportProvider { get; set; }
 
         /// <summary>
         /// parses a script for execution
