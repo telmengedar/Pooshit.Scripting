@@ -1,4 +1,5 @@
-﻿using NightlyCode.Scripting;
+﻿using System.Collections.Generic;
+using NightlyCode.Scripting;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
@@ -89,5 +90,30 @@ namespace Scripting.Tests
 
             Assert.AreEqual("There are 11 more ways to do it but lets keep it at that.", script.Execute());
         }
+
+        [Test, Parallelizable]
+        public void InterpolationFormatting() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$value=0.107228493",
+                "$\"Value: {$value:F2}\""
+            ));
+
+            Assert.AreEqual("Value: 0.11", script.Execute());
+        }
+        
+        [Test, Parallelizable]
+        public void DictionaryInterpolationFormatting() {
+            IScript script = parser.Parse(ScriptCode.Create(
+                "{",
+                "    1: 0.3233d:F2",
+                "}"
+            ));
+
+            IDictionary<object, object> result = script.Execute<IDictionary<object, object>>();
+            Assert.NotNull(result);
+            Assert.That(result.ContainsKey(1));
+            Assert.AreEqual("0.32", result[1]);
+        }
+
     }
 }

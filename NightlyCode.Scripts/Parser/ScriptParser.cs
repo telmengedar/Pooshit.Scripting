@@ -797,6 +797,21 @@ namespace NightlyCode.Scripting.Parser {
             return false;
         }
 
+        IScriptToken ParseFormatString(ref string data, ref int index) {
+            StringBuilder membername = new StringBuilder();
+            for(; index < data.Length; ++index) {
+                char character = data[index];
+                if(char.IsLetterOrDigit(character) || character == '#' || character=='.') {
+                    membername.Append(character);
+                    continue;
+                }
+
+                break;
+            }
+
+            return new ScriptValue(membername.ToString());
+        }
+        
         IScriptToken ParseMember(IScriptToken host, ref string data, ref int index, ref int linenumber) {
             int start = index;
             StringBuilder membername = new StringBuilder();
@@ -1158,7 +1173,7 @@ namespace NightlyCode.Scripting.Parser {
             return token;
         }
 
-        IScriptToken Parse(IScriptToken parent, ref string data, ref int index, ref int newlines, ref int linenumber, bool startofstatement = false) {
+        IScriptToken Parse(IScriptToken parent, ref string data, ref int index, ref int newlines, ref int linenumber, bool startofstatement = false, bool suppressformat=false) {
             List<IScriptToken> tokenlist = new List<IScriptToken>();
             List<OperatorIndex> indexlist = new List<OperatorIndex>();
 
@@ -1229,6 +1244,23 @@ namespace NightlyCode.Scripting.Parser {
                     tokenlist.Add(@operator);
                     if(!(@operator is IUnaryToken))
                         concat = true;
+                    break;
+                case ':':
+                    if (suppressformat) {
+                        // in a context where formatting is not allowed (like dictionary keys)
+                        done = true;
+                        break;
+                    }
+                    
+                    if (tokenlist.Count == 0)
+                        throw new ScriptParserException(starttoken, index, linenumber, "Formatter needs a token to format");
+                    if (tokenlist.Last() is IOperator)
+                        throw new ScriptParserException(starttoken, index, linenumber, "Unable to format operators");
+
+                    ++index;
+                    IScriptToken format = ParseFormatString(ref data, ref index);
+                    tokenlist[tokenlist.Count - 1] = new ScriptMethod(MethodCallResolver, tokenlist.Last(), "ToString", new[] {format, new ScriptValue(CultureInfo.InvariantCulture)});
+                    concat = false;
                     break;
                 case '.':
                     ++index;
@@ -1393,14 +1425,14 @@ namespace NightlyCode.Scripting.Parser {
             int newlines = 0;
             DictionaryToken dictionary = new DictionaryToken();
             while(Peek(data, index) != '}') {
-                IScriptToken key = Parse(parent, ref data, ref index, ref newlines, ref linenumber);
+                IScriptToken key = Parse(parent, ref data, ref index, ref newlines, ref linenumber, false, true);
                 while(key == null || key is Comment) {
                     if(Peek(data, index) == '}') {
                         key = null;
                         break;
                     }
 
-                    key = Parse(parent, ref data, ref index, ref newlines, ref linenumber);
+                    key = Parse(parent, ref data, ref index, ref newlines, ref linenumber, false, true);
                 }
 
                 if(key == null)
