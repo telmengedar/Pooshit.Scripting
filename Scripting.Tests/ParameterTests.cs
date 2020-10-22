@@ -1,10 +1,12 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using NightlyCode.Scripting;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Errors;
 using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
+using Scripting.Tests.Data;
 
 namespace Scripting.Tests {
 
@@ -118,6 +120,21 @@ namespace Scripting.Tests {
             ));
 
             Assert.AreEqual(typeof(int[]), script.Execute(new VariableProvider(new Variable("value", new object[] { 1, 2, 3 }.Select(v => v)))).GetType());
+        }
+        
+        [Test, Parallelizable]
+        public void CustomTypeFromJsonDictionary() {
+            IScriptParser customparser=new ScriptParser();
+            customparser.Types.AddType<Parameter>("lonk");
+            
+            IScript script = customparser.Parse(ScriptCode.Create(
+                "parameter($value, \"lonk\")",
+                "return($value.name)"
+            ));
+
+            Assert.AreEqual("lars", script.Execute(new VariableProvider(new Variable("value", new Dictionary<string, object> {
+                ["Name"]="lars"
+            }))));
         }
     }
 }

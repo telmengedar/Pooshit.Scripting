@@ -290,7 +290,6 @@ namespace Scripting.Tests {
             IScript script = parser.Parse("$state.result=8");
             script.Execute(new VariableProvider(new Variable("state", dictionary)));
             Assert.AreEqual(8, dictionary["result"]);
-
         }
     }
 }

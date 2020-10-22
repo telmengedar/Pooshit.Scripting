@@ -99,8 +99,6 @@ namespace NightlyCode.Scripting.Tokens {
                     else {
                         if (value is IDictionary dic)
                             value = dic.ToType(type);
-                        else if (value is IDictionary<string, object> gendic)
-                            value = gendic.ToType(type);
                         else value = Converter.Convert(value, type);
                     }
                 }

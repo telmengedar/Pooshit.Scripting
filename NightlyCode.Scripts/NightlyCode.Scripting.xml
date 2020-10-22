@@ -976,23 +976,7 @@
             <param name="targettype">type to create</param>
             <returns>type created from dictionary</returns>
         </member>
-        <member name="M:NightlyCode.Scripting.Extensions.DictionaryExtensions.ToType(System.Collections.Generic.IDictionary{System.String,System.Object},System.Type)">
-            <summary>
-            converts values of a dictionary to a type
-            </summary>
-            <param name="dictionary">dictionary containing property values</param>
-            <param name="targettype">type to create</param>
-            <returns>type created from dictionary</returns>
-        </member>
         <member name="M:NightlyCode.Scripting.Extensions.DictionaryExtensions.FillType(System.Collections.IDictionary,System.Object)">
-            <summary>
-            fills a type with information stored in a dictionary
-            </summary>
-            <param name="dictionary"></param>
-            <param name="value"></param>
-            <returns></returns>
-        </member>
-        <member name="M:NightlyCode.Scripting.Extensions.DictionaryExtensions.FillType(System.Collections.Generic.IDictionary{System.String,System.Object},System.Object)">
             <summary>
             fills a type with information stored in a dictionary
             </summary>
