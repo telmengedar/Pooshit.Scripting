@@ -496,7 +496,7 @@ namespace NightlyCode.Scripting.Parser {
             }
 
             if (Types.HasType(token)) {
-                if (index < data.Length - 2 && data[index] == '[' && data[index + 1] == ']') {
+                if (index <= data.Length - 2 && data[index] == '[' && data[index + 1] == ']') {
                     index += 2;
                     return new TypeToken(Types.GetType(token).ProvidedType.MakeArrayType());
                 }
