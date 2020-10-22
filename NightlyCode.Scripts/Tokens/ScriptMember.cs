@@ -90,11 +90,11 @@ namespace NightlyCode.Scripting.Tokens {
                         object[] values = value as object[] ?? collection.Cast<object>().ToArray();
                         targetvalue = Array.CreateInstance(property.PropertyType.GetElementType(), values.Length);
                         for (int i = 0; i < values.Length; ++i)
-                            ((Array) targetvalue).SetValue(values[i] is Dictionary<object, object> dic ? dic.ToType(property.PropertyType.GetElementType()) : Converter.Convert(values[i], property.PropertyType.GetElementType()), i);
+                            ((Array) targetvalue).SetValue(values[i] is IDictionary dic ? dic.ToType(property.PropertyType.GetElementType()) : Converter.Convert(values[i], property.PropertyType.GetElementType()), i);
                     }
                 }
                 else {
-                    targetvalue = value is Dictionary<object, object> dic ? dic.ToType(property.PropertyType) : Converter.Convert(value, property.PropertyType);
+                    targetvalue = value is IDictionary dic ? dic.ToType(property.PropertyType) : Converter.Convert(value, property.PropertyType);
                 }
             }
 

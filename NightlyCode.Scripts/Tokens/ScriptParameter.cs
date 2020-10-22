@@ -85,6 +85,8 @@ namespace NightlyCode.Scripting.Tokens {
                             foreach (object item in items) {
                                 if (item is IDictionary dic)
                                     array.SetValue(dic.ToType(elementtype), index++);
+                                else if(item is IDictionary<string, object> expando)
+                                    array.SetValue(expando.ToType(elementtype), index++);
                                 else array.SetValue(Converter.Convert(item, elementtype), index++);
                             }
 
@@ -99,6 +101,8 @@ namespace NightlyCode.Scripting.Tokens {
                     else {
                         if (value is IDictionary dic)
                             value = dic.ToType(type);
+                        else if (value is IDictionary<string, object> expando)
+                            value = expando.ToType(type);
                         else value = Converter.Convert(value, type);
                     }
                 }

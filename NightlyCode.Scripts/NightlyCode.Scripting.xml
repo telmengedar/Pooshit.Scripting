@@ -976,12 +976,32 @@
             <param name="targettype">type to create</param>
             <returns>type created from dictionary</returns>
         </member>
+        <member name="M:NightlyCode.Scripting.Extensions.DictionaryExtensions.ToType(System.Collections.Generic.IDictionary{System.String,System.Object},System.Type)">
+            <summary>
+            converts values of a dictionary to a type
+            </summary>
+            <remarks>
+            this is necessary because expandoobjects just implement idictionary&lt;string,object&gt;
+            but not idictionary
+            </remarks>
+            <param name="dictionary">dictionary containing property values</param>
+            <param name="targettype">type to create</param>
+            <returns>type created from dictionary</returns>
+        </member>
         <member name="M:NightlyCode.Scripting.Extensions.DictionaryExtensions.FillType(System.Collections.IDictionary,System.Object)">
             <summary>
             fills a type with information stored in a dictionary
             </summary>
             <param name="dictionary"></param>
             <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="M:NightlyCode.Scripting.Extensions.DictionaryExtensions.FillType(System.Collections.Generic.IDictionary{System.String,System.Object},System.Object)">
+            <summary>
+            fills a type with information stored in a dictionary
+            </summary>
+            <param name="dictionary">dictionary from which to take data</param>
+            <param name="value">value to which to transfer data</param>
             <returns></returns>
         </member>
         <member name="T:NightlyCode.Scripting.Extensions.OperatorExtensions">

@@ -306,7 +306,7 @@ namespace NightlyCode.Scripting.Operations {
                 if (!(value is IEnumerable))
                     return Converter.Convert(value, targettype);
             }
-            else if (value is Dictionary<object, object> dictionary) {
+            else if (value is IDictionary dictionary) {
                 return dictionary.ToType(targettype);
             }
             else if (targettype == typeof(string))
