@@ -6,6 +6,7 @@ using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Providers;
 using NUnit.Framework;
+using Scripting.Tests.Extensions;
 
 namespace Scripting.Tests {
 
@@ -68,6 +69,19 @@ namespace Scripting.Tests {
             IScript script = parser.Parse("([]=>30.2).invoke()");
 
             Assert.AreEqual(30.2, script.Execute<double>());
+        }
+
+        [Test, Parallelizable]
+        public void LambdaComplexExpressionWithoutBlock() {
+            int[] source = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+            IScriptParser parser=new ScriptParser();
+            parser.Extensions.AddExtensions<EnumerableExtensions>();
+            IScript script = parser.Parse("$source.where($s=>$s>4&&($s&1)==0).toarray()");
+            object[] result = script.Execute<object[]>(new Dictionary<string, object> {
+                ["source"] = source
+            });
+
+            Assert.That(result.SequenceEqual(new object[] {6, 8}));
         }
     }
 }

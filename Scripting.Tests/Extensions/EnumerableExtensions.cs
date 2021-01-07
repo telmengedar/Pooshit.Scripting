@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using NightlyCode.Scripting.Providers;
 
 namespace Scripting.Tests.Extensions {
 
@@ -9,6 +10,16 @@ namespace Scripting.Tests.Extensions {
     /// extensions for scripts with <see cref="IEnumerable"/> results
     /// </summary>
     public class EnumerableExtensions {
+
+        /// <summary>
+        /// filters an enumeration
+        /// </summary>
+        /// <param name="enumeration">enumeration to filter</param>
+        /// <param name="predicate">predicate to use as filter criterias</param>
+        /// <returns>filtered enumeration</returns>
+        public static IEnumerable Where(IEnumerable enumeration, LambdaMethod predicate) {
+            return enumeration.Cast<object>().Where(i => (bool) predicate.Invoke(i));
+        }
 
         /// <summary>
         /// returns first element of enumeration or default of type

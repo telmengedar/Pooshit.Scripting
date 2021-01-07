@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NightlyCode.Scripting", "Ni
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Scripting.Tests", "Scripting.Tests\Scripting.Tests.csproj", "{BE7B7A08-2222-410A-BEED-97BBC2FF5138}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Script.Executor", "Script.Executor\Script.Executor.csproj", "{553756FC-4837-4FEC-BE70-713FFDA09B94}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptExecutor", "ScriptExecutor\ScriptExecutor.csproj", "{0E920D54-764A-4EAF-B134-EAC67994DAD0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{BE7B7A08-2222-410A-BEED-97BBC2FF5138}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE7B7A08-2222-410A-BEED-97BBC2FF5138}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BE7B7A08-2222-410A-BEED-97BBC2FF5138}.Release|Any CPU.Build.0 = Release|Any CPU
-		{553756FC-4837-4FEC-BE70-713FFDA09B94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{553756FC-4837-4FEC-BE70-713FFDA09B94}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{553756FC-4837-4FEC-BE70-713FFDA09B94}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{553756FC-4837-4FEC-BE70-713FFDA09B94}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E920D54-764A-4EAF-B134-EAC67994DAD0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E920D54-764A-4EAF-B134-EAC67994DAD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E920D54-764A-4EAF-B134-EAC67994DAD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E920D54-764A-4EAF-B134-EAC67994DAD0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
