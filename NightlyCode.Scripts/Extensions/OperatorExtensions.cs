@@ -28,20 +28,21 @@ namespace NightlyCode.Scripting.Extensions {
                 return 2;
             case Operator.Modulo:
                 return 3;
-            case Operator.Addition:
             case Operator.Subtraction:
                 return 4;
-            case Operator.BitwiseAnd:
+            case Operator.Addition:
                 return 5;
-            case Operator.BitwiseOr:
+            case Operator.BitwiseAnd:
                 return 6;
-            case Operator.BitwiseXor:
+            case Operator.BitwiseOr:
                 return 7;
+            case Operator.BitwiseXor:
+                return 8;
             case Operator.ShiftLeft:
             case Operator.ShiftRight:
             case Operator.RolLeft:
             case Operator.RolRight:
-                return 8;
+                return 9;
             case Operator.Less:
             case Operator.LessOrEqual:
             case Operator.Greater:
@@ -50,13 +51,13 @@ namespace NightlyCode.Scripting.Extensions {
             case Operator.NotEqual:
             case Operator.Matches:
             case Operator.NotMatches:
-                return 9;
-            case Operator.LogicAnd:
                 return 10;
-            case Operator.LogicOr:
+            case Operator.LogicAnd:
                 return 11;
-            case Operator.LogicXor:
+            case Operator.LogicOr:
                 return 12;
+            case Operator.LogicXor:
+                return 13;
             case Operator.Assignment:
             case Operator.AddAssign:
             case Operator.SubAssign:
@@ -68,9 +69,9 @@ namespace NightlyCode.Scripting.Extensions {
             case Operator.AndAssign:
             case Operator.OrAssign:
             case Operator.XorAssign:
-                return 13;
-            case Operator.Lambda:
                 return 14;
+            case Operator.Lambda:
+                return 15;
             default:
                 // this is only thrown when the script parser logic is actually broken so no indices need to be provided
                 throw new ScriptParserException(-1, -1, -1, "Unsupported operator");

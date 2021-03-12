@@ -14,6 +14,18 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
+        public void AddNegativeChain() {
+            IScript script = parser.Parse("5.0d+-0.1d+0.1d*3");
+            Assert.AreEqual(5.2m, script.Execute());
+        }
+
+        [Test, Parallelizable]
+        public void OperatorPriority() {
+            IScript script = parser.Parse("5.0d-0.1d+0.1d*3");
+            Assert.AreEqual(5.2m, script.Execute());
+        }
+
+        [Test, Parallelizable]
         public void CompareWithNegativeNumber() {
             IScript script = parser.Parse("-1==-1");
             Assert.AreEqual(true, script.Execute());

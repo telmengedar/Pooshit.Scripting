@@ -471,6 +471,12 @@ namespace NightlyCode.Scripting.Parser {
                         TextIndex = start,
                         TokenLength = index - start
                     };
+                case "typeof":
+                    return new TypeOfToken(ParseSingleControlParameter(ref data, ref index, ref linenumber)) {
+                        LineNumber = startline,
+                        TextIndex = start,
+                        TokenLength = index - start
+                    };
                 }
             }
 
@@ -974,8 +980,11 @@ namespace NightlyCode.Scripting.Parser {
                     break;
 
                 OperatorNode current = node[character];
-                if(current == null)
+                if (current == null) {
+                    // probably two operators chained without space (eg. x+-y)
+                    --index;
                     break;
+                }
 
                 node = current;
                 if(!node.HasChildren)

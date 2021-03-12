@@ -3999,6 +3999,29 @@
         <member name="P:NightlyCode.Scripting.Tokens.StringInterpolation.Children">
             <inheritdoc />
         </member>
+        <member name="T:NightlyCode.Scripting.Tokens.TypeOfToken">
+            <summary>
+            extracts type of an expression
+            </summary>
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.TypeOfToken.#ctor(NightlyCode.Scripting.Tokens.IScriptToken)">
+            <summary>
+            creates a new <see cref="T:NightlyCode.Scripting.Tokens.TypeOfToken"/>
+            </summary>
+            <param name="token">token to be analysed</param>
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.TypeOfToken.Literal">
+            <inheritdoc />
+        </member>
+        <member name="M:NightlyCode.Scripting.Tokens.TypeOfToken.ExecuteToken(NightlyCode.Scripting.ScriptContext)">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.TypeOfToken.Parameters">
+            <inheritdoc />
+        </member>
+        <member name="P:NightlyCode.Scripting.Tokens.TypeOfToken.ParametersOptional">
+            <inheritdoc />
+        </member>
         <member name="T:NightlyCode.Scripting.Tokens.TypeToken">
             <summary>
             token used to provide type information

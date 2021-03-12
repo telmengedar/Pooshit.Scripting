@@ -24,5 +24,9 @@ namespace NightlyCode.ScriptExecutor {
         public void Error(string message, Exception details) {
             Log("ERR", message, details?.ToString());
         }
+
+        public void Write(string message) {
+            Console.Write(message);
+        }
     }
 }
