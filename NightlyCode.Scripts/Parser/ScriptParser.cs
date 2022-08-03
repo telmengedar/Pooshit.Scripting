@@ -123,6 +123,15 @@ namespace NightlyCode.Scripting.Parser {
         /// </summary>
         public OperatorTree OperatorTree => operatortree;
 
+        /// <summary>
+        /// determines whether to allow single quotes to specify strings
+        /// </summary>
+        /// <remarks>
+        /// single quotes are usually used for characters, but to allow behavior
+        /// like js this option can be used
+        /// </remarks>
+        public bool AllowSingleQuotesForStrings { get; set; }
+
         void InitializeOperators() {
             operatortree.Add("~", Operator.Complement);
             operatortree.Add("!", Operator.Not);
@@ -547,6 +556,8 @@ namespace NightlyCode.Scripting.Parser {
 
                 if(character == '\'') {
                     ++index;
+                    if (AllowSingleQuotesForStrings)
+                        return ParseLiteralSingleQuotes(data, ref index, linenumber);
                     return ParseCharacter(data, ref index, linenumber);
                 }
             }
@@ -704,6 +715,32 @@ namespace NightlyCode.Scripting.Parser {
                 TextIndex = start,
                 TokenLength = index - start
             };
+        }
+
+        IScriptToken ParseLiteralSingleQuotes(string data, ref int index, int linenumber) {
+            int start = index - 1;
+            StringBuilder literal = new StringBuilder();
+            for(; index < data.Length; ++index) {
+                char character = data[index];
+                switch(character) {
+                    case '\'':
+                        ++index;
+                        return new ScriptValue(literal.ToString()) {
+                            LineNumber = linenumber,
+                            TextIndex = start,
+                            TokenLength = index - start
+                        };
+                    case '\\':
+                        ++index;
+                        literal.Append(ParseSpecialCharacter(data[index]));
+                        break;
+                    default:
+                        literal.Append(character);
+                        break;
+                }
+            }
+
+            throw new ScriptParserException(start, index, linenumber, "Literal not terminated");
         }
 
         IScriptToken ParseLiteral(string data, ref int index, int linenumber) {
@@ -1334,7 +1371,7 @@ namespace NightlyCode.Scripting.Parser {
                     ++index;
                     IOperator op = tokenlist.LastOrDefault() as IOperator;
                     if((parent is null || op != null) && op?.Operator != Operator.Lambda) {
-                        tokenlist.Add(ParseDictionary(parent, ref data, ref index, ref linenumber));
+                        tokenlist.Add(ParseDictionary(/*parent*/null, ref data, ref index, ref linenumber));
                     }
                     else {
                         StatementBlock statementblock = ParseStatementBlock(parent, ref data, ref index, ref linenumber);

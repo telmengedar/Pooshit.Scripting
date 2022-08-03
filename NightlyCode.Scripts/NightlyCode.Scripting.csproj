@@ -15,9 +15,9 @@
     <Company>NightlyCode</Company>
     <Authors>Toni Gottschall</Authors>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <AssemblyVersion>0.17.52</AssemblyVersion>
+    <AssemblyVersion>0.17.54</AssemblyVersion>
     <FileVersion></FileVersion>
-    <PackageVersion>0.17.52-preview</PackageVersion>
+    <PackageVersion>0.17.54-preview</PackageVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
@@ -30,11 +30,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DocumentationFile>D:\Develop\Projects\NightlyCode.Scripting\NightlyCode.Scripts\NightlyCode.Scripting.xml</DocumentationFile>
   </PropertyGroup>
-
-  <Target Name="PostPackNugetDeploy" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">
-    <Copy SourceFiles="$(OutputPath)$(PackageId).$(PackageVersion).nupkg" DestinationFolder="$(DevDir)\NuGet\" />
-  </Target>
-
+  
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
   </ItemGroup>

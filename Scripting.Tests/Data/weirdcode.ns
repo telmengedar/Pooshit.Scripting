@@ -1,0 +1,49 @@
+$token=$jpath.select("headers[0]/token")
+$options=null
+if($token!=null)
+    $options={
+        "Headers": [
+            {
+                "Key": "Authorization",
+                "Value": "Bearer "+eval($token)
+            }
+        ]
+    }
+
+$response=null
+$body=$jpath.select("body[0]/data")
+$outData=$data.clone()
+try {
+    switch($jpath.select("request[0]/method"))
+    case("GET") {
+        $response=$http.get<object>($jpath.select("request[0]/url"), $options)
+    }
+    case("POST") {
+        $response=$http.post<object,object>($jpath.select("request[0]/url"), $body, $options)
+    }
+    case("PUT") {
+        $response=$http.put<object,object>($jpath.select("request[0]/url"), $body, $options)
+    }
+    case("PATCH") {
+        $response=$http.patch<object,object>($jpath.select("request[0]/url"), $body, $options)
+    }
+    case("DELETE") {
+        $response=$http.delete<object>($jpath.select("request[0]/url"), $options)
+    }
+    default {
+        $jpath.set($outData, "http/error", "unknown http method")
+        exit("error", $outData)
+        return
+    }
+}
+catch {
+    $jpath.set($outData, "http/error", $exception)
+    exit("error", $outData)
+    return
+}
+
+$resultPath=$jpath.select("response[0]/path")
+if($resultPath==null)
+    $resultPath="http/response"
+$jpath.set($outData, $resultPath, $response)
+exit("success", $outData)

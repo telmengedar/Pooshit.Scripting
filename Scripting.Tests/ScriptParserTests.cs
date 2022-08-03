@@ -241,5 +241,16 @@ namespace Scripting.Tests {
             Assert.AreEqual(5, textindex);
         }
 
+        [Test, Parallelizable]
+        public void CompileWeirdCode() {
+            string code = File.ReadAllText("Data/weirdcode.ns");
+            globalparser.Parse(code);
+        }
+        
+        [Test, Parallelizable]
+        public void CompileComplexDictionary() {
+            string code = File.ReadAllText("Data/formattedcomplexdictionary.ns");
+            globalparser.Parse(code);
+        }
     }
 }

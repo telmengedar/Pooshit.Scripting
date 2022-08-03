@@ -291,5 +291,11 @@ namespace Scripting.Tests {
             script.Execute(new VariableProvider(new Variable("state", dictionary)));
             Assert.AreEqual(8, dictionary["result"]);
         }
+
+        [Test, Parallelizable]
+        public void InitComplexDictionary() {
+            string code="$options={\"Headers\": [{ \"Key\": \"Authorization\", \"Value\": \"Bearer \"+eval($token)}]}";
+            parser.Parse(code);
+        }
     }
 }

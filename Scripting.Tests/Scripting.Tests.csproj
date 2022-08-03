@@ -55,6 +55,12 @@
     <None Remove="Scripts\Incomplete\incomplete2.ns" />
     <None Remove="Scripts\Incomplete\incomplete3.ns" />
     <None Remove="Scripts\Incomplete\incomplete4.ns" />
+    <None Update="Data\weirdcode.ns">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\formattedcomplexdictionary.ns">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

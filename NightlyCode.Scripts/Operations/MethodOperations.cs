@@ -270,14 +270,21 @@ namespace NightlyCode.Scripting.Operations {
                 if (value is Array valuearray)
                 {
                     Array array = Array.CreateInstance(elementtype, valuearray.Length);
-                    for (int k = 0; k < array.Length; ++k)
-                        array.SetValue(Converter.Convert(valuearray.GetValue(k), elementtype), k);
+                    for (int k = 0; k < array.Length; ++k) {
+                        object item = valuearray.GetValue(k);
+                        if (item is IDictionary dictionary)
+                            array.SetValue(dictionary.ToType(elementtype), k);
+                        else array.SetValue(Converter.Convert(item, elementtype), k);
+                    }
+
                     return array;
                 }
                 else
                 {
                     Array array = Array.CreateInstance(elementtype, 1);
-                    array.SetValue(Converter.Convert(value, elementtype), 0);
+                    if (value is IDictionary dictionary)
+                        array.SetValue(dictionary.ToType(elementtype), 0);
+                    else array.SetValue(Converter.Convert(value, elementtype), 0);
                     return array;
                 }
             }
@@ -288,14 +295,21 @@ namespace NightlyCode.Scripting.Operations {
                     if (value is Array valuearray)
                     {
                         Array array = Array.CreateInstance(genericargument, valuearray.Length);
-                        for (int k = 0; k < array.Length; ++k)
-                            array.SetValue(Converter.Convert(valuearray.GetValue(k), genericargument), k);
+                        for (int k = 0; k < array.Length; ++k) {
+                            object item = valuearray.GetValue(k);
+                            if(item is IDictionary dictionary)
+                                array.SetValue(Converter.Convert(dictionary.ToType(genericargument), genericargument), k);
+                            else array.SetValue(Converter.Convert(item, genericargument), k);
+                        }
+
                         return array;
                     }
                     else
                     {
                         Array array = Array.CreateInstance(genericargument, 1);
-                        array.SetValue(value, 0);
+                        if (value is IDictionary dictionary)
+                            array.SetValue(dictionary.ToType(genericargument), 0);
+                        else array.SetValue(value, 0);
                         return array;
                     }
                 }

@@ -75,5 +75,20 @@ namespace Scripting.Tests {
             visitor.Visit(script);
             Assert.AreEqual(0, visitor.Imports);
         }
+
+        [Test, Parallelizable]
+        public void AllowSingleQuoteForStrings() {
+            ScriptParser parser = new ScriptParser {
+                AllowSingleQuotesForStrings = true
+            };
+            IScript script = parser.Parse(
+                ScriptCode.Create(
+                    "return('bullshit')"
+                )
+            );
+
+            string value = script.Execute<string>();
+            Assert.AreEqual("bullshit", value);
+        }
     }
 }

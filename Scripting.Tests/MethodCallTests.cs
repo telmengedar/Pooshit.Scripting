@@ -262,5 +262,14 @@ namespace Scripting.Tests {
             IScript script = mathparser.Parse("this.convert<string>(7.5)");
             Assert.AreEqual("7.5", script.Execute(new VariableProvider(new Variable("this", this))));
         }
+        
+        [Test, Parallelizable]
+        public void CallGenericMethodWithTwoArguments() {
+            IScriptParser mathparser = new ScriptParser();
+            PointlessGenerics data = new PointlessGenerics();
+            IScript script = mathparser.Parse("data.twoarguments<string, int>()");
+            Assert.AreEqual(42, script.Execute(new VariableProvider(new Variable("data", data))));
+        }
+
     }
 }
