@@ -1,0 +1,44 @@
+$path=configValue("Data[0]/Path")
+if(!$path)
+  throw("Path to data to trim is required")
+
+$letters=configValue("Characters[0]/Letters")
+$digits=configValue("Characters[0]/Digits")
+$whitespaces=configValue("Characters[0]/Whitespaces")
+$interpunctuation=configValue("Characters[1]/Punctuation")
+$separator=configValue("Characters[1]/Separators")
+$braces=configValue("Characters[1]/Braces")
+
+$custom=configValue("Characters[2]/Custom")
+
+$value=jpath.select($data, $path)
+$predicate=$c=>{
+  if($letters && c.isletter())
+    return(false)
+  if($digits && c.isdigit())
+    return(false)
+  if($whitespaces && c.iswhitespace())
+    return(false)
+  if($interpuctuation && c.ispunctuation())
+    return(false)
+  if($separator && c.isseparator())
+    return(false)
+  if($braces && c.isbrace())
+    return(false)
+
+  if($custom && custom.contains(c))
+    return(false)
+
+  return(true)
+}
+
+$firstIndex=$value.indexof($predicate)
+if($firstIndex==-1)
+  $firstIndex=0
+$lastIndex=$value.lastindexof($predicate)
+if($lastIndex==-1)
+  $lastIndex=$value.length
+
+jpath.set($data, $path, $value.substring($firstIndex, $lastIndex-$firstIndex))
+
+exit("success", $data)

@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NightlyCode.Scripting;
 using NightlyCode.Scripting.Extensions;
@@ -82,6 +83,14 @@ namespace Scripting.Tests {
             });
 
             Assert.That(result.SequenceEqual(new object[] {6, 8}));
+        }
+
+        [Test, Parallelizable]
+        public void LambdaAsVariable() {
+            string code = File.ReadAllText("Data/lambdaasvariable.ns");
+            IScriptParser parser=new ScriptParser();
+            parser.Extensions.AddExtensions<EnumerableExtensions>();
+            IScript script = parser.Parse(code);
         }
     }
 }

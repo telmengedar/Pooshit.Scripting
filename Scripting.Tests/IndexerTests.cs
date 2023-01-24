@@ -51,7 +51,7 @@ namespace Scripting.Tests {
 
             IScript script = parser.Parse(ScriptCode.Create(
                 "$input",
-                "$firstelement=$input.farstordefault()",
+                "$firstelement=$input.firstordefault()",
                 "$firstelement"
             ));
 

@@ -58,6 +58,8 @@ namespace NightlyCode.Scripting.Extensions {
                 return 12;
             case Operator.LogicXor:
                 return 13;
+            case Operator.Lambda:
+                return 14;
             case Operator.Assignment:
             case Operator.AddAssign:
             case Operator.SubAssign:
@@ -69,8 +71,6 @@ namespace NightlyCode.Scripting.Extensions {
             case Operator.AndAssign:
             case Operator.OrAssign:
             case Operator.XorAssign:
-                return 14;
-            case Operator.Lambda:
                 return 15;
             default:
                 // this is only thrown when the script parser logic is actually broken so no indices need to be provided
