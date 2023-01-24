@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NightlyCode.Scripting.Providers;
 
-namespace Scripting.Tests.Extensions {
+namespace NightlyCode.Scripting.Extensions.Script {
 
     /// <summary>
     /// extensions for scripts with <see cref="IEnumerable"/> results
@@ -35,7 +35,7 @@ namespace Scripting.Tests.Extensions {
         /// </summary>
         /// <param name="enumeration">enumeration</param>
         /// <returns>first element of enumeration or null if enumeration contains no elements</returns>
-        public static T FarstOrDefault<T>(IEnumerable<T> enumeration) {
+        public static T FirstOrDefault<T>(IEnumerable<T> enumeration) {
             return enumeration.FirstOrDefault();
         }
 
@@ -148,6 +148,96 @@ namespace Scripting.Tests.Extensions {
         /// <returns>array containing elements of the enumeration</returns>
         public static Array ToArray(IEnumerable enumeration) {
             return enumeration.Cast<object>().ToArray();
+        }
+
+        /// <summary>
+        /// returns index of first matching item 
+        /// </summary>
+        /// <param name="enumeration">enumeration to iterate</param>
+        /// <param name="value">item to match against</param>
+        /// <returns>index of first item which matches predicate</returns>
+        public static int IndexOf(IEnumerable enumeration, object value) {
+            int index = 0;
+            if (value == null) {
+                foreach (object item in enumeration) {
+                    if (item==null)
+                        return index;
+                    ++index;
+                }
+            }
+            else {
+                foreach (object item in enumeration) {
+                    if (value.Equals(item))
+                        return index;
+                    ++index;
+                }
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// returns index of first item which matches a predicate 
+        /// </summary>
+        /// <param name="enumeration">enumeration to iterate</param>
+        /// <param name="predicate">predicate for item to match</param>
+        /// <returns>index of first item which matches predicate</returns>
+        public static int IndexOf(IEnumerable enumeration, LambdaMethod predicate) {
+            int index = 0;
+            foreach (object item in enumeration) {
+                if (predicate.Invoke(item) is bool result && result)
+                    return index;
+                ++index;
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// returns last item which matches a value 
+        /// </summary>
+        /// <param name="enumeration">enumeration to iterate</param>
+        /// <param name="value">item to match</param>
+        /// <returns>index of last item which matches predicate</returns>
+        public static int LastIndexOf(IEnumerable enumeration, object value) {
+            int lastIndexOf = -1;
+            int index = 0;
+
+            if (value == null) {
+                foreach (object item in enumeration) {
+                    if (item == null)
+                        lastIndexOf = index;
+                    ++index;
+                }
+            }
+            else {
+                foreach (object item in enumeration) {
+                    if (value.Equals(item))
+                        lastIndexOf = index;
+                    ++index;
+                }
+            }
+
+            return lastIndexOf;
+        }
+
+        /// <summary>
+        /// returns index of last item which matches a predicate 
+        /// </summary>
+        /// <param name="enumeration">enumeration to iterate</param>
+        /// <param name="predicate">predicate for item to match</param>
+        /// <returns>index of last item which matches predicate</returns>
+        public static int LastIndexOf(IEnumerable enumeration, LambdaMethod predicate) {
+            int lastIndexOf = -1;
+            int index = 0;
+            
+            foreach (object item in enumeration) {
+                if (predicate.Invoke(item) is bool result && result)
+                    lastIndexOf = index;
+                ++index;
+            }
+
+            return lastIndexOf;
         }
     }
 }

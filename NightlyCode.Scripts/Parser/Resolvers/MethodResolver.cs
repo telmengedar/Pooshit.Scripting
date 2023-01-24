@@ -67,7 +67,7 @@ namespace NightlyCode.Scripting.Parser.Resolvers {
                         lookuptype = lookuptype.GetGenericTypeDefinition();
 
                     methods = extensions.GetExtensions(lookuptype).Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters.Length, true)).ToArray();
-                    evaluation = methods.Select(m => MethodOperations.GetMethodMatchValue(m, parameters, true)).OrderBy(m => m.Item2).ToArray();
+                    evaluation = methods.Select(m => MethodOperations.GetMethodMatchValue(m, parameters, true)).Where(e => e.Item2 >= 0).OrderBy(m => m.Item2).ToArray();
                     if (evaluation.Length > 0)
                     {
                         MethodInfo method = evaluation[0].Item1;
@@ -92,7 +92,7 @@ namespace NightlyCode.Scripting.Parser.Resolvers {
                         lookuptype = lookuptype.GetGenericTypeDefinition();
 
                     methods = extensions.GetExtensions(lookuptype).Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters.Length, true)).ToArray();
-                    evaluation = methods.Select(m => MethodOperations.GetMethodMatchValue(m, parameters, true)).OrderBy(m => m.Item2).ToArray();
+                    evaluation = methods.Select(m => MethodOperations.GetMethodMatchValue(m, parameters, true)).Where(e => e.Item2 >= 0).OrderBy(m => m.Item2).ToArray();
                     if (evaluation.Length > 0)
                     {
                         MethodInfo method = evaluation[0].Item1;
@@ -123,7 +123,7 @@ namespace NightlyCode.Scripting.Parser.Resolvers {
             if (constructors.Length == 0)
                 throw new ScriptRuntimeException($"No matching constructors available for '{type.Name}({string.Join(",", parameters)})'", null);
 
-            Tuple<ConstructorInfo, int>[] evaluated = constructors.Select(c => MethodOperations.GetMethodMatchValue(c, parameters)).Where(e => e.Item2 >= 0).ToArray();
+            Tuple<ConstructorInfo, int>[] evaluated = constructors.Select(c => MethodOperations.GetMethodMatchValue(c, parameters)).Where(e => e.Item2 >= 0).OrderBy(e=>e.Item2).ToArray();
             if (evaluated.Length == 0)
                 throw new ScriptRuntimeException($"No matching constructor found for '{type.Name}({string.Join(", ", parameters)})'", null);
 

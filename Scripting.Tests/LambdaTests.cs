@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using NightlyCode.Scripting;
 using NightlyCode.Scripting.Extensions;
+using NightlyCode.Scripting.Extensions.Script;
 using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Providers;
 using NUnit.Framework;
-using Scripting.Tests.Extensions;
 
 namespace Scripting.Tests {
 

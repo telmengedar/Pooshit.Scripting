@@ -2,9 +2,9 @@
 using NightlyCode.Scripting;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Extensions;
+using NightlyCode.Scripting.Extensions.Script;
 using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
-using Scripting.Tests.Extensions;
 
 namespace Scripting.Tests {
 

@@ -1,9 +1,13 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using NightlyCode.Scripting;
 using NightlyCode.Scripting.Data;
 using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
+using Scripting.Tests.Data;
 
 namespace Scripting.Tests {
 
@@ -14,6 +18,7 @@ namespace Scripting.Tests {
         [SetUp]
         public void Setup() {
             parser.Types.AddType<Variable>("variable");
+            parser.Types.AddType<FormData>();
         }
 
         [Test, Parallelizable]
@@ -32,6 +37,17 @@ namespace Scripting.Tests {
                 "$var.value"
             );
             Assert.That(new[] { 1, 2, 7 }.SequenceEqual(script.Execute<IEnumerable>().Cast<int>()));
+        }
+
+        [Test, Parallelizable]
+        public void UseCorrectConstructor() {
+            IScript script = parser.Parse(
+                "return(new formdata($input, \"files[]\", \"test\"))"
+            );
+            FormData data = script.Execute<FormData>(new Dictionary<string, object>() {
+                ["input"] = new MemoryStream()
+            });
+            Assert.That(data.Content is StreamContent);
         }
     }
 }
