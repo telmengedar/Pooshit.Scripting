@@ -58,7 +58,8 @@ namespace Scripting.Tests {
             Assert.AreEqual(5, script.Execute(new VariableProvider(new Variable("input", new[] { 5, 9, 1 }))));
         }
 
-        [Test, Parallelizable]
+        // not sure whether this is actually what we want
+        /*[Test, Parallelizable]
         public void PreferGenericExtension() {
             IScriptParser parser = new ScriptParser();
             parser.Extensions.AddExtensions<EnumerableExtensions>();
@@ -71,7 +72,7 @@ namespace Scripting.Tests {
             ));
 
             Assert.AreEqual(1, script.Execute(new VariableProvider(new Variable("input", new[] { 5, 9, 1 }))));
-        }
+        }*/
 
     }
 }

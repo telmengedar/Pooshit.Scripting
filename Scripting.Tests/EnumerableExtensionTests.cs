@@ -70,6 +70,18 @@ namespace Scripting.Tests {
         }
 
         [Test]
+        public void IndexOfStringPredicate() {
+            ScriptParser parser = new ScriptParser();
+            parser.Extensions.AddExtensions<EnumerableExtensions>();
+
+            IScript script = parser.Parse("return($data.indexof(i=>i=='s'))");
+            int result = script.Execute<int>(new Dictionary<string, object> {
+                ["data"] = "andopsgendet"
+            });
+            Assert.AreEqual(5, result);
+        }
+
+        [Test]
         public void IndexOfPredicateNotFound() {
             ScriptParser parser = new ScriptParser();
             parser.Extensions.AddExtensions<EnumerableExtensions>();

@@ -31,10 +31,9 @@ namespace NightlyCode.Scripting.Operations {
             return Array.IndexOf(integerlist, type) > -1;
         }
 
-        public static Tuple<T,int> GetMethodMatchValue<T>(T method, object[] parameters, bool isextension = false)
-        where T : MethodBase
-        {
-            int result = isextension ? 1000 : 0;
+        public static int GetMethodMatchValue<T>(T method, object[] parameters, bool isextension = false)
+        where T : MethodBase {
+            int result = 0; //isextension ? 0 : 0;
             ParameterInfo[] methodparameters = method.GetParameters();
             if (isextension) methodparameters = methodparameters.Skip(1).ToArray();
             bool hasparams = methodparameters.Length > 0 && Attribute.IsDefined(methodparameters.Last(), typeof(ParamArrayAttribute));
@@ -45,7 +44,7 @@ namespace NightlyCode.Scripting.Operations {
                 Type methodparameter = i == methodparameters.Length - 1 && (hasparams || methodparameters[i].ParameterType.IsByRef) ? methodparameters[i].ParameterType.GetElementType() : methodparameters[i].ParameterType;
 
                 if (index >= parameters.Length)
-                    return new Tuple<T, int>(method, result);
+                    return result;
 
                 object parameter = parameters[index++];
                 if (i == methodparameters.Length - 1 && hasparams) {
@@ -65,7 +64,7 @@ namespace NightlyCode.Scripting.Operations {
 
                 if (parameter == null) {
                     if (methodparameter.IsValueType && !(methodparameter.IsGenericType && methodparameter.GetGenericTypeDefinition()==typeof(Nullable<>)))
-                        return new Tuple<T, int>(method, -1);
+                        return -1;
                     continue;
                 }
 
@@ -109,7 +108,7 @@ namespace NightlyCode.Scripting.Operations {
                 }
 
                 if (!(parameter is string) && !(parameter is Dictionary<object, object>) && (parameter is Array || parameter is IEnumerable))
-                    return new Tuple<T, int>(method, -1);
+                    return -1;
 
                 if (methodparameter == parameter.GetType() || (parameter.GetType().IsNullable() && parameter.GetType().GetGenericArguments()[0] == methodparameter))
                     continue;
@@ -121,7 +120,7 @@ namespace NightlyCode.Scripting.Operations {
 
                 if (IsFloatingPoint(parameter.GetType())) {
                     if (!IsFloatingPoint(methodparameter))
-                        return new Tuple<T, int>(method, -1);
+                        return -1;
                     result += 15 * multiplicator;
                     continue;
                 }
@@ -136,14 +135,14 @@ namespace NightlyCode.Scripting.Operations {
                         result += 12 * multiplicator;
                     else if (methodparameter.IsEnum)
                         result += 4 * multiplicator;
-                    else return new Tuple<T, int>(method, -1);
+                    else return -1;
                     continue;
                 }
 
                 if (parameter is char) {
                     if (IsInteger(methodparameter))
                         result += 5 * multiplicator;
-                    else return new Tuple<T, int>(method, -1);
+                    else return -1;
                     continue;
                 }
 
@@ -164,10 +163,10 @@ namespace NightlyCode.Scripting.Operations {
                     continue;
                 }
 
-                return new Tuple<T, int>(method, -1);
+                return -1;
             }
 
-            return new Tuple<T, int>(method, result);
+            return result;
         }
 
         /// <summary>

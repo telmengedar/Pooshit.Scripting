@@ -54,7 +54,7 @@ namespace NightlyCode.Scripting.Extensions.Script {
         /// <param name="enumeration">enumeration</param>
         /// <returns>first element of enumeration</returns>
         public static object First<T>(IEnumerable<T> enumeration) {
-            return enumeration.Last();
+            return enumeration.First();
         }
 
         /// <summary>

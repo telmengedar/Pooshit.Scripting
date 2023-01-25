@@ -69,7 +69,7 @@ namespace NightlyCode.Scripting.Tokens {
             }
 
             object[] parametervalues = Parameters.Select(p => p.Execute(context)).ToArray();
-            Tuple<MethodInfo, int>[] evaluated = indexer.Select(i => MethodOperations.GetMethodMatchValue(i.GetMethod, parametervalues)).Where(e => e.Item2 >= 0).ToArray();
+            Tuple<MethodInfo, int>[] evaluated = indexer.Select(i => new Tuple<MethodInfo, int>(i.GetMethod, MethodOperations.GetMethodMatchValue(i.GetMethod, parametervalues))).Where(e => e.Item2 >= 0).ToArray();
 
             if(evaluated.Length == 0)
                 throw new ScriptRuntimeException($"No index getter found on '{host.GetType().Name}' which matched the specified parameters '{string.Join(", ", parametervalues)}'", this);
@@ -92,7 +92,7 @@ namespace NightlyCode.Scripting.Tokens {
             PropertyInfo[] indexer = host.GetType().GetProperties().Where(p => p.GetIndexParameters().Length == Parameters.Length).ToArray();
 
             object[] parametervalues = Parameters.Select(p => p.Execute(context)).Concat(new[] { token.Execute(context) }).ToArray();
-            Tuple<MethodInfo, int>[] evaluated = indexer.Select(i => MethodOperations.GetMethodMatchValue(i.SetMethod, parametervalues)).Where(e => e.Item2 >= 0).OrderBy(m => m.Item2).ToArray();
+            Tuple<MethodInfo, int>[] evaluated = indexer.Select(i => new Tuple<MethodInfo, int>(i.SetMethod, MethodOperations.GetMethodMatchValue(i.SetMethod, parametervalues))).Where(e => e.Item2 >= 0).OrderBy(m => m.Item2).ToArray();
 
             if(evaluated.Length == 0)
                 throw new ScriptRuntimeException($"No index setter found on '{host.GetType().Name}' which matched the specified parameters '{string.Join(", ", parametervalues)}'", this);

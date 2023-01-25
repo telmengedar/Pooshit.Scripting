@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NightlyCode.Scripting.Errors;
@@ -29,6 +30,16 @@ namespace NightlyCode.Scripting.Parser.Resolvers {
         /// </summary>
         public bool EnableCaching { get; set; } = true;
 
+        MethodInfo[] GetCandidates(IEnumerable<MethodInfo> methods, string method, object[] parameters, Type[] genericParameters, bool isExtension) {
+            if (genericParameters == null)
+                return methods.Where(m => m.Name.ToLower() == method && !m.IsGenericMethodDefinition && MethodOperations.MatchesParameterCount(m, parameters.Length, isExtension)).ToArray();
+            
+            return methods
+                .Where(m => m.Name.ToLower() == method && m.IsGenericMethodDefinition && m.GetGenericArguments().Length == genericParameters.Length && MethodOperations.MatchesParameterCount(m, parameters.Length, isExtension))
+                .Select(m => m.MakeGenericMethod(genericParameters))
+                .ToArray();
+        }
+        
         /// <inheritdoc />
         public IResolvedMethod Resolve(object host, string methodname, object[] parameters, ReferenceParameter[] referenceparameters, Type[] genericparameters=null) {
             MethodCacheKey cachekey=null;
@@ -38,25 +49,13 @@ namespace NightlyCode.Scripting.Parser.Resolvers {
                     return method;
             }
 
-            MethodInfo[] methods;
-
-            if (genericparameters == null)
-                methods = host.GetType().GetMethods().Where(m => m.Name.ToLower() == methodname && !m.IsGenericMethodDefinition && MethodOperations.MatchesParameterCount(m, parameters.Length)).ToArray();
-            else {
-                methods = host.GetType()
-                    .GetMethods()
-                    .Where(m => m.Name.ToLower() == methodname && m.IsGenericMethodDefinition && m.GetGenericArguments().Length == genericparameters.Length && MethodOperations.MatchesParameterCount(m, parameters.Length))
-                    .Select(m => m.MakeGenericMethod(genericparameters))
-                    .ToArray();
-            }
-
-            Tuple<MethodInfo, int>[] evaluation = methods.Select(m => MethodOperations.GetMethodMatchValue(m, parameters)).Where(e => e.Item2 >= 0).OrderBy(m => m.Item2).ToArray();
-            if (evaluation.Length > 0) {
-                if (EnableCaching)
-                    return methodcache[cachekey] = new ResolvedMethod(evaluation[0].Item1, referenceparameters);
-                return new ResolvedMethod(evaluation[0].Item1, referenceparameters);
-            }
-
+            MethodInfo[] methods = GetCandidates(host.GetType().GetMethods(), methodname, parameters, genericparameters, false);
+            
+            List<Tuple<Type, MethodInfo, int, bool>> evaluation = new List<Tuple<Type, MethodInfo, int, bool>>(methods.Select(m => {
+                int result = MethodOperations.GetMethodMatchValue(m, parameters);
+                return new Tuple<Type, MethodInfo, int, bool>(host.GetType(), m, result, false);
+            }).Where(m => m.Item3 >= 0));
+            
             if (extensions != null)
             {
                 Type extensionbase = host.GetType();
@@ -66,18 +65,11 @@ namespace NightlyCode.Scripting.Parser.Resolvers {
                     if (lookuptype.IsGenericType)
                         lookuptype = lookuptype.GetGenericTypeDefinition();
 
-                    methods = extensions.GetExtensions(lookuptype).Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters.Length, true)).ToArray();
-                    evaluation = methods.Select(m => MethodOperations.GetMethodMatchValue(m, parameters, true)).Where(e => e.Item2 >= 0).OrderBy(m => m.Item2).ToArray();
-                    if (evaluation.Length > 0)
-                    {
-                        MethodInfo method = evaluation[0].Item1;
-                        if (method.IsGenericMethodDefinition)
-                            method = method.MakeGenericMethod(extensionbase.GetGenericArguments());
-
-                        if (EnableCaching)
-                            return methodcache[cachekey] = new ResolvedMethod(method, referenceparameters, true);
-                        return new ResolvedMethod(method, referenceparameters, true);
-                    }
+                    methods = GetCandidates(extensions.GetExtensions(lookuptype), methodname, parameters, genericparameters, true);
+                    evaluation.AddRange(methods.Select(m => {
+                        int result = MethodOperations.GetMethodMatchValue(m, parameters, true);
+                        return new Tuple<Type, MethodInfo, int, bool>(extensionbase, m, result, true);
+                    }).Where(e => e.Item3 >= 0));
 
                     if (extensionbase == typeof(object))
                         break;
@@ -91,19 +83,21 @@ namespace NightlyCode.Scripting.Parser.Resolvers {
                     if (lookuptype.IsGenericType)
                         lookuptype = lookuptype.GetGenericTypeDefinition();
 
-                    methods = extensions.GetExtensions(lookuptype).Where(m => m.Name.ToLower() == methodname && MethodOperations.MatchesParameterCount(m, parameters.Length, true)).ToArray();
-                    evaluation = methods.Select(m => MethodOperations.GetMethodMatchValue(m, parameters, true)).Where(e => e.Item2 >= 0).OrderBy(m => m.Item2).ToArray();
-                    if (evaluation.Length > 0)
-                    {
-                        MethodInfo method = evaluation[0].Item1;
-                        if (method.IsGenericMethodDefinition)
-                            method = method.MakeGenericMethod(interfacetype.GetGenericArguments());
-
-                        if (EnableCaching)
-                            return methodcache[cachekey] = new ResolvedMethod(method, referenceparameters, true);
-                        return new ResolvedMethod(method, referenceparameters, true);
-                    }
+                    methods = GetCandidates(extensions.GetExtensions(lookuptype), methodname, parameters, genericparameters, true);
+                    evaluation.AddRange(methods.Select(m => {
+                        int result = MethodOperations.GetMethodMatchValue(m, parameters, true);
+                        return new Tuple<Type, MethodInfo, int, bool>(extensionbase, m, result, true);
+                    }).Where(e => e.Item3 >= 0));
                 }
+            }
+
+            if (evaluation.Count > 0) {
+                Tuple<Type, MethodInfo, int, bool> methodInformation = evaluation.OrderBy(e=>e.Item3).First();
+                MethodInfo method = methodInformation.Item2;
+
+                if (EnableCaching)
+                    return methodcache[cachekey] = new ResolvedMethod(method, referenceparameters, methodInformation.Item4);
+                return new ResolvedMethod(method, referenceparameters, methodInformation.Item4);
             }
 
             throw new ScriptRuntimeException($"Method '{methodname}' matching the parameters '({string.Join(",", parameters)})' not found on type {host.GetType().Name}", null);
@@ -123,7 +117,7 @@ namespace NightlyCode.Scripting.Parser.Resolvers {
             if (constructors.Length == 0)
                 throw new ScriptRuntimeException($"No matching constructors available for '{type.Name}({string.Join(",", parameters)})'", null);
 
-            Tuple<ConstructorInfo, int>[] evaluated = constructors.Select(c => MethodOperations.GetMethodMatchValue(c, parameters)).Where(e => e.Item2 >= 0).OrderBy(e=>e.Item2).ToArray();
+            Tuple<ConstructorInfo, int>[] evaluated = constructors.Select(c => new Tuple<ConstructorInfo, int>(c, MethodOperations.GetMethodMatchValue(c, parameters))).Where(e => e.Item2 >= 0).OrderBy(e=>e.Item2).ToArray();
             if (evaluated.Length == 0)
                 throw new ScriptRuntimeException($"No matching constructor found for '{type.Name}({string.Join(", ", parameters)})'", null);
 
