@@ -79,5 +79,12 @@ namespace Scripting.Tests {
             int result = script.Execute<int>(new VariableProvider(new Variable("condition", TestEnum.Bimmel)));
             Assert.AreEqual(1, result);
         }
+        
+        [Test, Parallelizable]
+        public void SwitchOneliner() {
+            IScript script = parser.Parse("switch(\"Vollzeit\") case(\"Vollzeit\") \"Fulltime\" case(\"Teilzeit\") \"Parttime\" default \"Unknown\"");
+            string result = script.Execute<string>();
+            Assert.AreEqual("Fulltime", result);
+        }
     }
 }

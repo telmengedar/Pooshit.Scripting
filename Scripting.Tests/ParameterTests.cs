@@ -136,5 +136,16 @@ namespace Scripting.Tests {
                 ["Name"]="lars"
             }))));
         }
+
+        [Test, Parallelizable]
+        public void ObjectParameterUsedInIf() {
+            IScriptParser customParser=new ScriptParser();
+
+            IScript script = customParser.Parse(
+                                                @"parameter($material, object, null) if($material!=null) return(material.thickness) return(2.5)"
+                                               );
+
+            Assert.AreEqual(2.5, script.Execute());
+        }
     }
 }

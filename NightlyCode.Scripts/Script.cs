@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using NightlyCode.Scripting.Errors;
+using NightlyCode.Scripting.Extensions;
 using NightlyCode.Scripting.Extern;
 using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
@@ -30,6 +32,9 @@ namespace NightlyCode.Scripting {
             if(result is T execute)
                 return execute;
 
+            if (result is IDictionary dictionary)
+                return dictionary.ToType<T>();
+            
             try {
                 return Converter.Convert<T>(result);
             }

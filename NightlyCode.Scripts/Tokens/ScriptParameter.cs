@@ -71,6 +71,7 @@ namespace NightlyCode.Scripting.Tokens {
             if(value == null) {
                 if(type.IsValueType)
                     throw new ScriptRuntimeException("Unable to pass null to a value parameter", this);
+                ((VariableProvider)context.Arguments).ReplaceVariable(Variable.Name, null);
                 return null;
             }
 

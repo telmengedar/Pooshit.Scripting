@@ -40,10 +40,10 @@ namespace Scripting.Tests {
             using (StreamReader reader = new StreamReader(typeof(FormatterTests).Assembly.GetManifestResourceStream($"Scripting.Tests.Scripts.Formatting.{inputresource}")))
                 inputcode = reader.ReadToEnd();
             using (StreamReader reader = new StreamReader(typeof(FormatterTests).Assembly.GetManifestResourceStream($"Scripting.Tests.Scripts.Formatting.{expectedresource}")))
-                expectedcode = reader.ReadToEnd();
+                expectedcode = reader.ReadToEnd().Replace("\r\n", "\n");
 
             IScript script = parser.Parse(inputcode);
-            string resultcode = formatter.FormatScript(script);
+            string resultcode = formatter.FormatScript(script).Replace("\r\n", "\n");
             Console.WriteLine(resultcode);
             Assert.AreEqual(expectedcode, resultcode);
         }

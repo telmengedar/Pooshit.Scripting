@@ -56,7 +56,7 @@ namespace Scripting.Tests {
             Dictionary<object, object> result = script.Execute<Dictionary<object, object>>();
             Assert.AreEqual(70, result["value"]);
         }
-
+        
         [Test, Parallelizable]
         public void DictionaryInArray() {
             IScript script = parser.Parse(ScriptCode.Create(

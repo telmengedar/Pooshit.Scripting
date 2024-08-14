@@ -1464,6 +1464,8 @@ namespace NightlyCode.Scripting.Parser {
             }
 
             // there has to be a single statement or nothing at this point
+            if (tokenlist.Count > 1)
+                return new StatementBlock(tokenlist.ToArray());
             return tokenlist.SingleOrDefault();
         }
 

@@ -26,6 +26,15 @@ namespace NightlyCode.Scripting.Extensions {
         /// <summary>
         /// converts values of a dictionary to a type
         /// </summary>
+        /// <param name="dictionary">dictionary containing property values</param>
+        /// <returns>type created from dictionary</returns>
+        public static T ToType<T>(this IDictionary dictionary) {
+            return (T)ToType(dictionary, typeof(T));
+        }
+
+        /// <summary>
+        /// converts values of a dictionary to a type
+        /// </summary>
         /// <remarks>
         /// this is necessary because expandoobjects just implement idictionary&lt;string,object&gt;
         /// but not idictionary

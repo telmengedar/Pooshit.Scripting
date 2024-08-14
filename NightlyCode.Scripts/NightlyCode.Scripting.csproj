@@ -15,9 +15,10 @@
     <Company>NightlyCode</Company>
     <Authors>Toni Gottschall</Authors>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <AssemblyVersion>0.17.66</AssemblyVersion>
+    <AssemblyVersion>0.17.73</AssemblyVersion>
     <FileVersion></FileVersion>
-    <PackageVersion>0.17.66-preview</PackageVersion>
+    <PackageVersion>0.17.73-preview</PackageVersion>
+    <LangVersion>default</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
