@@ -131,6 +131,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NightlyCode.Scripts\Pooshit.Scripting.csproj" />
+    <ProjectReference Include="..\Pooshit.Scripts\Pooshit.Scripting.csproj" />
   </ItemGroup>
 
   <ItemGroup>

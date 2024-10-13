@@ -3,32 +3,17 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.17.40-preview</Version>
     <Description>Provides an environment to parse and execute scripts</Description>
     <Copyright>Toni Gottschall</Copyright>
-    <PackageLicenseUrl></PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/telmengedar/NightlyCode.Scripting</PackageProjectUrl>
     <RepositoryUrl>https://github.com/telmengedar/NightlyCode.Scripting</RepositoryUrl>
     <PackageTags>script, parser, code, dynamic, expression</PackageTags>
-    <Company></Company>
     <Authors>Toni Gottschall</Authors>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <AssemblyVersion>0.17.73</AssemblyVersion>
-    <FileVersion></FileVersion>
     <PackageVersion>0.17.73-preview</PackageVersion>
     <LangVersion>default</LangVersion>
     <PackageId>Pooshit.Scripting</PackageId>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
-    <DebugType>pdbonly</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
-    <DebugType>pdbonly</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-    <DocumentationFile>D:\Develop\Projects\NightlyCode.Scripting\NightlyCode.Scripts\NightlyCode.Scripting.xml</DocumentationFile>
   </PropertyGroup>
   
   <ItemGroup>
@@ -38,7 +23,6 @@
   <ItemGroup>
     <None Include="LICENSE">
       <Pack>True</Pack>
-      <PackagePath></PackagePath>
     </None>
   </ItemGroup>
 </Project>
