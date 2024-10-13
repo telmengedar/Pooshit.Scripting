@@ -1,7 +1,6 @@
-﻿using System;
-using NightlyCode.Scripting.Tokens;
+﻿using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Formatters.Tokens {
+namespace Pooshit.Scripting.Formatters.Tokens {
 
     /// <summary>
     /// collection of available formatters

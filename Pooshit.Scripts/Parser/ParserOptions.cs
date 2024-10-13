@@ -1,6 +1,6 @@
-﻿using NightlyCode.Scripting.Data;
+﻿using Pooshit.Scripting.Data;
 
-namespace NightlyCode.Scripting.Parser {
+namespace Pooshit.Scripting.Parser {
 
     /// <summary>
     /// options for parser

@@ -1,4 +1,4 @@
-﻿namespace NightlyCode.Scripting.Parser.Extract {
+﻿namespace Pooshit.Scripting.Parser.Extract {
     public enum ExtractionScanMode {
         Done=-1,
         DetermineMode=0,

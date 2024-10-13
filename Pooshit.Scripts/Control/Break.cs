@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Control {
+namespace Pooshit.Scripting.Control {
 
     /// <summary>
     /// breaks execution of a loop

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Control {
+namespace Pooshit.Scripting.Control {
     /// <summary>
     /// a block of statements executed in sequence
     /// </summary>

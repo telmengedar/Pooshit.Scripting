@@ -1,38 +1,37 @@
-﻿using NightlyCode.Scripting.Parser;
+﻿using Pooshit.Scripting.Parser;
 
-namespace NightlyCode.Scripting.Tokens {
+namespace Pooshit.Scripting.Tokens;
+
+/// <summary>
+/// value in a script command
+/// </summary>
+public class ScriptValue : ScriptToken {
 
     /// <summary>
-    /// value in a script command
+    /// creates a new <see cref="ScriptParser"/>
     /// </summary>
-    public class ScriptValue : ScriptToken {
+    /// <param name="value">value</param>
+    public ScriptValue(object value) {
+        Value = value;
+    }
 
-        /// <summary>
-        /// creates a new <see cref="ScriptParser"/>
-        /// </summary>
-        /// <param name="value">value</param>
-        public ScriptValue(object value) {
-            Value = value;
-        }
+    /// <summary>
+    /// contained value
+    /// </summary>
+    public object Value { get; }
 
-        /// <summary>
-        /// contained value
-        /// </summary>
-        public object Value { get; }
+    /// <inheritdoc />
+    public override string Literal => "value";
 
-        /// <inheritdoc />
-        public override string Literal => "value";
+    /// <inheritdoc />
+    protected override object ExecuteToken(ScriptContext context) {
+        return Value;
+    }
 
-        /// <inheritdoc />
-        protected override object ExecuteToken(ScriptContext context) {
-            return Value;
-        }
-
-        /// <inheritdoc />
-        public override string ToString() {
-            if(Value is string)
-                return $"\"{Value}\"";
-            return Value?.ToString() ?? "null";
-        }
+    /// <inheritdoc />
+    public override string ToString() {
+        if(Value is string)
+            return $"\"{Value}\"";
+        return Value?.ToString() ?? "null";
     }
 }

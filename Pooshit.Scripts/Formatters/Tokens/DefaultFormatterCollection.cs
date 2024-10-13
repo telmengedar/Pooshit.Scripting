@@ -1,8 +1,8 @@
-﻿using NightlyCode.Scripting.Control;
-using NightlyCode.Scripting.Operations;
-using NightlyCode.Scripting.Tokens;
+﻿using Pooshit.Scripting.Control;
+using Pooshit.Scripting.Operations;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Formatters.Tokens {
+namespace Pooshit.Scripting.Formatters.Tokens {
 
     /// <summary>
     /// formatter collection with default entries

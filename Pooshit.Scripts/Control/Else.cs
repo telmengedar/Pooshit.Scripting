@@ -1,6 +1,6 @@
-﻿using NightlyCode.Scripting.Tokens;
+﻿using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Control {
+namespace Pooshit.Scripting.Control {
 
     /// <summary>
     /// token containing body for an <see cref="If"/> statement of which condition is not met

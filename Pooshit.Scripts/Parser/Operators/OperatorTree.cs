@@ -1,7 +1,7 @@
 ﻿using System;
-using NightlyCode.Scripting.Data;
+using Pooshit.Scripting.Data;
 
-namespace NightlyCode.Scripting.Parser.Operators {
+namespace Pooshit.Scripting.Parser.Operators {
 
     /// <summary>
     /// tree containing operator information

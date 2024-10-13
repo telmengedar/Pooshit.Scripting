@@ -1,7 +1,7 @@
 ﻿using System;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Parser.Extract {
+namespace Pooshit.Scripting.Parser.Extract {
 
     /// <summary>
     /// extracts single tokens from scripts

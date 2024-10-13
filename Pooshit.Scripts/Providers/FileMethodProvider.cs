@@ -1,10 +1,10 @@
 ﻿using System.IO;
 using System.Reflection;
-using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Parser;
+using Pooshit.Scripting.Data;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Parser;
 
-namespace NightlyCode.Scripting.Providers {
+namespace Pooshit.Scripting.Providers {
 
     /// <summary>
     /// provides external methods from a file path

@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using NightlyCode.Scripting;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Parser;
+using Pooshit.Scripting;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Parser;
 
 namespace NightlyCode.ScriptExecutor {
     class Program {

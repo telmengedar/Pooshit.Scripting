@@ -1,32 +1,31 @@
 ﻿
-namespace NightlyCode.Scripting.Tokens {
+namespace Pooshit.Scripting.Tokens;
+
+/// <summary>
+/// block containing an arithmetic evaluation
+/// </summary>
+public class ArithmeticBlock : ScriptToken {
+    readonly IScriptToken inner;
+
+    internal ArithmeticBlock(IScriptToken inner) {
+        this.inner = inner;
+    }
 
     /// <summary>
-    /// block containing an arithmetic evaluation
+    /// inner statement block
     /// </summary>
-    public class ArithmeticBlock : ScriptToken {
-        readonly IScriptToken inner;
+    public IScriptToken InnerBlock => inner;
 
-        internal ArithmeticBlock(IScriptToken inner) {
-            this.inner = inner;
-        }
+    /// <inheritdoc />
+    public override string Literal => "(...)";
 
-        /// <summary>
-        /// inner statement block
-        /// </summary>
-        public IScriptToken InnerBlock => inner;
+    /// <inheritdoc />
+    protected override object ExecuteToken(ScriptContext context) {
+        return inner.Execute(context);
+    }
 
-        /// <inheritdoc />
-        public override string Literal => "(...)";
-
-        /// <inheritdoc />
-        protected override object ExecuteToken(ScriptContext context) {
-            return inner.Execute(context);
-        }
-
-        /// <inheritdoc />
-        public override string ToString() {
-            return $"({inner})";
-        }
+    /// <inheritdoc />
+    public override string ToString() {
+        return $"({inner})";
     }
 }

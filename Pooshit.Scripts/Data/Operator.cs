@@ -1,4 +1,4 @@
-﻿namespace NightlyCode.Scripting.Data {
+﻿namespace Pooshit.Scripting.Data {
 
     /// <summary>
     /// operator type

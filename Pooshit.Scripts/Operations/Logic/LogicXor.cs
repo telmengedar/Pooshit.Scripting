@@ -1,7 +1,7 @@
-﻿using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Extensions;
+﻿using Pooshit.Scripting.Data;
+using Pooshit.Scripting.Extensions;
 
-namespace NightlyCode.Scripting.Operations.Logic {
+namespace Pooshit.Scripting.Operations.Logic {
 
     /// <summary>
     /// computes logical XOR of lhs and rhs

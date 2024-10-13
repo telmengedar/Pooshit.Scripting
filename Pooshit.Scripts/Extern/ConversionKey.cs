@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NightlyCode.Scripting.Extern {
+namespace Pooshit.Scripting.Extern {
 
     /// <summary>
     /// key used for specific conversion

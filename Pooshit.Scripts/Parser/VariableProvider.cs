@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Errors;
+using Pooshit.Scripting.Data;
+using Pooshit.Scripting.Errors;
 
-namespace NightlyCode.Scripting.Parser {
+namespace Pooshit.Scripting.Parser {
 
     /// <summary>
     /// basic implementation of a variable provider used if no custom provider is specified

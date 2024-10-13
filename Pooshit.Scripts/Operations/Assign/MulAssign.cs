@@ -1,6 +1,6 @@
-﻿using NightlyCode.Scripting.Data;
+﻿using Pooshit.Scripting.Data;
 
-namespace NightlyCode.Scripting.Operations.Assign {
+namespace Pooshit.Scripting.Operations.Assign {
 
     /// <summary>
     /// multiplies a value from the result of a token and assigns it to the same token

@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using NightlyCode.Scripting.Providers;
+using Pooshit.Scripting.Providers;
 
-namespace NightlyCode.Scripting.Hosts {
+namespace Pooshit.Scripting.Hosts {
 
     /// <summary>
     /// provides methods for tasks

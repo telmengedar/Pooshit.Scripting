@@ -2,11 +2,13 @@
 using System;
 using System.Linq;
 using NightlyCode.Scripting;
-using NightlyCode.Scripting.Control;
-using NightlyCode.Scripting.Parser;
-using NightlyCode.Scripting.Parser.Extract;
 using NightlyCode.Scripting.Tokens;
 using NUnit.Framework;
+using Pooshit.Scripting;
+using Pooshit.Scripting.Control;
+using Pooshit.Scripting.Parser;
+using Pooshit.Scripting.Parser.Extract;
+using Pooshit.Scripting.Tokens;
 
 namespace Scripting.Tests {
 

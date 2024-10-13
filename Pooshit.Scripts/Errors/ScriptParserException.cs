@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NightlyCode.Scripting.Errors {
+namespace Pooshit.Scripting.Errors {
 
     /// <summary>
     /// exception triggered when parser is unable to parse script

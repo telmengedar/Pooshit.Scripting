@@ -1,11 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Tokens;
-using NightlyCode.Scripting.Extensions;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Extensions;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Control {
+namespace Pooshit.Scripting.Control {
 
     /// <summary>
     /// loop which iterates over a collection

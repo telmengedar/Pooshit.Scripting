@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using NightlyCode.Scripting.Parser.Resolvers;
-using NightlyCode.Scripting.Providers;
+using Pooshit.Scripting.Parser.Resolvers;
+using Pooshit.Scripting.Providers;
 
-namespace NightlyCode.Scripting.Parser {
+namespace Pooshit.Scripting.Parser {
 
     /// <inheritdoc />
     public class TypeProvider : ITypeProvider {

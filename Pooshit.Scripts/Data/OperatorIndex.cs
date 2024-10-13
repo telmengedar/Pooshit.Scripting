@@ -1,6 +1,6 @@
-﻿using NightlyCode.Scripting.Operations;
+﻿using Pooshit.Scripting.Operations;
 
-namespace NightlyCode.Scripting.Data {
+namespace Pooshit.Scripting.Data {
 
     /// <summary>
     /// index of an operator in a token list

@@ -2,9 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using NightlyCode.Scripting.Providers;
+using Pooshit.Scripting.Providers;
 
-namespace NightlyCode.Scripting.Extensions.Script {
+namespace Pooshit.Scripting.Extensions.Script {
 
     /// <summary>
     /// extensions for scripts with <see cref="IEnumerable"/> results

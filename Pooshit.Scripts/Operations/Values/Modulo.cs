@@ -1,6 +1,6 @@
-﻿using NightlyCode.Scripting.Data;
+﻿using Pooshit.Scripting.Data;
 
-namespace NightlyCode.Scripting.Operations.Values {
+namespace Pooshit.Scripting.Operations.Values {
 
     /// <summary>
     /// computes the modulus when dividing LHS by RHS

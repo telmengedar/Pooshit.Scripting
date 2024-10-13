@@ -3,11 +3,13 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using NightlyCode.Scripting;
-using NightlyCode.Scripting.Control;
-using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Parser;
 using NightlyCode.Scripting.Tokens;
 using NUnit.Framework;
+using Pooshit.Scripting;
+using Pooshit.Scripting.Control;
+using Pooshit.Scripting.Data;
+using Pooshit.Scripting.Parser;
+using Pooshit.Scripting.Tokens;
 using Scripting.Tests.Data;
 
 namespace Scripting.Tests {

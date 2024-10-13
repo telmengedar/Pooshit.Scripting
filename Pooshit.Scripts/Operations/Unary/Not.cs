@@ -1,7 +1,7 @@
-﻿using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Extensions;
+﻿using Pooshit.Scripting.Data;
+using Pooshit.Scripting.Extensions;
 
-namespace NightlyCode.Scripting.Operations.Unary {
+namespace Pooshit.Scripting.Operations.Unary {
 
     /// <summary>
     /// logical negation of boolean values

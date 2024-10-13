@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Providers;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Providers;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Control {
+namespace Pooshit.Scripting.Control {
 
     /// <summary>
     /// imports a script method using the <see cref="IImportProvider"/> of the parser

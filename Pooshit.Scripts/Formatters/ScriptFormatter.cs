@@ -1,7 +1,7 @@
 ﻿using System.Text;
-using NightlyCode.Scripting.Formatters.Tokens;
+using Pooshit.Scripting.Formatters.Tokens;
 
-namespace NightlyCode.Scripting.Formatters {
+namespace Pooshit.Scripting.Formatters {
 
     /// <inheritdoc />
     public class ScriptFormatter : IScriptFormatter {

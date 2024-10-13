@@ -1,6 +1,6 @@
-﻿using NightlyCode.Scripting.Parser;
+﻿using Pooshit.Scripting.Parser;
 
-namespace NightlyCode.Scripting.Data {
+namespace Pooshit.Scripting.Data {
 
     /// <summary>
     /// interface for an external method which can get called from a script

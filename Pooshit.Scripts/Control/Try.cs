@@ -1,7 +1,7 @@
 ﻿using System;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Control {
+namespace Pooshit.Scripting.Control {
 
     /// <summary>
     /// statement wrapping a body for exception handling

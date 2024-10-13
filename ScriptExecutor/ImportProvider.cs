@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using NightlyCode.Scripting.Providers;
+using Pooshit.Scripting.Providers;
 
 namespace NightlyCode.ScriptExecutor {
     public class ImportProvider : IImportProvider {

@@ -1,7 +1,7 @@
 ﻿using System;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Errors {
+namespace Pooshit.Scripting.Errors {
 
     /// <summary>
     /// exception triggered when an error was encountered parsing or executing a script

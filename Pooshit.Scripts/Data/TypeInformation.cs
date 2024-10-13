@@ -1,7 +1,7 @@
 ﻿using System;
-using NightlyCode.Scripting.Extern;
+using Pooshit.Scripting.Extern;
 
-namespace NightlyCode.Scripting.Data {
+namespace Pooshit.Scripting.Data {
 
     /// <summary>
     /// type related information methods

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Control.Internal {
+namespace Pooshit.Scripting.Control.Internal {
     class ListStatementBlock : ITokenContainer, IScriptToken {
         readonly List<IScriptToken> body=new List<IScriptToken>();
 

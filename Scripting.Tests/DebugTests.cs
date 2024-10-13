@@ -1,11 +1,13 @@
 ﻿using System;
 using NightlyCode.Scripting;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Extensions;
-using NightlyCode.Scripting.Parser;
-using NightlyCode.Scripting.Providers;
 using NightlyCode.Scripting.Tokens;
 using NUnit.Framework;
+using Pooshit.Scripting;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Extensions;
+using Pooshit.Scripting.Parser;
+using Pooshit.Scripting.Providers;
+using Pooshit.Scripting.Tokens;
 
 namespace Scripting.Tests {
 

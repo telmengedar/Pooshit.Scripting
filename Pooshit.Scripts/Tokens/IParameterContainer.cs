@@ -1,20 +1,19 @@
 ﻿using System.Collections.Generic;
 
-namespace NightlyCode.Scripting.Tokens {
+namespace Pooshit.Scripting.Tokens;
+
+/// <summary>
+/// control token which is based on a condition
+/// </summary>
+public interface IParameterContainer : IScriptToken {
 
     /// <summary>
-    /// control token which is based on a condition
+    /// evaluated condition
     /// </summary>
-    public interface IParameterContainer : IScriptToken {
+    IEnumerable<IScriptToken> Parameters { get; }
 
-        /// <summary>
-        /// evaluated condition
-        /// </summary>
-        IEnumerable<IScriptToken> Parameters { get; }
-
-        /// <summary>
-        /// determines whether specification of parameters is optional
-        /// </summary>
-        bool ParametersOptional { get; }
-    }
+    /// <summary>
+    /// determines whether specification of parameters is optional
+    /// </summary>
+    bool ParametersOptional { get; }
 }

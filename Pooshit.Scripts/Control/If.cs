@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using NightlyCode.Scripting.Extensions;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Extensions;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Control {
+namespace Pooshit.Scripting.Control {
 
     /// <summary>
     /// statement execution a body when a condition is met

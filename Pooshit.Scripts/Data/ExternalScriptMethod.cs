@@ -1,6 +1,6 @@
-﻿using NightlyCode.Scripting.Parser;
+﻿using Pooshit.Scripting.Parser;
 
-namespace NightlyCode.Scripting.Data {
+namespace Pooshit.Scripting.Data {
 
     /// <summary>
     /// script method provided by resolver

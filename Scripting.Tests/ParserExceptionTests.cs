@@ -1,8 +1,8 @@
 ﻿using System;
 using NightlyCode.Scripting;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Parser;
 
 namespace Scripting.Tests {
 

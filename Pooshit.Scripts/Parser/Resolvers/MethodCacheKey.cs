@@ -1,8 +1,8 @@
 ﻿using System;
-using NightlyCode.Scripting.Extensions;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Extensions;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Parser.Resolvers {
+namespace Pooshit.Scripting.Parser.Resolvers {
 
     /// <summary>
     /// key for a method call

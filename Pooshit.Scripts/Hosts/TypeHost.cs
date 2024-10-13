@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Extensions;
-using NightlyCode.Scripting.Parser;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Extensions;
+using Pooshit.Scripting.Parser;
 
-namespace NightlyCode.Scripting.Hosts {
+namespace Pooshit.Scripting.Hosts {
 
     /// <summary>
     /// provides methods to interact with types in scripts

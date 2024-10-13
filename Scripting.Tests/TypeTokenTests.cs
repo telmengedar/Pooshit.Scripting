@@ -1,6 +1,6 @@
 ﻿using System;
-using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
+using Pooshit.Scripting.Parser;
 
 namespace Scripting.Tests {
     

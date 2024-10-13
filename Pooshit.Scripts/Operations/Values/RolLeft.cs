@@ -1,8 +1,8 @@
-﻿using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Extensions;
-using NightlyCode.Scripting.Extern;
+﻿using Pooshit.Scripting.Data;
+using Pooshit.Scripting.Extensions;
+using Pooshit.Scripting.Extern;
 
-namespace NightlyCode.Scripting.Operations.Values {
+namespace Pooshit.Scripting.Operations.Values {
 
     /// <summary>
     /// rolls bits of lhs to the left by rhs steps

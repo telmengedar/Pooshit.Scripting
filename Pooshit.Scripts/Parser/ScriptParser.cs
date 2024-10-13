@@ -5,25 +5,26 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using NightlyCode.Scripting.Control;
-using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Extensions;
-using NightlyCode.Scripting.Operations;
-using NightlyCode.Scripting.Operations.Assign;
-using NightlyCode.Scripting.Operations.Comparision;
-using NightlyCode.Scripting.Operations.Logic;
-using NightlyCode.Scripting.Operations.Unary;
-using NightlyCode.Scripting.Operations.Values;
-using NightlyCode.Scripting.Parser.Operators;
-using NightlyCode.Scripting.Parser.Resolvers;
-using NightlyCode.Scripting.Providers;
 using NightlyCode.Scripting.Tokens;
-using Switch = NightlyCode.Scripting.Control.Switch;
+using Pooshit.Scripting.Control;
+using Pooshit.Scripting.Data;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Extensions;
+using Pooshit.Scripting.Operations;
+using Pooshit.Scripting.Operations.Assign;
+using Pooshit.Scripting.Operations.Comparision;
+using Pooshit.Scripting.Operations.Logic;
+using Pooshit.Scripting.Operations.Unary;
+using Pooshit.Scripting.Operations.Values;
+using Pooshit.Scripting.Parser.Operators;
+using Pooshit.Scripting.Parser.Resolvers;
+using Pooshit.Scripting.Providers;
+using Pooshit.Scripting.Tokens;
+using Switch = Pooshit.Scripting.Control.Switch;
 
 // TODO: the parent parameter is only used to determine whether to parse for a dictionary. There should be better ways to handle that
 
-namespace NightlyCode.Scripting.Parser {
+namespace Pooshit.Scripting.Parser {
 
     /// <summary>
     /// parses scripts from string data

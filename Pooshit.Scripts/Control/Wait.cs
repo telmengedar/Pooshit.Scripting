@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Threading;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Extern;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Extern;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Control {
+namespace Pooshit.Scripting.Control {
 
     /// <summary>
     /// token which waits a specified timespan

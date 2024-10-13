@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
-using NightlyCode.Scripting.Operations;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Operations;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Parser.Resolvers {
+namespace Pooshit.Scripting.Parser.Resolvers {
 
     /// <inheritdoc />
     public class ResolvedMethod : IResolvedMethod {

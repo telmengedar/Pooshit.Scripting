@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
-using NightlyCode.Scripting.Providers;
+using Pooshit.Scripting.Providers;
 
-namespace NightlyCode.Scripting.Parser {
+namespace Pooshit.Scripting.Parser {
 
     /// <summary>
     /// interface for a parser of script code

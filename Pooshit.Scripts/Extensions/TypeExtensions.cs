@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Parser;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Parser;
 
-namespace NightlyCode.Scripting.Extensions {
+namespace Pooshit.Scripting.Extensions {
 
     /// <summary>
     /// extensions for type operations

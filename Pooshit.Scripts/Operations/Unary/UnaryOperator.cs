@@ -1,7 +1,7 @@
-﻿using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Tokens;
+﻿using Pooshit.Scripting.Data;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Operations.Unary {
+namespace Pooshit.Scripting.Operations.Unary {
 
     /// <summary>
     /// operator which acts on a single operand which is usually following the operator

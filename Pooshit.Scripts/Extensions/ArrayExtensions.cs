@@ -1,4 +1,4 @@
-﻿namespace NightlyCode.Scripting.Extensions {
+﻿namespace Pooshit.Scripting.Extensions {
     public static class ArrayExtensions {
 
 		/// <summary>

@@ -1,4 +1,4 @@
-﻿namespace NightlyCode.Scripting.Formatters {
+﻿namespace Pooshit.Scripting.Formatters {
 
     /// <summary>
     /// formats scripts for text editors

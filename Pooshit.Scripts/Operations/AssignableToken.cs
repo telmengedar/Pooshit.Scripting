@@ -1,8 +1,8 @@
 ﻿using System;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Operations {
+namespace Pooshit.Scripting.Operations {
 
     /// <summary>
     /// base implementation which handles errors

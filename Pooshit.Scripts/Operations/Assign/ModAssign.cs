@@ -1,7 +1,6 @@
-﻿using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Parser;
+﻿using Pooshit.Scripting.Data;
 
-namespace NightlyCode.Scripting.Operations.Assign {
+namespace Pooshit.Scripting.Operations.Assign {
 
     /// <summary>
     /// computes modulus of a value with the result of a token and assigns it to the same token

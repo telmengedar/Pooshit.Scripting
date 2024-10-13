@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using NightlyCode.Scripting.Extensions;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Extensions;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Control {
+namespace Pooshit.Scripting.Control {
 
     /// <summary>
     /// case for a <see cref="Switch"/> statement

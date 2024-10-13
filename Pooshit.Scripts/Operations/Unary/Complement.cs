@@ -1,6 +1,6 @@
-﻿using NightlyCode.Scripting.Data;
+﻿using Pooshit.Scripting.Data;
 
-namespace NightlyCode.Scripting.Operations.Unary {
+namespace Pooshit.Scripting.Operations.Unary {
 
     /// <summary>
     /// computes the bit-complement of the result of a token

@@ -1,7 +1,8 @@
 ﻿using NightlyCode.Scripting;
-using NightlyCode.Scripting.Extensions;
-using NightlyCode.Scripting.Parser;
 using NUnit.Framework;
+using Pooshit.Scripting;
+using Pooshit.Scripting.Extensions;
+using Pooshit.Scripting.Parser;
 
 namespace Scripting.Tests {
 

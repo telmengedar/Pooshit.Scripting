@@ -1,7 +1,7 @@
-﻿using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Tokens;
+﻿using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Providers {
+namespace Pooshit.Scripting.Providers {
 
     /// <summary>
     /// lambda method which can get executed

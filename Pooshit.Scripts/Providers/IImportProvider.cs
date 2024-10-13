@@ -1,4 +1,4 @@
-﻿namespace NightlyCode.Scripting.Providers {
+﻿namespace Pooshit.Scripting.Providers {
 
     /// <summary>
     /// interface for an external method provider

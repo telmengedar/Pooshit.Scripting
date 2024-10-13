@@ -3,11 +3,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Operations;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Operations;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Parser.Resolvers {
+namespace Pooshit.Scripting.Parser.Resolvers {
 
     /// <summary>
     /// default method provider

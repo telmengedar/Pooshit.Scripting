@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
-using NightlyCode.Scripting.Operations;
-using NightlyCode.Scripting.Parser;
-using NightlyCode.Scripting.Parser.Resolvers;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Operations;
+using Pooshit.Scripting.Parser;
+using Pooshit.Scripting.Parser.Resolvers;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Providers {
+namespace Pooshit.Scripting.Providers {
 
     /// <summary>
     /// provides instances of arbitrary types

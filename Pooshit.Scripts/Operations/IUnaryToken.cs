@@ -1,6 +1,6 @@
-﻿using NightlyCode.Scripting.Tokens;
+﻿using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Operations {
+namespace Pooshit.Scripting.Operations {
 
     /// <summary>
     /// token applying an operation to a single operand

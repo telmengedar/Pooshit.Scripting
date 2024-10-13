@@ -1,8 +1,8 @@
-﻿using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Tokens;
+﻿using Pooshit.Scripting.Data;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Operations.Unary {
+namespace Pooshit.Scripting.Operations.Unary {
 
     /// <summary>
     /// increments the value of a token by 1

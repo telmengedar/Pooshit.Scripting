@@ -1,8 +1,8 @@
 ﻿using System;
-using NightlyCode.Scripting.Tokens;
-using NightlyCode.Scripting.Visitors;
+using Pooshit.Scripting.Tokens;
+using Pooshit.Scripting.Visitors;
 
-namespace NightlyCode.Scripting.Parser.Extract {
+namespace Pooshit.Scripting.Parser.Extract {
 
     /// <summary>
     /// visits a script to extract a token at a specific position

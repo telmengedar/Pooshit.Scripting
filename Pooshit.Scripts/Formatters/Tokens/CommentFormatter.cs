@@ -1,8 +1,7 @@
-﻿using System.Linq;
-using System.Text;
-using NightlyCode.Scripting.Tokens;
+﻿using System.Text;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Formatters.Tokens {
+namespace Pooshit.Scripting.Formatters.Tokens {
 
     /// <summary>
     /// formats <see cref="Comment"/>s

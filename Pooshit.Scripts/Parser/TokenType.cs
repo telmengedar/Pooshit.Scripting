@@ -1,4 +1,4 @@
-﻿namespace NightlyCode.Scripting.Parser {
+﻿namespace Pooshit.Scripting.Parser {
 
     /// <summary>
     /// token types known to parser

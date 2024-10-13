@@ -1,8 +1,8 @@
 ﻿using System.Text.RegularExpressions;
-using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Errors;
+using Pooshit.Scripting.Data;
+using Pooshit.Scripting.Errors;
 
-namespace NightlyCode.Scripting.Operations.Comparision {
+namespace Pooshit.Scripting.Operations.Comparision {
 
     /// <summary>
     /// determines whether a string matches a regex

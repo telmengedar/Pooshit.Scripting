@@ -1,4 +1,4 @@
-﻿namespace NightlyCode.Scripting.Extensions {
+﻿namespace Pooshit.Scripting.Extensions {
 
     /// <summary>
     /// helper method for script code

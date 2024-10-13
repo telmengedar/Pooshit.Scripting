@@ -1,9 +1,9 @@
 ﻿using System;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Extern;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Extern;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Extensions {
+namespace Pooshit.Scripting.Extensions {
 
     /// <summary>
     /// extensions for values

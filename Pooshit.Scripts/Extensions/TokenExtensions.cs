@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using NightlyCode.Scripting.Extern;
-using NightlyCode.Scripting.Tokens;
+﻿using System.Collections.Generic;
+using Pooshit.Scripting.Extern;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Extensions {
+namespace Pooshit.Scripting.Extensions {
 
     /// <summary>
     /// extensions for <see cref="IScriptToken"/>s

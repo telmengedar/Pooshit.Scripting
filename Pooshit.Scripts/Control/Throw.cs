@@ -1,8 +1,8 @@
 ﻿using System;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Control {
+namespace Pooshit.Scripting.Control {
 
     /// <summary>
     /// throws an exception from currently executed code

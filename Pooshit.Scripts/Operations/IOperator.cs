@@ -1,7 +1,7 @@
-﻿using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Tokens;
+﻿using Pooshit.Scripting.Data;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Operations {
+namespace Pooshit.Scripting.Operations {
 
     /// <summary>
     /// scripttoken which operates on other tokens

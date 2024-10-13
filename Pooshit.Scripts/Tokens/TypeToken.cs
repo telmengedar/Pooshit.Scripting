@@ -1,27 +1,26 @@
 ﻿using System;
 
-namespace NightlyCode.Scripting.Tokens {
+namespace Pooshit.Scripting.Tokens;
+
+/// <summary>
+/// token used to provide type information
+/// </summary>
+public class TypeToken : ScriptToken {
+    readonly Type type;
 
     /// <summary>
-    /// token used to provide type information
+    /// creates a new <see cref="TypeToken"/>
     /// </summary>
-    public class TypeToken : ScriptToken {
-        readonly Type type;
+    /// <param name="type">type provided by token</param>
+    public TypeToken(Type type) {
+        this.type = type;
+    }
 
-        /// <summary>
-        /// creates a new <see cref="TypeToken"/>
-        /// </summary>
-        /// <param name="type">type provided by token</param>
-        public TypeToken(Type type) {
-            this.type = type;
-        }
+    /// <inheritdoc />
+    public override string Literal => type.Name.ToLower();
 
-        /// <inheritdoc />
-        public override string Literal => type.Name.ToLower();
-
-        /// <inheritdoc />
-        protected override object ExecuteToken(ScriptContext context) {
-            return type;
-        }
+    /// <inheritdoc />
+    protected override object ExecuteToken(ScriptContext context) {
+        return type;
     }
 }

@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Extensions;
-using NightlyCode.Scripting.Extern;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Extensions;
+using Pooshit.Scripting.Extern;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Operations {
+namespace Pooshit.Scripting.Operations {
 
     /// <summary>
     /// operations used when calling methods dynamically

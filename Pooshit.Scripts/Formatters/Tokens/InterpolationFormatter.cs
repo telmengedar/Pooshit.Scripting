@@ -1,8 +1,8 @@
 ﻿using System.Text;
-using NightlyCode.Scripting.Control;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Control;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Formatters.Tokens {
+namespace Pooshit.Scripting.Formatters.Tokens {
 
     /// <summary>
     /// formats <see cref="StringInterpolation"/>s

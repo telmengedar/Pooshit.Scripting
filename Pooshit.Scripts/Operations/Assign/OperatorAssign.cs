@@ -1,8 +1,8 @@
-﻿using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Tokens;
+﻿using Pooshit.Scripting.Data;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Operations.Assign {
+namespace Pooshit.Scripting.Operations.Assign {
 
     /// <summary>
     /// computes the result of a binary operation and assigns the result to lhs

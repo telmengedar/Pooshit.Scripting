@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Reflection;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Parser.Resolvers {
+namespace Pooshit.Scripting.Parser.Resolvers {
 
     /// <summary>
     /// resolves method calls for <see cref="ScriptMethod"/> tokens

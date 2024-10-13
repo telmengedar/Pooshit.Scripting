@@ -1,8 +1,8 @@
 ﻿using System.Text;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Extensions {
+namespace Pooshit.Scripting.Extensions {
 
     /// <summary>
     /// extensions for script exceptions

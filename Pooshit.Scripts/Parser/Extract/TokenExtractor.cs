@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Text;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Parser.Extract {
+namespace Pooshit.Scripting.Parser.Extract {
 
     /// <inheritdoc />
     public class TokenExtractor : ITokenExtractor {

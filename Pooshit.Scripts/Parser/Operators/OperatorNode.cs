@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using NightlyCode.Scripting.Data;
+using Pooshit.Scripting.Data;
 
-namespace NightlyCode.Scripting.Parser.Operators {
+namespace Pooshit.Scripting.Parser.Operators {
 
     /// <summary>
     /// node in an operator tree

@@ -1,7 +1,6 @@
-﻿using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Parser;
+﻿using Pooshit.Scripting.Data;
 
-namespace NightlyCode.Scripting.Operations.Assign {
+namespace Pooshit.Scripting.Operations.Assign {
 
     /// <summary>
     /// computes bitwise and of lhs and rhs and assigns the result to lhs

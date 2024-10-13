@@ -1,8 +1,8 @@
 ﻿using System;
-using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Extensions;
+using Pooshit.Scripting.Data;
+using Pooshit.Scripting.Extensions;
 
-namespace NightlyCode.Scripting.Operations.Values {
+namespace Pooshit.Scripting.Operations.Values {
 
     /// <summary>
     /// shifts the bits of LHS by RHS to the right

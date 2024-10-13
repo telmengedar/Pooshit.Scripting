@@ -1,8 +1,8 @@
-﻿using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Extern;
+﻿using Pooshit.Scripting.Data;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Extern;
 
-namespace NightlyCode.Scripting.Extensions {
+namespace Pooshit.Scripting.Extensions {
 
     /// <summary>
     /// extensions for comparator tokens

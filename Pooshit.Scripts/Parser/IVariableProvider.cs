@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace NightlyCode.Scripting.Parser {
+namespace Pooshit.Scripting.Parser {
 
     /// <summary>
     /// provides named variables to script

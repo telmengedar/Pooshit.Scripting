@@ -1,9 +1,9 @@
 ﻿using Microsoft.CSharp.RuntimeBinder;
-using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Errors;
-using NightlyCode.Scripting.Tokens;
+using Pooshit.Scripting.Data;
+using Pooshit.Scripting.Errors;
+using Pooshit.Scripting.Tokens;
 
-namespace NightlyCode.Scripting.Operations.Logic {
+namespace Pooshit.Scripting.Operations.Logic {
 
     /// <summary>
     /// logic operation on boolean operands

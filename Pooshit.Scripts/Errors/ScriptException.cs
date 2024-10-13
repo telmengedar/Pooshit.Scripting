@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NightlyCode.Scripting.Errors {
+namespace Pooshit.Scripting.Errors {
 
     /// <summary>
     /// exception related to script engine

@@ -1,6 +1,6 @@
-﻿using NightlyCode.Scripting.Data;
+﻿using Pooshit.Scripting.Data;
 
-namespace NightlyCode.Scripting.Operations.Comparision {
+namespace Pooshit.Scripting.Operations.Comparision {
 
     /// <summary>
     /// compares two values for equality

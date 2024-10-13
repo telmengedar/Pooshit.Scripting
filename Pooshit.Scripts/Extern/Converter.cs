@@ -4,13 +4,12 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
-using NightlyCode.Scripting.Extensions;
-
+using Pooshit.Scripting.Extensions;
 #if WINDOWS_UWP
 using System.Reflection;
 #endif
 
-namespace NightlyCode.Scripting.Extern {
+namespace Pooshit.Scripting.Extern {
 
     /// <summary>
     /// converter used to convert data types

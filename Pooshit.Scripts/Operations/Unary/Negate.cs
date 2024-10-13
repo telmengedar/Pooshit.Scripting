@@ -1,7 +1,6 @@
-﻿using NightlyCode.Scripting.Data;
-using NightlyCode.Scripting.Parser;
+﻿using Pooshit.Scripting.Data;
 
-namespace NightlyCode.Scripting.Operations.Unary {
+namespace Pooshit.Scripting.Operations.Unary {
 
     /// <summary>
     /// negates the value of a token

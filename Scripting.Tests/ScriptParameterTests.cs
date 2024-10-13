@@ -1,9 +1,10 @@
 ﻿using System.Linq;
 using NightlyCode.Scripting;
-using NightlyCode.Scripting.Extensions;
-using NightlyCode.Scripting.Parser;
-using NightlyCode.Scripting.Visitors;
 using NUnit.Framework;
+using Pooshit.Scripting;
+using Pooshit.Scripting.Extensions;
+using Pooshit.Scripting.Parser;
+using Pooshit.Scripting.Visitors;
 
 namespace Scripting.Tests {
 
