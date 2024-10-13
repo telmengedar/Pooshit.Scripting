@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\NightlyCode.Scripts\NightlyCode.Scripting.csproj" />
+      <ProjectReference Include="..\NightlyCode.Scripts\Pooshit.Scripting.csproj" />
     </ItemGroup>
 
 </Project>

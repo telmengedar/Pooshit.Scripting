@@ -68,7 +68,7 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void FreeTypeParameter() {
             IScript script = parser.Parse(ScriptCode.Create(
-                "parameter($collection, \"NightlyCode.Scripting.Data.Variable,NightlyCode.Scripting[]\")",
+                "parameter($collection, \"Pooshit.Scripting.Data.Variable,Pooshit.Scripting[]\")",
                 "$result=0",
                 "foreach($number,$collection)",
                 "  $result+=$number.value",

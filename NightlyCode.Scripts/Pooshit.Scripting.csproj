@@ -2,8 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
-    <AssemblyName>NightlyCode.Scripting</AssemblyName>
-    <RootNamespace>NightlyCode.Scripting</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Version>0.17.40-preview</Version>
     <Description>Provides an environment to parse and execute scripts</Description>
@@ -12,13 +10,14 @@
     <PackageProjectUrl>https://github.com/telmengedar/NightlyCode.Scripting</PackageProjectUrl>
     <RepositoryUrl>https://github.com/telmengedar/NightlyCode.Scripting</RepositoryUrl>
     <PackageTags>script, parser, code, dynamic, expression</PackageTags>
-    <Company>NightlyCode</Company>
+    <Company></Company>
     <Authors>Toni Gottschall</Authors>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <AssemblyVersion>0.17.73</AssemblyVersion>
     <FileVersion></FileVersion>
     <PackageVersion>0.17.73-preview</PackageVersion>
     <LangVersion>default</LangVersion>
+    <PackageId>Pooshit.Scripting</PackageId>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
