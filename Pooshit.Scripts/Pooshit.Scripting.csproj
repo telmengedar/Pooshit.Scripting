@@ -21,8 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="LICENSE">
-      <Pack>True</Pack>
-    </None>
+    <None Include="LICENSE" Pack="true" PackagePath="" />
   </ItemGroup>
 </Project>
