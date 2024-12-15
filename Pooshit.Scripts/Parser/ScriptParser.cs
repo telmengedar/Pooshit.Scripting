@@ -1688,6 +1688,6 @@ public class ScriptParser : IScriptParser {
 
     /// <inheritdoc />
     public Delegate ParseDelegate(string data, params LambdaParameter[] parameters) {
-        return Parse(data).ToDelegate(parameters);
+        return Parse(data).ToDelegate(Extensions, parameters);
     }
 }

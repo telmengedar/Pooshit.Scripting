@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using Pooshit.Scripting.Expressions;
+using Pooshit.Scripting.Parser;
 
 namespace Pooshit.Scripting.Extensions;
 
@@ -9,15 +10,16 @@ namespace Pooshit.Scripting.Extensions;
 /// extensions used to convert scripts to expressions
 /// </summary>
 public static class ExpressionExtensions {
-
+	
 	/// <summary>
 	/// converts a script to a compiled lambda expression
 	/// </summary>
 	/// <param name="script">script to convert</param>
+	/// <param name="extensions">available extension methods</param>
 	/// <param name="parameters">parameters of script</param>
 	/// <returns>compiled lambda expression</returns>
-	public static Delegate ToDelegate(this IScript script, IDictionary<string, object> parameters) {
-		LambdaExpression expression = new ExpressionBuilder().BuildExpression(script, parameters);
+	public static Delegate ToDelegate(this IScript script, IExtensionProvider extensions, IDictionary<string, object> parameters) {
+		LambdaExpression expression = new ExpressionBuilder().BuildExpression(script, extensions, parameters);
 		return expression.Compile();
 	}
 		
@@ -25,10 +27,11 @@ public static class ExpressionExtensions {
 	/// converts a script to a compiled lambda expression
 	/// </summary>
 	/// <param name="script">script to convert</param>
+	/// <param name="extensions">available extension methods</param>
 	/// <param name="parameters">parameters of script</param>
 	/// <returns>compiled lambda expression</returns>
-	public static Delegate ToDelegate(this IScript script, params LambdaParameter[] parameters) {
-		LambdaExpression expression = new ExpressionBuilder().BuildExpression(script, parameters);
+	public static Delegate ToDelegate(this IScript script, IExtensionProvider extensions, params LambdaParameter[] parameters) {
+		LambdaExpression expression = new ExpressionBuilder().BuildExpression(script, extensions, parameters);
 		return expression.Compile();
 	}
 

@@ -123,4 +123,15 @@ public class ExpressionBuilderTests {
 		Assert.AreEqual(21, result);
 	}
 
+	[Test, Parallelizable]
+	public void ExtensionMethod() {
+		ScriptParser parser = new();
+		parser.Extensions.AddExtensions<TestExtensions>();
+
+		Delegate function = parser.ParseDelegate("\"hel\".append(\"lo\")");
+		object result = function.DynamicInvoke();
+
+		Assert.AreEqual("hello", result);
+	}
+
 }
