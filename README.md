@@ -1,6 +1,6 @@
-# NightlyCode.Scripting
+# P00Sh:t Scripting
 
-[NuGet](https://www.nuget.org/packages/NightlyCode.Scripting)
+[NuGet](https://www.nuget.org/packages/Pooshit.Scripting)
 
 Provides a parser for scripts which execute controlled scripts on a C# backend.
 
@@ -45,6 +45,7 @@ script.Execute();
 An expression is a single token or a series of tokens which result in a value. A token can be a literal, operator, method call, variable or basically anything which combined in a meaningful way results in a value.
 
 ### Operators
+These are the default operators provided by the script parser. Operators can be defined freely using the **OperatorTree** property of the parser.
 
 |Operator|Name|Description|
 |-|-|-|
