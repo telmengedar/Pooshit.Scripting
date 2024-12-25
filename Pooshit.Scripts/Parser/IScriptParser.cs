@@ -46,4 +46,13 @@ public interface IScriptParser {
     /// <param name="parameters">parameters to use for lambda call</param>
     /// <returns>parsed lambda delegate</returns>
     Delegate ParseDelegate(string data, params LambdaParameter[] parameters);
+    
+    /// <summary>
+    /// parses a lambda delegate from script code 
+    /// </summary>
+    /// <param name="data">script code to parse</param>
+    /// <param name="parameters">parameters to use for lambda call</param>
+    /// <returns>parsed lambda delegate</returns>
+    T ParseDelegate<T>(string data, params LambdaParameter[] parameters);
+    
 }

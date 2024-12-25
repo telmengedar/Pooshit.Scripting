@@ -15,6 +15,10 @@ namespace Scripting.Tests.Data {
             return data;
         }
 
+        public float Float(float data) {
+            return data;
+        }
+
         public string TestMethod(string parameter, string[] parameters)
         {
             return $"{parameter}_{string.Join(",", parameters)}";

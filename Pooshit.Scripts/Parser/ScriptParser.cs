@@ -209,7 +209,7 @@ public class ScriptParser : IScriptParser {
     IScriptToken[] TryParseControlParameters(ref string data, ref int index, ref int linenumber) {
         SkipWhitespaces(data, ref index, ref linenumber);
         if(index >= data.Length || data[index] != '(')
-            return new IScriptToken[0];
+            return [];
         return ParseControlParameters(null, ref data, ref index, ref linenumber);
     }
 
@@ -455,7 +455,7 @@ public class ScriptParser : IScriptParser {
                 initializer = ParseDictionary(null, ref data, ref index, ref linenumber);
             }
 
-            IScriptToken[] constructorparameters = initializer != null ? new IScriptToken[0] : ParseControlParameters(null, ref data, ref index, ref linenumber);
+            IScriptToken[] constructorparameters = initializer != null ? [] : ParseControlParameters(null, ref data, ref index, ref linenumber);
 
             return new NewInstance(type, typeprovider.ProvidedType, typeprovider, constructorparameters) {
                 LineNumber = startline,
@@ -564,13 +564,13 @@ public class ScriptParser : IScriptParser {
             }
         }
 
-        StringBuilder tokenname = new StringBuilder();
+        StringBuilder tokenname = new();
         for(; index < data.Length; ++index) {
             char character = data[index];
 
             if(char.IsLetterOrDigit(character) || character == '_' || (parsenumber && character == '.'))
                 tokenname.Append(character);
-            else if(character == '"' || character == '\\') {
+            else if(character is '"' or '\\') {
                 ++index;
                 tokenname.Append(ParseSpecialCharacter(data[index]));
             }
@@ -909,7 +909,7 @@ public class ScriptParser : IScriptParser {
         int newlines = 0;
         SkipWhitespaces(data, ref index, ref linenumber);
         int start = index;
-        List<IScriptToken> array = new List<IScriptToken>();
+        List<IScriptToken> array = [];
         for(; index < data.Length;) {
             char character = data[index];
             switch(character) {
@@ -1307,7 +1307,7 @@ public class ScriptParser : IScriptParser {
 
                     ++index;
                     IScriptToken format = ParseFormatString(ref data, ref index);
-                    tokenlist[tokenlist.Count - 1] = new ScriptMethod(MethodCallResolver, tokenlist.Last(), "ToString", new[] {format, new ScriptValue(CultureInfo.InvariantCulture)});
+                    tokenlist[tokenlist.Count - 1] = new ScriptMethod(MethodCallResolver, tokenlist.Last(), "ToString", [format, new ScriptValue(CultureInfo.InvariantCulture)]);
                     concat = false;
                 break;
                 case '.':
@@ -1689,5 +1689,10 @@ public class ScriptParser : IScriptParser {
     /// <inheritdoc />
     public Delegate ParseDelegate(string data, params LambdaParameter[] parameters) {
         return Parse(data).ToDelegate(Extensions, parameters);
+    }
+
+    /// <inheritdoc />
+    public T ParseDelegate<T>(string data, params LambdaParameter[] parameters) {
+        return Parse(data).ToDelegate<T>(Extensions, parameters);
     }
 }

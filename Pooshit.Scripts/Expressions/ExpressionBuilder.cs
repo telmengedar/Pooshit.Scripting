@@ -43,6 +43,19 @@ public class ExpressionBuilder {
 		return Expression.Lambda(Build(script.Body, extensions, parameters), parameters);
 	}
 
+	/// <summary>
+	/// builds an expression from a script
+	/// </summary>
+	/// <param name="script">script from which to build expression</param>
+	/// <param name="extensions">available extensions</param>
+	/// <param name="variables">variables from which to build parameters</param>
+	/// <returns>build lambda expression</returns>
+	public Expression<T> BuildExpression<T>(IScript script, IExtensionProvider extensions, params LambdaParameter[] variables) {
+		ParameterExpression[] parameters = variables.Select(v => Expression.Parameter(v.Type, v.Name))
+		                                            .ToArray();
+		return Expression.Lambda<T>(Build(script.Body, extensions, parameters), parameters);
+	}
+
 	Expression Build(IScriptToken token, IExtensionProvider extensions, ParameterExpression[] variables) {
 		if (token is StatementBlock block)
 			return Expression.Block(block.Children.Select(c=>Build(c, extensions, variables)));
