@@ -291,4 +291,77 @@ public class ExpressionBuilderTests {
 		Assert.AreEqual(7.0f, result);
 	}
 
+	[Test, Parallelizable]
+	public void StringVariableAndInterpolation() {
+		ScriptParser parser = new();
+		Func<string> function = parser.ParseDelegate<Func<string>>("$variable=\"\"\n" +
+		                                                         "$variable+=$\"Nr {5} lives ...\"\n" +
+		                                                         "return($variable)"
+		                                                        );
+		string result = function();
+
+		Assert.AreEqual("Nr 5 lives ...", result);
+	}
+
+	[Test, Parallelizable]
+	public void StringAdd() {
+		ScriptParser parser = new();
+		Func<string> function = parser.ParseDelegate<Func<string>>("\"Hello \"+\"World\"");
+		Assert.AreEqual("Hello World", function());
+	}
+
+	[Test, Parallelizable]
+	public void AddDifferentTypes() {
+		ScriptParser parser = new();
+		Func<float> function=parser.ParseDelegate<Func<float>>("3.14f+7");
+		Assert.AreEqual(10.14f, function());
+	}
+
+	[Test, Parallelizable]
+	public void SwitchWithoutDefault() {
+		ScriptParser parser = new();
+		Func<int, int> function=parser.ParseDelegate<Func<int,int>>("switch($number) case(1) 0 case(2) 3",
+		                                                   new LambdaParameter<int>("number"));
+		Assert.AreEqual(0, function(78));
+	}
+	
+	[Test, Parallelizable]
+	public void SwitchWithoutDefaultHitCase() {
+		ScriptParser parser = new();
+		Func<int, int> function=parser.ParseDelegate<Func<int,int>>("switch($number) case(1) 0 case(2) 3",
+		                                                            new LambdaParameter<int>("number"));
+		Assert.AreEqual(3, function(2));
+	}
+
+	[Test, Parallelizable]
+	public void IfThenElse() {
+		ScriptParser parser = new();
+		Func<int, int> function = parser.ParseDelegate<Func<int, int>>("if($number>5) return(7) else return(2)",
+		                                                               new LambdaParameter<int>("number"));
+		Assert.AreEqual(7, function(10));
+	}
+
+	[Test, Parallelizable]
+	public void IfThenElseImplicitely() {
+		ScriptParser parser = new();
+		Func<int, int> function = parser.ParseDelegate<Func<int, int>>("if($number>5) 7 else 2",
+		                                                               new LambdaParameter<int>("number"));
+		Assert.AreEqual(7, function(10));
+	}
+
+	[Test, Parallelizable]
+	public void IfThenElseImplicitelyHitElse() {
+		ScriptParser parser = new();
+		Func<int, int> function = parser.ParseDelegate<Func<int, int>>("if($number>5) 7 else 2",
+		                                                               new LambdaParameter<int>("number"));
+		Assert.AreEqual(2, function(3));
+	}
+
+	[Test, Parallelizable]
+	public void IfThenElseHitElse() {
+		ScriptParser parser = new();
+		Func<int, int> function = parser.ParseDelegate<Func<int, int>>("if($number>5) return(7) else return(2)",
+		                                                               new LambdaParameter<int>("number"));
+		Assert.AreEqual(2, function(3));
+	}
 }
