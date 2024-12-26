@@ -273,22 +273,35 @@ public class ExpressionBuilder {
 		}
 		
 		if (token is Switch switchToken) {
+			Expression condition = Build(switchToken.Parameters.Single(), extensions, variables, labels);
 			SwitchCase[] cases = switchToken.Cases.Select(c => Expression.SwitchCase(
 			                                                                         Build(c.Body, extensions, variables, labels),
-			                                                                         c.Parameters.Select(p => Build(p, extensions, variables, labels)).ToArray()
+			                                                                         c.Parameters.Select(p => Convert(Build(p, extensions, variables, labels), condition.Type)).ToArray()
 			                                                                        )).ToArray();
 			Expression defaultBody = Build(switchToken.Default?.Body, extensions, variables, labels);
-			if (cases.Length > 0 && cases[0].Body.Type != typeof(void))
+			if (defaultBody == null && cases.Length > 0 && cases[0].Body.Type != typeof(void))
 				defaultBody = Expression.Default(cases[0].Body.Type);
 
-			return Expression.Switch(Build(switchToken.Parameters.Single(), extensions, variables, labels),
+			return Expression.Switch(condition,
 			                         defaultBody,
 			                         cases);
+		}
+
+		if (token is Try tryToken) {
+			Expression tryBlock = Build(tryToken.Body, extensions, variables, labels);
+			CatchBlock catchBlock = Expression.Catch(typeof(Exception), Build(tryToken.Catch?.Body, extensions, variables, labels) ?? Expression.Default(tryBlock.Type));
+			return Expression.TryCatch(tryBlock, catchBlock);
 		}
 
 		throw new NotSupportedException(token.GetType().Name);
 	}
 
+	Expression Convert(Expression expression, Type type) {
+		if (expression.Type == type)
+			return expression;
+		return Expression.Convert(expression, type);
+	}
+	
 	Expression StringConcat(params Expression[] expressions) {
 		return Expression.Call(typeof(string).GetMethod("Concat", [typeof(string[])]),
 		                       Expression.NewArrayInit(typeof(string), expressions));

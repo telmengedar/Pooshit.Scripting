@@ -318,6 +318,14 @@ public class ExpressionBuilderTests {
 	}
 
 	[Test, Parallelizable]
+	public void SwitchDefault() {
+		ScriptParser parser = new();
+		Func<object, int> function=parser.ParseDelegate<Func<object,int>>("switch($number) case(1) 0 case(2) 3 default 9",
+		                                                            new LambdaParameter<object>("number"));
+		Assert.AreEqual(9, function(78));
+	}
+
+	[Test, Parallelizable]
 	public void SwitchWithoutDefault() {
 		ScriptParser parser = new();
 		Func<int, int> function=parser.ParseDelegate<Func<int,int>>("switch($number) case(1) 0 case(2) 3",
@@ -364,4 +372,21 @@ public class ExpressionBuilderTests {
 		                                                               new LambdaParameter<int>("number"));
 		Assert.AreEqual(2, function(3));
 	}
+	
+	[Test, Parallelizable]
+	public void Try() {
+		ScriptParser parser = new();
+		Func<int, int> function = parser.ParseDelegate<Func<int, int>>("try { number / 0 } 9",
+		                                                               new LambdaParameter<int>("number"));
+		Assert.AreEqual(9, function(3));
+	}
+	
+	[Test, Parallelizable]
+	public void TryCatch() {
+		ScriptParser parser = new();
+		Func<int, int> function = parser.ParseDelegate<Func<int, int>>("try { number / 0 } catch { number/3 }",
+		                                                               new LambdaParameter<int>("number"));
+		Assert.AreEqual(1, function(3));
+	}
+
 }
