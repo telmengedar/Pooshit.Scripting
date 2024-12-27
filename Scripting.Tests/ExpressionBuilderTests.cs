@@ -183,6 +183,19 @@ public class ExpressionBuilderTests {
 	}
 
 	[Test, Parallelizable]
+	public void AutoCastMethodArguments() {
+		ScriptParser parser = new();
+		TestHost host = new();
+
+		Func<TestHost, object, string> function = parser.ParseDelegate<Func<TestHost, object,string>>("host.testmethod(x, [\"y\", \"z\"])", 
+		                                                                                              new LambdaParameter<TestHost>("host"),
+		                                                                                              new LambdaParameter<object>("x"));
+		string result=function(host, "x");
+
+		Assert.AreEqual("x_y,z", result);
+	}
+
+	[Test, Parallelizable]
 	public void ArrayIndexer() {
 		ScriptParser parser = new();
 

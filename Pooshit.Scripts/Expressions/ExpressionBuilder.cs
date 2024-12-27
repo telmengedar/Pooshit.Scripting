@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -380,11 +381,16 @@ public class ExpressionBuilder {
 
 	Expression BuildMethod(ScriptMethod method, IExtensionProvider extensions, List<ParameterExpression> variables, List<LabelExpression> labels) {
 		Expression host = Build(method.Host, extensions, variables, labels);
-		Expression[] parameters = method.Parameters.Select(p => Build(p, extensions, variables, labels)).ToArray();
-		
-		if (host.Type.GetMethod(method.MethodName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase) != null)
-			return Expression.Call(Build(method.Host, extensions, variables, labels), method.MethodName, null, parameters);
 
+		MethodInfo methodInfo = host.Type.GetMethods().FirstOrDefault(m => string.Compare(m.Name, method.MethodName, null, CompareOptions.IgnoreCase) == 0 && m.GetParameters().Length == method.Parameters.Length);
+		if (methodInfo != null)
+			return Expression.Call(host, 
+			                       methodInfo, 
+			                       GenerateParameters(method.Parameters, 
+			                                          methodInfo.GetParameters(), 
+			                                          extensions, variables, labels).ToArray());
+
+		Expression[] parameters = method.Parameters.Select(p => Build(p, extensions, variables, labels)).ToArray();
 		MethodInfo[] methods = extensions.GetExtensions(host.Type)
 		                                 .Where(m => string.Compare(m.Name, method.MethodName, StringComparison.OrdinalIgnoreCase) == 0 && ParametersMatching(m.GetParameters(), parameters))
 		                                 .ToArray();
@@ -392,9 +398,19 @@ public class ExpressionBuilder {
 		if (methods.Length == 0)
 			throw new NotSupportedException($"Unable to find matching method '{method.MethodName}' on type '{host.Type.FullName}'.");
 
-		return Expression.Call(null, methods[0], [host, ..method.Parameters.Select(p => Build(p, extensions, variables, labels))]);
-	} 
-	
+		return Expression.Call(null, methods[0], GenerateParameters([host, ..method.Parameters.Select(p => Build(p, extensions, variables, labels))], methods[0].GetParameters()));
+	}
+
+	IEnumerable<Expression> GenerateParameters(IScriptToken[] sourceParameters, ParameterInfo[] targetParameters, IExtensionProvider extensions, List<ParameterExpression> variables, List<LabelExpression> labels) {
+		for(int i=0;i<sourceParameters.Length;++i)
+			yield return Convert(Build(sourceParameters[i], extensions, variables, labels), targetParameters[i].ParameterType);
+	}
+
+	IEnumerable<Expression> GenerateParameters(Expression[] sourceParameters, ParameterInfo[] targetParameters) {
+		for(int i=0;i<sourceParameters.Length;++i)
+			yield return Convert(sourceParameters[i], targetParameters[i].ParameterType);
+	}
+
 	Type DetermineArrayType(Expression[] arrayValues) {
 		if(arrayValues.Length == 0)
 			return typeof(object);
