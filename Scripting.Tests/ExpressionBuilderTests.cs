@@ -406,7 +406,17 @@ public class ExpressionBuilderTests {
 			{ "Affe", "Mensch" }
 		}));
 	}
-	
+
+	[Test, Parallelizable]
+	public void AccessIDictionaryItemUsingPropertySyntax() {
+		ScriptParser parser = new();
+		Func<IDictionary<string, object>, string> function = parser.ParseDelegate<Func<IDictionary<string, object>, string>>("dic.Affe",
+		                                                                                                                   new LambdaParameter<IDictionary<string, object>>("dic"));
+		Assert.AreEqual("Mensch", function(new Dictionary<string, object> {
+			{ "Affe", "Mensch" }
+		}));
+	}
+
 	[Test, Parallelizable]
 	public void AssignDictionaryItemUsingPropertySyntax() {
 		ScriptParser parser = new();

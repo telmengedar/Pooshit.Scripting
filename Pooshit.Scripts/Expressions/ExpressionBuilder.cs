@@ -238,7 +238,9 @@ public class ExpressionBuilder {
 
 		if (token is ScriptMember member) {
 			Expression host = Build(member.Host, extensions, variables, labels);
-			if (typeof(IDictionary).IsAssignableFrom(host.Type))
+			if (typeof(IDictionary).IsAssignableFrom(host.Type) || 
+			    host.Type.IsGenericType && host.Type.GetGenericTypeDefinition() == typeof(IDictionary<,>) ||
+			    host.Type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)))
 				return Expression.Property(host, "Item", Expression.Constant(member.Member));
 			return Expression.Property(host, member.Member);
 		}
