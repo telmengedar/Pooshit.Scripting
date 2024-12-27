@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Pooshit.Scripting.Expressions;
 using Pooshit.Scripting.Parser;
@@ -387,6 +388,34 @@ public class ExpressionBuilderTests {
 		Func<int, int> function = parser.ParseDelegate<Func<int, int>>("try { number / 0 } catch { number/3 }",
 		                                                               new LambdaParameter<int>("number"));
 		Assert.AreEqual(1, function(3));
+	}
+
+	[Test, Parallelizable]
+	public void AutoConvertTypedLambda() {
+		ScriptParser parser = new();
+		Func<DayOfWeek> function = parser.ParseDelegate<Func<DayOfWeek>>("6");
+		Assert.AreEqual(DayOfWeek.Saturday, function());
+	}
+
+	[Test, Parallelizable]
+	public void AccessDictionaryItemUsingPropertySyntax() {
+		ScriptParser parser = new();
+		Func<Dictionary<string, string>, string> function = parser.ParseDelegate<Func<Dictionary<string, string>, string>>("dic.Affe",
+		                                                                                                                   new LambdaParameter<Dictionary<string, string>>("dic"));
+		Assert.AreEqual("Mensch", function(new() {
+			{ "Affe", "Mensch" }
+		}));
+	}
+	
+	[Test, Parallelizable]
+	public void AssignDictionaryItemUsingPropertySyntax() {
+		ScriptParser parser = new();
+		Dictionary<string, string> dic = new();
+		Func<Dictionary<string, string>, string> function = parser.ParseDelegate<Func<Dictionary<string, string>, string>>("dic.Affe=\"Mensch\"",
+		                                                                                                                   new LambdaParameter<Dictionary<string, string>>("dic"));
+
+		function(dic);
+		Assert.AreEqual("Mensch", dic["Affe"]);
 	}
 
 }

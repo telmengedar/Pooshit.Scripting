@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -78,7 +79,14 @@ public class ExpressionBuilder {
 	public Expression<T> BuildExpression<T>(IScript script, IExtensionProvider extensions, params LambdaParameter[] variables) {
 		ParameterExpression[] parameters = variables.Select(v => Expression.Parameter(v.Type, v.Name)).ToArray();
 		List<ParameterExpression> variablesXp = [..parameters];
-		return Expression.Lambda<T>(Build(script.Body, extensions, variablesXp, [], null, true), parameters);
+
+		Expression body = Build(script.Body, extensions, variablesXp, [], null, true);
+		if (typeof(T).IsGenericType && typeof(T).Name.StartsWith("Func")) {
+			Type returnType = typeof(T).GetGenericArguments().Last();
+			if (body.Type != returnType)
+				body = Convert(body, returnType);
+		}
+		return Expression.Lambda<T>(body, parameters);
 	}
 	
 	Expression Build(IScriptToken token, IExtensionProvider extensions, List<ParameterExpression> variables, List<LabelExpression> labels, Type typeHint=default, bool firstBlock=false) {
@@ -228,8 +236,13 @@ public class ExpressionBuilder {
 			return Expression.Property(indexHost, "Item", indexer.Parameters.Select(p => Build(p, extensions, variables, labels)).ToArray());
 		}
 
-		if(token is ScriptMember member)
-			return Expression.Property(Build(member.Host, extensions, variables, labels), member.Member);
+		if (token is ScriptMember member) {
+			Expression host = Build(member.Host, extensions, variables, labels);
+			if (typeof(IDictionary).IsAssignableFrom(host.Type))
+				return Expression.Property(host, "Item", Expression.Constant(member.Member));
+			return Expression.Property(host, member.Member);
+		}
+
 		if (token is ScriptMethod method)
 			return BuildMethod(method, extensions, variables, labels);
 		if (token is ScriptArray array) {

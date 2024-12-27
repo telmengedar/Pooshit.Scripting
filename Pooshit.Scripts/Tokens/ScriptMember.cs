@@ -46,7 +46,8 @@ public class ScriptMember : AssignableToken {
 
         if (host is IDictionary dictionary) {
             if (!dictionary.Contains(Member)) {
-                object key = dictionary.Keys.Cast<object>().FirstOrDefault(k => (k is string skey) && string.Compare(skey.ToLower(), Member, CultureInfo.InvariantCulture, CompareOptions.IgnoreCase) == 0);
+                object key = dictionary.Keys.Cast<object>()
+                                       .FirstOrDefault(k => (k is string skey) && string.Compare(skey, Member, CultureInfo.InvariantCulture, CompareOptions.IgnoreCase) == 0);
                 if (key == null) 
                     throw new ScriptRuntimeException($"A key with the name of {membername} was not found in dictionary", this);
                 return dictionary[key];
