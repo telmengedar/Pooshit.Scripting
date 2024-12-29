@@ -10,8 +10,8 @@
     <PackageTags>script, parser, code, dynamic, expression</PackageTags>
     <Authors>Toni Gottschall</Authors>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <AssemblyVersion>0.18.7</AssemblyVersion>
-    <PackageVersion>0.18.7-preview</PackageVersion>
+    <AssemblyVersion>0.18.17</AssemblyVersion>
+    <PackageVersion>0.18.17-preview</PackageVersion>
     <LangVersion>default</LangVersion>
     <PackageId>Pooshit.Scripting</PackageId>
   </PropertyGroup>

@@ -1,11 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Pooshit.Scripting.Control;
+using Pooshit.Scripting.Extensions;
 using Pooshit.Scripting.Extern;
 using Pooshit.Scripting.Operations.Assign;
 using Pooshit.Scripting.Operations.Comparision;
@@ -272,17 +272,16 @@ public class ExpressionBuilder {
 		}
 
 		if (token is If ifToken) {
+			Expression condition = Convert(Build(ifToken.Parameters.Single(), extensions, variables, labels), typeof(bool));
 			Expression trueBranch = Build(ifToken.Body, extensions, variables, labels);
 			if (ifToken.Else != null) {
 				Expression falseBranch = Build(ifToken.Else.Body, extensions, variables, labels);
 				if (falseBranch.Type == trueBranch.Type)
-					return Expression.Condition(Build(ifToken.Parameters.Single(), extensions, variables, labels),
-					                            trueBranch, falseBranch, trueBranch.Type);
-				return Expression.IfThenElse(Build(ifToken.Parameters.Single(), extensions, variables, labels),
-				                             trueBranch, falseBranch);
+					return Expression.Condition(condition, trueBranch, falseBranch, trueBranch.Type);
+				return Expression.Condition(condition, Convert(trueBranch, typeof(object)), Convert(falseBranch, typeof(object)), typeof(object));
 			}
 
-			return Expression.Condition(Build(ifToken.Parameters.Single(), extensions, variables, labels),
+			return Expression.Condition(condition,
 			                            trueBranch,
 			                            Expression.Default(trueBranch.Type),
 			                            trueBranch.Type);
@@ -309,13 +308,17 @@ public class ExpressionBuilder {
 			return Expression.TryCatch(tryBlock, catchBlock);
 		}
 
+		if (token is TypeToken type)
+			return Expression.Constant(type.Type);
+		
 		throw new NotSupportedException(token.GetType().Name);
 	}
 
 	Expression Convert(Expression expression, Type type) {
-		if (expression.Type == type)
+		if (expression.Type == type || type.IsAssignableFrom(expression.Type) && type!=typeof(object) && !type.IsNullable())
 			return expression;
-		return Expression.Convert(expression, type);
+
+		return Expression.Call(null, converter.MakeGenericMethod(type), Expression.Convert(expression, typeof(object)), Expression.Constant(true));
 	}
 	
 	Expression StringConcat(params Expression[] expressions) {
@@ -358,7 +361,8 @@ public class ExpressionBuilder {
 		int lhsIndex = Array.IndexOf(typeOrder, lhs.Type);
 		int rhsIndex = Array.IndexOf(typeOrder, rhs.Type);
 		if (lhsIndex <= 0 || rhsIndex <= 0)
-			throw new NotSupportedException($"Operation not supported for {lhs.Type} and  {rhs.Type}");
+			// just try anyways, there might be a custom operator
+			return op(lhs, rhs);
 
 		Type targetType = typeOrder[Math.Max(lhsIndex, rhsIndex)];
 		if (lhs.Type != targetType)
@@ -368,47 +372,84 @@ public class ExpressionBuilder {
 
 		return op(lhs, rhs);
 	}
+	
+	int GetMatchScore(MethodInfo method, Expression[] parameters) {
+		ParameterInfo[] methodParameters = method.GetParameters();
+		int score = 0;
+		for (int i = 0; i < parameters.Length; ++i) {
+			int parameterIndex = Array.IndexOf(typeOrder, parameters[i].Type);
+			int methodParameterIndex = Array.IndexOf(typeOrder, methodParameters[i].ParameterType);
+			if (parameterIndex == -1 || methodParameterIndex == -1)
+				score += 500;
+			else score += Math.Abs(parameterIndex - methodParameterIndex);
+		}
 
-	bool ParametersMatching(ParameterInfo[] parameters, Expression[] expressions) {
-		if (parameters.Length - 1 != expressions.Length)
-			return false;
-
-		for (int i = 0; i < expressions.Length; ++i)
-			if (!parameters[i + 1].ParameterType.IsAssignableFrom(expressions[i].Type))
-				return false;
-		return true;
+		score <<= 1;
+		score += methodParameters.Length - parameters.Length;
+		return score;
 	}
 
+	IEnumerable<MethodInfo> GetMatchingMethods(IEnumerable<MethodInfo> methods, string name, Expression[] scriptParameters, Type[] genericParameters, bool isExtension) {
+		foreach (MethodInfo method in methods) {
+			if (string.Compare(name, method.Name, StringComparison.OrdinalIgnoreCase) != 0)
+				continue;
+			
+			ParameterInfo[] parameters = method.GetParameters();
+			if (parameters.Count(p => !p.IsOptional) + (isExtension ? -1 : 0) != scriptParameters.Length)
+				continue;
+
+			if (method.IsGenericMethodDefinition) {
+				if (method.GetGenericArguments().Length != genericParameters.Length)
+					continue;
+			}
+			else if (genericParameters.Length > 0)
+				continue;
+			
+			yield return method;
+		}
+	}
+	
 	Expression BuildMethod(ScriptMethod method, IExtensionProvider extensions, List<ParameterExpression> variables, List<LabelExpression> labels) {
 		Expression host = Build(method.Host, extensions, variables, labels);
+		Expression[] scriptParameters = method.Parameters.Select(p => Build(p, extensions, variables, labels))
+		                                      .ToArray();
+		Type[] genericScriptParameters = method.GenericParameters?.Cast<TypeToken>().Select(p => p.Type).ToArray() ?? [];
+		MethodInfo methodInfo = GetMatchingMethods(host.Type.GetMethods(BindingFlags.Public | BindingFlags.Instance), 
+		                                           method.MethodName,
+		                                           scriptParameters,
+		                                           genericScriptParameters,
+		                                           false)
+		                        .OrderBy(m => GetMatchScore(m, scriptParameters))
+		                        .FirstOrDefault();
 
-		MethodInfo methodInfo = host.Type.GetMethods().FirstOrDefault(m => string.Compare(m.Name, method.MethodName, null, CompareOptions.IgnoreCase) == 0 && m.GetParameters().Length == method.Parameters.Length);
-		if (methodInfo != null)
-			return Expression.Call(host, 
-			                       methodInfo, 
-			                       GenerateParameters(method.Parameters, 
-			                                          methodInfo.GetParameters(), 
-			                                          extensions, variables, labels).ToArray());
+		if (methodInfo == null) {
+			methodInfo = GetMatchingMethods(extensions.GetExtensions(method.MethodName),
+			                                method.MethodName,
+			                                scriptParameters,
+			                                genericScriptParameters,
+			                                true)
+			             .OrderBy(m => GetMatchScore(m, scriptParameters))
+			             .FirstOrDefault();
+			scriptParameters = [host, ..scriptParameters];
+		}
 
-		Expression[] parameters = method.Parameters.Select(p => Build(p, extensions, variables, labels)).ToArray();
-		MethodInfo[] methods = extensions.GetExtensions(host.Type)
-		                                 .Where(m => string.Compare(m.Name, method.MethodName, StringComparison.OrdinalIgnoreCase) == 0 && ParametersMatching(m.GetParameters(), parameters))
-		                                 .ToArray();
-
-		if (methods.Length == 0)
+		if (methodInfo == null)
 			throw new NotSupportedException($"Unable to find matching method '{method.MethodName}' on type '{host.Type.FullName}'.");
 
-		return Expression.Call(null, methods[0], GenerateParameters([host, ..method.Parameters.Select(p => Build(p, extensions, variables, labels))], methods[0].GetParameters()));
+		if (methodInfo.IsGenericMethodDefinition)
+			methodInfo = methodInfo.MakeGenericMethod(genericScriptParameters);
+		
+		return Expression.Call(methodInfo.IsStatic?null:host,
+		                       methodInfo,
+		                       GenerateParameters(scriptParameters, methodInfo.GetParameters()).ToArray());
 	}
-
-	IEnumerable<Expression> GenerateParameters(IScriptToken[] sourceParameters, ParameterInfo[] targetParameters, IExtensionProvider extensions, List<ParameterExpression> variables, List<LabelExpression> labels) {
-		for(int i=0;i<sourceParameters.Length;++i)
-			yield return Convert(Build(sourceParameters[i], extensions, variables, labels), targetParameters[i].ParameterType);
-	}
-
+	
 	IEnumerable<Expression> GenerateParameters(Expression[] sourceParameters, ParameterInfo[] targetParameters) {
-		for(int i=0;i<sourceParameters.Length;++i)
-			yield return Convert(sourceParameters[i], targetParameters[i].ParameterType);
+		for (int i = 0; i < targetParameters.Length; ++i) {
+			if (i >= sourceParameters.Length)
+				yield return Expression.Constant(targetParameters[i].DefaultValue, targetParameters[i].ParameterType);
+			else yield return Convert(sourceParameters[i], targetParameters[i].ParameterType);
+		}
 	}
 
 	Type DetermineArrayType(Expression[] arrayValues) {

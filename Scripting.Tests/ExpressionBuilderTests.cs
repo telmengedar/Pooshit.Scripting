@@ -196,6 +196,18 @@ public class ExpressionBuilderTests {
 	}
 
 	[Test, Parallelizable]
+	public void CallMethodFillDefault() {
+		ScriptParser parser = new();
+		parser.Extensions.AddExtensions<TestExtensions>();
+
+		Func<int,int> function = parser.ParseDelegate<Func<int,int>>("x.optional()",
+		                                                             new LambdaParameter<int>("x"));
+		int result = function(20);
+
+		Assert.AreEqual(30, result);
+	}
+	
+	[Test, Parallelizable]
 	public void ArrayIndexer() {
 		ScriptParser parser = new();
 
@@ -268,6 +280,18 @@ public class ExpressionBuilderTests {
 	}
 
 	[Test, Parallelizable]
+	public void ExtensionMethodAutoCast() {
+		ScriptParser parser = new();
+		parser.Extensions.AddExtensions<TestExtensions>();
+
+		Func<object,string> function = parser.ParseDelegate<Func<object,string>>("x.append(\"lo\")",
+		                                                                         new LambdaParameter<object>("x"));
+		string result = function("hel");
+
+		Assert.AreEqual("hello", result);
+	}
+
+	[Test, Parallelizable]
 	public void ExtensionMethodTyped() {
 		ScriptParser parser = new();
 		parser.Extensions.AddExtensions<TestExtensions>();
@@ -276,6 +300,17 @@ public class ExpressionBuilderTests {
 		string result = function();
 
 		Assert.AreEqual("hello", result);
+	}
+
+	[Test, Parallelizable]
+	public void ExtensionMethodTypedGeneric() {
+		ScriptParser parser = new();
+		parser.Extensions.AddExtensions<TestExtensions>();
+
+		Func<string> function = parser.ParseDelegate<Func<string>>("\"hel\".append<string>(\"lo\")");
+		string result = function();
+
+		Assert.AreEqual("lohel", result);
 	}
 
 	[Test, Parallelizable]
@@ -364,6 +399,14 @@ public class ExpressionBuilderTests {
 	}
 
 	[Test, Parallelizable]
+	public void IfThenElseDifferentTypes() {
+		ScriptParser parser = new();
+		Func<int, decimal> function = parser.ParseDelegate<Func<int, decimal>>("if($number>5) 7 else 0.2f",
+		                                                               new LambdaParameter<int>("number"));
+		Assert.AreEqual(7.0m, function(10));
+	}
+
+	[Test, Parallelizable]
 	public void IfThenElseImplicitely() {
 		ScriptParser parser = new();
 		Func<int, int> function = parser.ParseDelegate<Func<int, int>>("if($number>5) 7 else 2",
@@ -439,6 +482,50 @@ public class ExpressionBuilderTests {
 
 		function(dic);
 		Assert.AreEqual("Mensch", dic["Affe"]);
+	}
+
+	[Test, Parallelizable]
+	public void SwitchEnumNames() {
+		ScriptParser parser = new();
+		Func<DayOfWeek, int> function=parser.ParseDelegate<Func<DayOfWeek,int>>("switch(day) case(\"Monday\") 5 case(\"Friday\") 44 default 0",
+		                                                                        new LambdaParameter<DayOfWeek>("day"));
+		Assert.AreEqual(44, function(DayOfWeek.Friday));
+	}
+
+	[Test, Parallelizable]
+	public void DateTimeAddTimespan() {
+		ScriptParser parser = new();
+		Func<DateTime, TimeSpan, DateTime> function = parser.ParseDelegate<Func<DateTime, TimeSpan, DateTime>>("date+time",
+		                                                                                                       new LambdaParameter<DateTime>("date"),
+		                                                                                                       new LambdaParameter<TimeSpan>("time"));
+		Assert.AreEqual(new DateTime(2024, 12, 12), function(new(2024, 12, 11), TimeSpan.FromDays(1.0)));
+	}
+
+	[Test, Parallelizable]
+	public void DateTimeAddTimespanNullableResult() {
+		ScriptParser parser = new();
+		Func<DateTime, TimeSpan, DateTime?> function = parser.ParseDelegate<Func<DateTime, TimeSpan, DateTime?>>("date+time",
+		                                                                                                       new LambdaParameter<DateTime>("date"),
+		                                                                                                       new LambdaParameter<TimeSpan>("time"));
+		Assert.AreEqual(new DateTime(2024, 12, 12), function(new(2024, 12, 11), TimeSpan.FromDays(1.0)));
+	}
+
+	[Test, Parallelizable]
+	public void DateTimeSubTimespan() {
+		ScriptParser parser = new();
+		Func<DateTime, TimeSpan, DateTime> function = parser.ParseDelegate<Func<DateTime, TimeSpan, DateTime>>("date-time",
+		                                                                                                       new LambdaParameter<DateTime>("date"),
+		                                                                                                       new LambdaParameter<TimeSpan>("time"));
+		Assert.AreEqual(new DateTime(2024, 12, 12), function(new(2024, 12, 13), TimeSpan.FromDays(1.0)));
+	}
+
+	[Test, Parallelizable]
+	public void IfImpliciteBool() {
+		ScriptParser parser = new();
+		Func<string, int> function = parser.ParseDelegate<Func<string, int>>("if(x) 1 else 0",
+		                                                                     new LambdaParameter<string>("x"));
+		Assert.AreEqual(1, function("hello"));
+		Assert.AreEqual(0, function(null));
 	}
 
 }

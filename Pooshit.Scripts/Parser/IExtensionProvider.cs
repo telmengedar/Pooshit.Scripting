@@ -17,6 +17,13 @@ public interface IExtensionProvider {
     IEnumerable<MethodInfo> GetExtensions(Type host);
 
     /// <summary>
+    /// get extension methods by name
+    /// </summary>
+    /// <param name="name">name of method to find</param>
+    /// <returns>methods matching specified name</returns>
+    IEnumerable<MethodInfo> GetExtensions(string name);
+    
+    /// <summary>
     /// adds methods of an extension type
     /// </summary>
     /// <param name="extensiontype">type of which to add extension methods</param>

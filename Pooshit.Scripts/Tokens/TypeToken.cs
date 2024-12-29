@@ -16,6 +16,11 @@ public class TypeToken : ScriptToken {
         this.type = type;
     }
 
+    /// <summary>
+    /// represented type
+    /// </summary>
+    public Type Type => type;
+    
     /// <inheritdoc />
     public override string Literal => type.Name.ToLower();
 

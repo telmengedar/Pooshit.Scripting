@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace Pooshit.Scripting.Parser;
@@ -34,6 +35,12 @@ class ExtensionProvider : IExtensionProvider {
     /// <typeparam name="T">type of which to add extension methods</typeparam>
     public void AddExtensions<T>() {
         AddExtensions(typeof(T));
+    }
+
+    /// <inheritdoc />
+    public IEnumerable<MethodInfo> GetExtensions(string name) {
+        return extensions.SelectMany(e => e.Value)
+                         .Where(e => string.Compare(name, e.Name, StringComparison.OrdinalIgnoreCase) == 0);
     }
 
     /// <summary>

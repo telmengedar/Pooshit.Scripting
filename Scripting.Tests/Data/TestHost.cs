@@ -1,31 +1,31 @@
 ﻿using System.Collections.Generic;
 
-namespace Scripting.Tests.Data {
-    public class TestHost {
-        readonly Dictionary<string, object> values=new Dictionary<string, object>();
+namespace Scripting.Tests.Data;
 
-        public object this[string key] {
-            get => values[key];
-            set => values[key] = value;
-        }
+public class TestHost {
+    readonly Dictionary<string, object> values=new();
 
-        public int Property { get; set; }
+    public object this[string key] {
+        get => values[key];
+        set => values[key] = value;
+    }
 
-        public int Integer(int data) {
-            return data;
-        }
+    public int Property { get; set; }
 
-        public float Float(float data) {
-            return data;
-        }
+    public int Integer(int data) {
+        return data;
+    }
 
-        public string TestMethod(string parameter, string[] parameters)
-        {
-            return $"{parameter}_{string.Join(",", parameters)}";
-        }
+    public float Float(float data) {
+        return data;
+    }
 
-        public void AddTestHost(string key, TestHost host) {
-            values[key] = host;
-        }
+    public string TestMethod(string parameter, string[] parameters)
+    {
+        return $"{parameter}_{string.Join(",", parameters)}";
+    }
+
+    public void AddTestHost(string key, TestHost host) {
+        values[key] = host;
     }
 }
