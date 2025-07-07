@@ -528,4 +528,26 @@ public class ExpressionBuilderTests {
 		Assert.AreEqual(0, function(null));
 	}
 
+	[Test, Parallelizable]
+	public void While() {
+		ScriptParser parser = new();
+		Func<int, int> function = parser.ParseDelegate<Func<int, int>>("$x=1 while(x<y) x<<=1 return(x)",
+		                                                                     new LambdaParameter<int>("y"));
+		Assert.AreEqual(16, function(10));
+	}
+
+	[Test, Parallelizable]
+	public void For() {
+		ScriptParser parser = new();
+		Func<int, int> function = parser.ParseDelegate<Func<int, int>>("$x=1 for($i=0,i<y,++i) x<<=1 return(x)",
+		                                                               new LambdaParameter<int>("y"));
+		Assert.AreEqual(16, function(4));
+	}
+	
+	[Test, Parallelizable]
+	public void Foreach() {
+		ScriptParser parser = new();
+		Func<int> function = parser.ParseDelegate<Func<int>>("$x=0 foreach($item,[2,6,3,8,10]) x+=item return(x)");
+		Assert.AreEqual(29, function());
+	}
 }

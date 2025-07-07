@@ -19,7 +19,7 @@ public static class ExpressionExtensions {
 	/// <param name="parameters">parameters of script</param>
 	/// <returns>compiled lambda expression</returns>
 	public static Delegate ToDelegate(this IScript script, IExtensionProvider extensions, IDictionary<string, object> parameters) {
-		LambdaExpression expression = new ExpressionBuilder().BuildExpression(script, extensions, parameters);
+		LambdaExpression expression = new ExpressionBuilder(extensions).BuildExpression(script, parameters);
 		return expression.Compile();
 	}
 		
@@ -31,7 +31,7 @@ public static class ExpressionExtensions {
 	/// <param name="parameters">parameters of script</param>
 	/// <returns>compiled lambda expression</returns>
 	public static Delegate ToDelegate(this IScript script, IExtensionProvider extensions, params LambdaParameter[] parameters) {
-		LambdaExpression expression = new ExpressionBuilder().BuildExpression(script, extensions, parameters);
+		LambdaExpression expression = new ExpressionBuilder(extensions).BuildExpression(script, parameters);
 		return expression.Compile();
 	}
 
@@ -43,7 +43,7 @@ public static class ExpressionExtensions {
 	/// <param name="parameters">parameters of script</param>
 	/// <returns>compiled lambda expression</returns>
 	public static T ToDelegate<T>(this IScript script, IExtensionProvider extensions, params LambdaParameter[] parameters) {
-		Expression<T> expression = new ExpressionBuilder().BuildExpression<T>(script, extensions, parameters);
+		Expression<T> expression = new ExpressionBuilder(extensions).BuildExpression<T>(script, parameters);
 		return expression.Compile();
 	}
 }

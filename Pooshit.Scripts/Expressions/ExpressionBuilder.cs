@@ -41,7 +41,14 @@ public class ExpressionBuilder {
 
 	readonly MethodInfo converter;
 
-	public ExpressionBuilder() {
+	readonly IExtensionProvider extensions;
+	
+	/// <summary>
+	/// creates a new <see cref="ExpressionBuilder"/>
+	/// </summary>
+	/// <param name="extensions">available extension methods</param>
+	public ExpressionBuilder(IExtensionProvider extensions) {
+		this.extensions = extensions;
 		converter = typeof(Converter).GetMethods(BindingFlags.Public | BindingFlags.Static)
 		                             .First(m => m.Name == "Convert" && m.IsGenericMethodDefinition);
 	}
@@ -50,172 +57,189 @@ public class ExpressionBuilder {
 	/// builds an expression from a script
 	/// </summary>
 	/// <param name="script">script from which to build expression</param>
-	/// <param name="extensions">available extensions</param>
 	/// <param name="variables">variables from which to build parameters</param>
 	/// <returns>build lambda expression</returns>
-	public LambdaExpression BuildExpression(IScript script, IExtensionProvider extensions, IDictionary<string, object> variables) {
-		return BuildExpression(script, extensions, variables.Select(v => new LambdaParameter(v.Key, v.Value.GetType())).ToArray());
+	public LambdaExpression BuildExpression(IScript script, IDictionary<string, object> variables) {
+		return BuildExpression(script, 
+		                       variables.Select(v => new LambdaParameter(v.Key, v.Value.GetType())).ToArray());
 	}
 
 	/// <summary>
 	/// builds an expression from a script
 	/// </summary>
 	/// <param name="script">script from which to build expression</param>
-	/// <param name="extensions">available extensions</param>
 	/// <param name="variables">variables from which to build parameters</param>
 	/// <returns>build lambda expression</returns>
-	public LambdaExpression BuildExpression(IScript script, IExtensionProvider extensions, params LambdaParameter[] variables) {
+	public LambdaExpression BuildExpression(IScript script, params LambdaParameter[] variables) {
 		ParameterExpression[] parameters = variables.Select(v => Expression.Parameter(v.Type, v.Name)).ToArray();
 		List<ParameterExpression> variablesXp = [..parameters];
-		return Expression.Lambda(Build(script.Body, extensions, variablesXp, [], null, true), parameters);
+		return Expression.Lambda(BuildMainBlock(script.Body, variablesXp, typeof(object)), parameters);
 	}
 
 	/// <summary>
 	/// builds an expression from a script
 	/// </summary>
 	/// <param name="script">script from which to build expression</param>
-	/// <param name="extensions">available extensions</param>
 	/// <param name="variables">variables from which to build parameters</param>
 	/// <returns>build lambda expression</returns>
-	public Expression<T> BuildExpression<T>(IScript script, IExtensionProvider extensions, params LambdaParameter[] variables) {
+	public Expression<T> BuildExpression<T>(IScript script, params LambdaParameter[] variables) {
 		ParameterExpression[] parameters = variables.Select(v => Expression.Parameter(v.Type, v.Name)).ToArray();
 		List<ParameterExpression> variablesXp = [..parameters];
 
-		Expression body = Build(script.Body, extensions, variablesXp, [], null, true);
-		if (typeof(T).IsGenericType && typeof(T).Name.StartsWith("Func")) {
-			Type returnType = typeof(T).GetGenericArguments().Last();
-			if (body.Type != returnType)
-				body = Convert(body, returnType);
-		}
+		Type returnType = typeof(object);
+		if (typeof(T).IsGenericType && typeof(T).Name.StartsWith("Func"))
+			returnType = typeof(T).GetGenericArguments().Last();
+		
+		Expression body = BuildMainBlock(script.Body, variablesXp, returnType);
+		if (body.Type != returnType)
+			body = Convert(body, returnType);
 		return Expression.Lambda<T>(body, parameters);
 	}
+
+	Expression BuildMainBlock(IScriptToken token, List<ParameterExpression> variables, Type returnType) {
+		if (token is StatementBlock block) {
+			returnType ??= typeof(object);
+			Labels labels = new() {
+				ReturnType = returnType
+			};
+
+			List<ParameterExpression> newVariables = [..variables];
+			Expression[] statements = block.Children.Select(c => Build(c, newVariables, labels)).ToArray();
+			Type blockType = statements.LastOrDefault()?.Type ?? typeof(void);
+			
+			newVariables=[..newVariables.Except(variables)];
+			if (labels.ReturnLabel != null)
+				return Expression.Block(blockType, newVariables, [..statements, labels.ReturnLabel]);
+			return Expression.Block(blockType, newVariables, statements);
+		}
+		
+		throw new NotSupportedException($"Unsupported expression type {returnType} as main block");
+	}
 	
-	Expression Build(IScriptToken token, IExtensionProvider extensions, List<ParameterExpression> variables, List<LabelExpression> labels, Type typeHint=default, bool firstBlock=false) {
+	Expression Build(IScriptToken token, List<ParameterExpression> variables, Labels labels, Type typeHint=default) {
 		if (token == null)
 			return null;
 		
 		if (token is StatementBlock block) {
 			List<ParameterExpression> newVariables = [..variables];
-			Expression[] blockExpressions = block.Children.Select(c => Build(c, extensions, newVariables, labels)).ToArray();
+			Expression[] statements = block.Children.Select(c => Build(c, newVariables, labels)).ToArray();
+			newVariables=[..newVariables.Except(variables)];
+			return Expression.Block(newVariables, statements);
 
-			newVariables = [..newVariables.Except(variables)];
-			if(firstBlock)
-				return Expression.Block(newVariables, blockExpressions.Concat(labels));
-			return Expression.Block(newVariables, blockExpressions);
 		}
 
 		if (token is Addition addition)
-			return BinOpString(Build(addition.Lhs, extensions, variables, labels),
-			                   Build(addition.Rhs, extensions, variables, labels),
+			return BinOpString(Build(addition.Lhs, variables, labels),
+			                   Build(addition.Rhs, variables, labels),
 			                   Expression.Add,
 			                   false
 			                  );
 		if(token is Subtraction subtraction)
-			return Expression.Subtract(Build(subtraction.Lhs, extensions, variables, labels), 
-			                           Build(subtraction.Rhs, extensions, variables, labels));
+			return Expression.Subtract(Build(subtraction.Lhs, variables, labels), 
+			                           Build(subtraction.Rhs, variables, labels));
 		if(token is Multiplication multiply)
-			return Expression.Multiply(Build(multiply.Lhs, extensions, variables, labels), 
-			                           Build(multiply.Rhs, extensions, variables, labels));
+			return Expression.Multiply(Build(multiply.Lhs, variables, labels), 
+			                           Build(multiply.Rhs, variables, labels));
 		if(token is Division division)
-			return Expression.Divide(Build(division.Lhs, extensions, variables, labels), 
-			                         Build(division.Rhs, extensions, variables, labels));
+			return Expression.Divide(Build(division.Lhs, variables, labels), 
+			                         Build(division.Rhs, variables, labels));
 		if(token is Modulo modulo)
-			return Expression.Modulo(Build(modulo.Lhs, extensions, variables, labels), 
-			                         Build(modulo.Rhs, extensions, variables, labels));
+			return Expression.Modulo(Build(modulo.Lhs, variables, labels), 
+			                         Build(modulo.Rhs, variables, labels));
 		if(token is ShiftLeft shiftLeft)
-			return Expression.LeftShift(Build(shiftLeft.Lhs, extensions, variables, labels), 
-			                            Build(shiftLeft.Rhs, extensions, variables, labels));
+			return Expression.LeftShift(Build(shiftLeft.Lhs, variables, labels), 
+			                            Build(shiftLeft.Rhs, variables, labels));
 		if(token is ShiftRight shiftRight)
-			return Expression.RightShift(Build(shiftRight.Lhs, extensions, variables, labels), 
-			                             Build(shiftRight.Rhs, extensions, variables, labels));
+			return Expression.RightShift(Build(shiftRight.Lhs, variables, labels), 
+			                             Build(shiftRight.Rhs, variables, labels));
 		if(token is BitwiseAnd bitwiseAnd)
-			return Expression.And(Build(bitwiseAnd.Lhs, extensions, variables, labels), 
-			                      Build(bitwiseAnd.Rhs, extensions, variables, labels));
+			return Expression.And(Build(bitwiseAnd.Lhs, variables, labels), 
+			                      Build(bitwiseAnd.Rhs, variables, labels));
 		if(token is BitwiseOr bitwiseOr)
-			return Expression.Or(Build(bitwiseOr.Lhs, extensions, variables, labels), 
-			                     Build(bitwiseOr.Rhs, extensions, variables, labels));
+			return Expression.Or(Build(bitwiseOr.Lhs, variables, labels), 
+			                     Build(bitwiseOr.Rhs, variables, labels));
 		if(token is BitwiseXor bitwiseXor)
-			return Expression.ExclusiveOr(Build(bitwiseXor.Lhs, extensions, variables, labels), 
-			                              Build(bitwiseXor.Rhs, extensions, variables, labels));
+			return Expression.ExclusiveOr(Build(bitwiseXor.Lhs, variables, labels), 
+			                              Build(bitwiseXor.Rhs, variables, labels));
 		if (token is AddAssign addAssign)
-			return BinOpString(Build(addAssign.Lhs, extensions, variables, labels),
-			                   Build(addAssign.Rhs, extensions, variables, labels),
+			return BinOpString(Build(addAssign.Lhs, variables, labels),
+			                   Build(addAssign.Rhs, variables, labels),
 			                   Expression.AddAssign,
 			                   true
 			                  );
 		if(token is SubAssign subAssign)
-			return Expression.SubtractAssign(Build(subAssign.Lhs, extensions, variables, labels), 
-			                                 Build(subAssign.Rhs, extensions, variables, labels));
+			return Expression.SubtractAssign(Build(subAssign.Lhs, variables, labels), 
+			                                 Build(subAssign.Rhs, variables, labels));
 		if(token is MulAssign mulAssign)
-			return Expression.MultiplyAssign(Build(mulAssign.Lhs, extensions, variables, labels), 
-			                                 Build(mulAssign.Rhs, extensions, variables, labels));
+			return Expression.MultiplyAssign(Build(mulAssign.Lhs, variables, labels), 
+			                                 Build(mulAssign.Rhs, variables, labels));
 		if(token is DivAssign divAssign)
-			return Expression.DivideAssign(Build(divAssign.Lhs, extensions, variables, labels), 
-			                               Build(divAssign.Rhs, extensions, variables, labels));
+			return Expression.DivideAssign(Build(divAssign.Lhs, variables, labels), 
+			                               Build(divAssign.Rhs, variables, labels));
 		if(token is ModAssign modAssign)
-			return Expression.ModuloAssign(Build(modAssign.Lhs, extensions, variables, labels), 
-			                               Build(modAssign.Rhs, extensions, variables, labels));
+			return Expression.ModuloAssign(Build(modAssign.Lhs, variables, labels), 
+			                               Build(modAssign.Rhs, variables, labels));
 		if(token is AndAssign andAssign)
-			return Expression.AndAssign(Build(andAssign.Lhs, extensions, variables, labels), 
-			                            Build(andAssign.Rhs, extensions, variables, labels));
+			return Expression.AndAssign(Build(andAssign.Lhs, variables, labels), 
+			                            Build(andAssign.Rhs, variables, labels));
 		if(token is OrAssign orAssign)
-			return Expression.OrAssign(Build(orAssign.Lhs, extensions, variables, labels), 
-			                           Build(orAssign.Rhs, extensions, variables, labels));
+			return Expression.OrAssign(Build(orAssign.Lhs, variables, labels), 
+			                           Build(orAssign.Rhs, variables, labels));
 		if(token is XorAssign xorAssign)
-			return Expression.ExclusiveOrAssign(Build(xorAssign.Lhs, extensions, variables, labels), 
-			                                    Build(xorAssign.Rhs, extensions, variables, labels));
+			return Expression.ExclusiveOrAssign(Build(xorAssign.Lhs, variables, labels), 
+			                                    Build(xorAssign.Rhs, variables, labels));
 		if(token is ShlAssign shlAssign)
-			return Expression.LeftShiftAssign(Build(shlAssign.Lhs, extensions, variables, labels), 
-			                                  Build(shlAssign.Rhs, extensions, variables, labels));
+			return Expression.LeftShiftAssign(Build(shlAssign.Lhs, variables, labels), 
+			                                  Build(shlAssign.Rhs, variables, labels));
 		if(token is ShrAssign shrAssign)
-			return Expression.RightShiftAssign(Build(shrAssign.Lhs, extensions, variables, labels), 
-			                                   Build(shrAssign.Rhs, extensions, variables, labels));
+			return Expression.RightShiftAssign(Build(shrAssign.Lhs, variables, labels), 
+			                                   Build(shrAssign.Rhs, variables, labels));
 		if (token is Assignment assignment) {
-			Expression rhs = Build(assignment.Rhs, extensions, variables, labels);
-			return Expression.Assign(Build(assignment.Lhs, extensions, variables, labels, rhs.Type),
+			Expression rhs = Build(assignment.Rhs, variables, labels);
+			return Expression.Assign(Build(assignment.Lhs, variables, labels, rhs.Type),
 			                         rhs);
 		}
 
 		if(token is Equal equal)
-			return Expression.Equal(Build(equal.Lhs, extensions, variables, labels), 
-			                        Build(equal.Rhs, extensions, variables, labels));
+			return Expression.Equal(Build(equal.Lhs, variables, labels), 
+			                        Build(equal.Rhs, variables, labels));
 		if(token is NotEqual notEqual)
-			return Expression.NotEqual(Build(notEqual.Lhs, extensions, variables, labels), 
-			                           Build(notEqual.Rhs, extensions, variables, labels));
+			return Expression.NotEqual(Build(notEqual.Lhs, variables, labels), 
+			                           Build(notEqual.Rhs, variables, labels));
 		if(token is Greater greater)
-			return Expression.GreaterThan(Build(greater.Lhs, extensions, variables, labels), 
-			                              Build(greater.Rhs, extensions, variables, labels));
+			return Expression.GreaterThan(Build(greater.Lhs, variables, labels), 
+			                              Build(greater.Rhs, variables, labels));
 		if(token is GreaterOrEqual greaterOrEqual)
-			return Expression.GreaterThanOrEqual(Build(greaterOrEqual.Lhs, extensions, variables, labels), 
-			                                     Build(greaterOrEqual.Rhs, extensions, variables, labels));
+			return Expression.GreaterThanOrEqual(Build(greaterOrEqual.Lhs, variables, labels), 
+			                                     Build(greaterOrEqual.Rhs, variables, labels));
 		if(token is Less less)
-			return Expression.LessThan(Build(less.Lhs, extensions, variables, labels), 
-			                           Build(less.Rhs, extensions, variables, labels));
+			return Expression.LessThan(Build(less.Lhs, variables, labels), 
+			                           Build(less.Rhs, variables, labels));
 		if(token is LessOrEqual lessOrEqual)
-			return Expression.LessThanOrEqual(Build(lessOrEqual.Lhs, extensions, variables, labels), 
-			                                  Build(lessOrEqual.Rhs, extensions, variables, labels));
+			return Expression.LessThanOrEqual(Build(lessOrEqual.Lhs, variables, labels), 
+			                                  Build(lessOrEqual.Rhs, variables, labels));
 		if(token is LogicAnd logicAnd)
-			return Expression.AndAlso(Build(logicAnd.Lhs, extensions, variables, labels), 
-			                          Build(logicAnd.Rhs, extensions, variables, labels));
+			return Expression.AndAlso(Build(logicAnd.Lhs, variables, labels), 
+			                          Build(logicAnd.Rhs, variables, labels));
 		if(token is LogicOr logicOr)
-			return Expression.OrElse(Build(logicOr.Lhs, extensions, variables, labels), 
-			                         Build(logicOr.Rhs, extensions, variables, labels));
+			return Expression.OrElse(Build(logicOr.Lhs, variables, labels), 
+			                         Build(logicOr.Rhs, variables, labels));
 		if(token is Complement complement)
-			return Expression.OnesComplement(Build(complement.Operand, extensions, variables, labels));
+			return Expression.OnesComplement(Build(complement.Operand, variables, labels));
 		if (token is Increment increment) {
 			if(increment.IsPostToken)
-				return Expression.PostIncrementAssign(Build(increment.Operand, extensions, variables, labels));
-			return Expression.PreIncrementAssign(Build(increment.Operand, extensions, variables, labels));
+				return Expression.PostIncrementAssign(Build(increment.Operand, variables, labels));
+			return Expression.PreIncrementAssign(Build(increment.Operand, variables, labels));
 		}
 		if (token is Decrement decrement) {
 			if(decrement.IsPostToken)
-				return Expression.PostDecrementAssign(Build(decrement.Operand, extensions, variables, labels));
-			return Expression.PreDecrementAssign(Build(decrement.Operand, extensions, variables, labels));
+				return Expression.PostDecrementAssign(Build(decrement.Operand, variables, labels));
+			return Expression.PreDecrementAssign(Build(decrement.Operand, variables, labels));
 		}
 		if(token is Negate negate)
-			return Expression.Negate(Build(negate.Operand, extensions, variables, labels));
+			return Expression.Negate(Build(negate.Operand, variables, labels));
 		if(token is Not not)
-			return Expression.Not(Build(not.Operand, extensions, variables, labels));
+			return Expression.Not(Build(not.Operand, variables, labels));
 
 		if(token is ScriptValue value)
 			return Expression.Constant(value.Value);
@@ -231,14 +255,14 @@ public class ExpressionBuilder {
 		}
 
 		if (token is ScriptIndexer indexer) {
-			Expression indexHost = Build(indexer.Host, extensions, variables, labels);
+			Expression indexHost = Build(indexer.Host, variables, labels);
 			if (indexHost.Type.IsArray)
-				return Expression.ArrayIndex(indexHost, indexer.Parameters.Select(p => Build(p, extensions, variables, labels)).ToArray());
-			return Expression.Property(indexHost, "Item", indexer.Parameters.Select(p => Build(p, extensions, variables, labels)).ToArray());
+				return Expression.ArrayIndex(indexHost, indexer.Parameters.Select(p => Build(p, variables, labels)).ToArray());
+			return Expression.Property(indexHost, "Item", indexer.Parameters.Select(p => Build(p, variables, labels)).ToArray());
 		}
 
 		if (token is ScriptMember member) {
-			Expression host = Build(member.Host, extensions, variables, labels);
+			Expression host = Build(member.Host, variables, labels);
 			if (typeof(IDictionary).IsAssignableFrom(host.Type) || 
 			    host.Type.IsGenericType && host.Type.GetGenericTypeDefinition() == typeof(IDictionary<,>) ||
 			    host.Type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)))
@@ -247,35 +271,32 @@ public class ExpressionBuilder {
 		}
 
 		if (token is ScriptMethod method)
-			return BuildMethod(method, extensions, variables, labels);
+			return BuildMethod(method, variables, labels);
 		if (token is ScriptArray array) {
-			Expression[] arrayValues = array.Values.Select(p => Build(p, extensions, variables, labels)).ToArray();
+			Expression[] arrayValues = array.Values.Select(p => Build(p, variables, labels)).ToArray();
 			return Expression.NewArrayInit(DetermineArrayType(arrayValues), arrayValues);
 		}
 
 		if (token is ArithmeticBlock arithmeticBlock)
-			return Build(arithmeticBlock.InnerBlock, extensions, variables, labels);
+			return Build(arithmeticBlock.InnerBlock, variables, labels);
 
 		if (token is StringInterpolation stringInterpolation)
-			return StringConcat(stringInterpolation.Children.Select(c => StringConvert(Build(c, extensions, variables, labels))).ToArray());
+			return StringConcat(stringInterpolation.Children.Select(c => StringConvert(Build(c, variables, labels))).ToArray());
 
 		if (token is Return returnToken) {
-			Expression returnValue = Build(returnToken.Value, extensions, variables, labels);
-			LabelExpression returnLabel = labels.FirstOrDefault();
-			if (returnLabel == null) {
-				returnLabel = Expression.Label(Expression.Label(returnValue.Type),
-				                               Expression.Default(returnValue.Type));
-				labels.Add(returnLabel);
-			}
-
-			return Expression.Return(returnLabel.Target, returnValue, returnValue.Type);
+			labels.ReturnLabel ??= Expression.Label(Expression.Label(labels.ReturnType),
+			                                        Expression.Default(labels.ReturnType));
+			Expression returnValue = Build(returnToken.Value, variables, labels);
+			return Expression.Return(labels.ReturnLabel.Target,
+			                         Convert(returnValue, labels.ReturnType),
+			                         labels.ReturnType);
 		}
 
 		if (token is If ifToken) {
-			Expression condition = Convert(Build(ifToken.Parameters.Single(), extensions, variables, labels), typeof(bool));
-			Expression trueBranch = Build(ifToken.Body, extensions, variables, labels);
+			Expression condition = Convert(Build(ifToken.Parameters.Single(), variables, labels), typeof(bool));
+			Expression trueBranch = Build(ifToken.Body, variables, labels);
 			if (ifToken.Else != null) {
-				Expression falseBranch = Build(ifToken.Else.Body, extensions, variables, labels);
+				Expression falseBranch = Build(ifToken.Else.Body, variables, labels);
 				if (falseBranch.Type == trueBranch.Type)
 					return Expression.Condition(condition, trueBranch, falseBranch, trueBranch.Type);
 				return Expression.Condition(condition, Convert(trueBranch, typeof(object)), Convert(falseBranch, typeof(object)), typeof(object));
@@ -288,12 +309,12 @@ public class ExpressionBuilder {
 		}
 		
 		if (token is Switch switchToken) {
-			Expression condition = Build(switchToken.Parameters.Single(), extensions, variables, labels);
+			Expression condition = Build(switchToken.Parameters.Single(), variables, labels);
 			SwitchCase[] cases = switchToken.Cases.Select(c => Expression.SwitchCase(
-			                                                                         Build(c.Body, extensions, variables, labels),
-			                                                                         c.Parameters.Select(p => Convert(Build(p, extensions, variables, labels), condition.Type)).ToArray()
+			                                                                         Build(c.Body, variables, labels),
+			                                                                         c.Parameters.Select(p => Convert(Build(p, variables, labels), condition.Type)).ToArray()
 			                                                                        )).ToArray();
-			Expression defaultBody = Build(switchToken.Default?.Body, extensions, variables, labels);
+			Expression defaultBody = Build(switchToken.Default?.Body, variables, labels);
 			if (defaultBody == null && cases.Length > 0 && cases[0].Body.Type != typeof(void))
 				defaultBody = Expression.Default(cases[0].Body.Type);
 
@@ -303,24 +324,81 @@ public class ExpressionBuilder {
 		}
 
 		if (token is Try tryToken) {
-			Expression tryBlock = Build(tryToken.Body, extensions, variables, labels);
-			CatchBlock catchBlock = Expression.Catch(typeof(Exception), Build(tryToken.Catch?.Body, extensions, variables, labels) ?? Expression.Default(tryBlock.Type));
+			Expression tryBlock = Build(tryToken.Body, variables, labels);
+			CatchBlock catchBlock = Expression.Catch(typeof(Exception), Build(tryToken.Catch?.Body, variables, labels) ?? Expression.Default(tryBlock.Type));
 			return Expression.TryCatch(tryBlock, catchBlock);
 		}
 
 		if (token is TypeToken type)
 			return Expression.Constant(type.Type);
+
+		if (token is While whileToken) {
+			LabelTarget loopEnd = Expression.Label("label" + labels.LabelCounter++);
+			Expression condition = Expression.IfThen(Expression.Not(Convert(Build(whileToken.Parameters.First(), variables, labels), typeof(bool))),
+			                                         Expression.Break(loopEnd));
+			Expression body = Build(whileToken.Body, variables, labels);
+			return Expression.Loop(Expression.Block(condition, body), loopEnd);
+		}
+
+		if (token is For forToken) {
+			LabelTarget loopEnd = Expression.Label("label" + labels.LabelCounter++);
+			Expression init = Build(forToken.Parameters.First(), variables, labels);
+			Expression condition = Expression.IfThen(Expression.Not(Convert(Build(forToken.Parameters.Skip(1).First(), variables, labels), typeof(bool))),
+			                                         Expression.Break(loopEnd));
+			return Expression.Block(init,
+			                        Expression.Loop(Expression.Block(condition,
+			                                                         Build(forToken.Body, variables, labels),
+			                                                         Build(forToken.Parameters.Skip(2).First(), variables, labels)),
+			                                        loopEnd));
+		}
+
+		if (token is Foreach foreachToken) {
+			Expression collection = Build(foreachToken.Collection, variables, labels);
+			return ForEach(collection,
+			               Build(foreachToken.Iterator, variables, labels, collection.Type.GetElementType()) as ParameterExpression,
+			               Build(foreachToken.Body, variables, labels),
+			               labels);
+		}
 		
 		throw new NotSupportedException(token.GetType().Name);
 	}
 
+	static Expression ForEach(Expression collection, ParameterExpression loopVar, Expression loopContent, Labels labels)
+	{
+		Type elementType = loopVar.Type;
+		Type enumerableType = typeof(IEnumerable<>).MakeGenericType(elementType);
+		Type enumeratorType = typeof(IEnumerator<>).MakeGenericType(elementType);
+
+		ParameterExpression enumeratorVar = Expression.Variable(enumeratorType, "enumerator");
+		MethodCallExpression getEnumeratorCall = Expression.Call(collection, enumerableType.GetMethod("GetEnumerator"));
+		BinaryExpression enumeratorAssign = Expression.Assign(enumeratorVar, getEnumeratorCall);
+
+		// The MoveNext method's actually on IEnumerator, not IEnumerator<T>
+		MethodCallExpression moveNextCall = Expression.Call(enumeratorVar, typeof(IEnumerator).GetMethod("MoveNext"));
+
+		LabelTarget breakLabel = Expression.Label("label" + labels.LabelCounter++);
+
+		return Expression.Block([enumeratorVar],
+		                        enumeratorAssign,
+		                        Expression.Loop(
+		                                        Expression.IfThenElse(
+		                                                              Expression.Equal(moveNextCall, Expression.Constant(true)),
+		                                                              Expression.Block([loopVar],
+		                                                                               Expression.Assign(loopVar, Expression.Property(enumeratorVar, "Current")),
+		                                                                               loopContent
+		                                                                              ),
+		                                                              Expression.Break(breakLabel)
+		                                                             ),
+		                                        breakLabel)
+		                       );
+	}
 	Expression Convert(Expression expression, Type type) {
-		if (expression.Type == type || type.IsAssignableFrom(expression.Type) && type!=typeof(object) && !type.IsNullable())
+		if (expression.Type == type || type.IsAssignableFrom(expression.Type) && type != typeof(object) && !type.IsNullable())
 			return expression;
 
 		return Expression.Call(null, converter.MakeGenericMethod(type), Expression.Convert(expression, typeof(object)), Expression.Constant(true));
 	}
-	
+
 	Expression StringConcat(params Expression[] expressions) {
 		return Expression.Call(typeof(string).GetMethod("Concat", [typeof(string[])]),
 		                       Expression.NewArrayInit(typeof(string), expressions));
@@ -409,9 +487,9 @@ public class ExpressionBuilder {
 		}
 	}
 	
-	Expression BuildMethod(ScriptMethod method, IExtensionProvider extensions, List<ParameterExpression> variables, List<LabelExpression> labels) {
-		Expression host = Build(method.Host, extensions, variables, labels);
-		Expression[] scriptParameters = method.Parameters.Select(p => Build(p, extensions, variables, labels))
+	Expression BuildMethod(ScriptMethod method, List<ParameterExpression> variables, Labels labels) {
+		Expression host = Build(method.Host, variables, labels);
+		Expression[] scriptParameters = method.Parameters.Select(p => Build(p, variables, labels))
 		                                      .ToArray();
 		Type[] genericScriptParameters = method.GenericParameters?.Cast<TypeToken>().Select(p => p.Type).ToArray() ?? [];
 		MethodInfo methodInfo = GetMatchingMethods(host.Type.GetMethods(BindingFlags.Public | BindingFlags.Instance), 

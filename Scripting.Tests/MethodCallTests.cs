@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -79,6 +80,13 @@ namespace Scripting.Tests {
             };
         }
 
+        public object DictionaryMethod(Dictionary<string, object> parameter) {
+            if (parameter == null)
+                return null;
+            parameter.TryGetValue("result", out object result);
+            return result;
+        }
+        
         [Test, Parallelizable]
         public void CallMethodWithArrayParameters() {
             IScript script = parser.Parse("$test.methodwitharrayparameters(\"success\", [$test.parameter(\"n\", \"1\"),$test.parameter(\"m\", \"7\")])");
@@ -244,7 +252,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public async Task ParameterUsingImplicitOperator() {
-            XElement element = new XElement("root", new XElement("child"));
+            XElement element = new("root", new XElement("child"));
             IScript script = await parser.ParseAsync("$child=$node.element(\"child\")\nreturn($child.name)");
             Assert.AreEqual("child", await script.ExecuteAsync<string>(new VariableProvider(new Variable("node", element))));
         }
@@ -267,10 +275,15 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void CallGenericMethodWithTwoArguments() {
             IScriptParser mathparser = new ScriptParser();
-            PointlessGenerics data = new PointlessGenerics();
+            PointlessGenerics data = new();
             IScript script = mathparser.Parse("data.twoarguments<string, int>()");
             Assert.AreEqual(42, script.Execute(new VariableProvider(new Variable("data", data))));
         }
 
+        [Test, Parallelizable]
+        public void CallDictionaryArgument() {
+            IScript script = parser.Parse("this.dictionarymethod({\"result\":7})");
+            Assert.AreEqual(7, script.Execute(new VariableProvider(new Variable("this", this))));
+        }
     }
 }

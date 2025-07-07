@@ -54,46 +54,61 @@ namespace Pooshit.Scripting.Extensions {
         /// <param name="value"></param>
         /// <returns></returns>
         public static object FillType(this IDictionary dictionary, object value) {
-            Type targettype = value.GetType();
-            foreach(DictionaryEntry property in dictionary) {
-                string propertyname = property.Key.ToString();
-                PropertyInfo propertyinfo = targettype.GetProperty(propertyname, BindingFlags.Instance | BindingFlags.IgnoreCase | BindingFlags.Public);
-                if(propertyinfo == null || property.Value==null)
-                    continue;
+            Type targetType = value.GetType();
+            if (value is IDictionary targetDictionary) {
+                if (targetType.IsGenericType) {
+                    Type[] dicArguments = targetType.GetGenericArguments();
+                    Type keyType=dicArguments[0];
+                    Type valueType=dicArguments[1];
+                    foreach (DictionaryEntry property in dictionary)
+                        targetDictionary[Converter.Convert(property.Key, keyType)] = Converter.Convert(property.Value, valueType);
+                }
+                else {
+                    foreach (DictionaryEntry property in dictionary)
+                        targetDictionary[property.Key] = property.Value;
+                }
+            }
+            else {
+                foreach (DictionaryEntry property in dictionary) {
+                    string propertyname = property.Key.ToString();
+                    PropertyInfo propertyinfo = targetType.GetProperty(propertyname, BindingFlags.Instance | BindingFlags.IgnoreCase | BindingFlags.Public);
+                    if (propertyinfo == null || property.Value == null)
+                        continue;
 
-                if (property.Value.GetType() == propertyinfo.PropertyType || propertyinfo.PropertyType.IsInstanceOfType(property.Value)) {
-                    propertyinfo.SetValue(value, property.Value);
-                    continue;
-                }
-                
-                if(property.Value is IDictionary subdictionary) {
-                    propertyinfo.SetValue(value, ToType(subdictionary, propertyinfo.PropertyType));
-                }
-                else if(propertyinfo.PropertyType.IsArray) {
-                    Array arrayvalue;
-                    Type elementtype = propertyinfo.PropertyType.GetElementType();
-                    if(property.Value is IEnumerable sourcelist) {
-                        Array sourcearray = sourcelist as Array ?? sourcelist.Cast<object>().ToArray();
-                        arrayvalue = Array.CreateInstance(elementtype, sourcearray.Length);
-                        for(int i = 0; i < sourcearray.Length; ++i) {
-                            if(sourcearray.GetValue(i) is IDictionary itemdictionary)
-                                arrayvalue.SetValue(itemdictionary.ToType(elementtype), i);
-                            else
-                                arrayvalue.SetValue(Converter.Convert(sourcearray.GetValue(i), elementtype), i);
+                    if (property.Value.GetType() == propertyinfo.PropertyType || propertyinfo.PropertyType.IsInstanceOfType(property.Value)) {
+                        propertyinfo.SetValue(value, property.Value);
+                        continue;
+                    }
+
+                    if (property.Value is IDictionary subdictionary) {
+                        propertyinfo.SetValue(value, ToType(subdictionary, propertyinfo.PropertyType));
+                    }
+                    else if (propertyinfo.PropertyType.IsArray) {
+                        Array arrayvalue;
+                        Type elementtype = propertyinfo.PropertyType.GetElementType();
+                        if (property.Value is IEnumerable sourcelist) {
+                            Array sourcearray = sourcelist as Array ?? sourcelist.Cast<object>().ToArray();
+                            arrayvalue = Array.CreateInstance(elementtype, sourcearray.Length);
+                            for (int i = 0; i < sourcearray.Length; ++i) {
+                                if (sourcearray.GetValue(i) is IDictionary itemdictionary)
+                                    arrayvalue.SetValue(itemdictionary.ToType(elementtype), i);
+                                else
+                                    arrayvalue.SetValue(Converter.Convert(sourcearray.GetValue(i), elementtype), i);
+                            }
                         }
-                    }
-                    else {
-                        arrayvalue = Array.CreateInstance(propertyinfo.PropertyType.GetElementType(), 1);
-                        if(property.Value is IDictionary itemdictionary)
-                            arrayvalue.SetValue(itemdictionary.ToType(elementtype), 0);
-                        else
-                            arrayvalue.SetValue(Converter.Convert(property.Value, elementtype), 0);
-                    }
+                        else {
+                            arrayvalue = Array.CreateInstance(propertyinfo.PropertyType.GetElementType(), 1);
+                            if (property.Value is IDictionary itemdictionary)
+                                arrayvalue.SetValue(itemdictionary.ToType(elementtype), 0);
+                            else
+                                arrayvalue.SetValue(Converter.Convert(property.Value, elementtype), 0);
+                        }
 
-                    propertyinfo.SetValue(value, arrayvalue);
+                        propertyinfo.SetValue(value, arrayvalue);
+                    }
+                    else
+                        propertyinfo.SetValue(value, Converter.Convert(property.Value, propertyinfo.PropertyType, true));
                 }
-                else
-                    propertyinfo.SetValue(value, Converter.Convert(property.Value, propertyinfo.PropertyType, true));
             }
 
             return value;
