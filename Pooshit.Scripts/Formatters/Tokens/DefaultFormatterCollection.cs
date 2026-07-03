@@ -35,6 +35,8 @@ namespace Pooshit.Scripting.Formatters.Tokens {
             AddFormatter(typeof(ImpliciteTypeCast), new CastFormatter());
             AddFormatter(typeof(If), new IfFormatter());
             AddFormatter(typeof(ConditionalToken), new ConditionalFormatter());
+            AddFormatter(typeof(ConditionalAccess), new ConditionalAccessFormatter());
+            AddFormatter(typeof(ReceiverPlaceholder), DefaultFormatter.Instance);
         }
     }
 }
