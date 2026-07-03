@@ -58,8 +58,10 @@ namespace Pooshit.Scripting.Extensions {
                 return 12;
             case Operator.LogicXor:
                 return 13;
-            case Operator.Lambda:
+            case Operator.NullCoalesce:
                 return 14;
+            case Operator.Lambda:
+                return 15;
             case Operator.Assignment:
             case Operator.AddAssign:
             case Operator.SubAssign:
@@ -71,7 +73,7 @@ namespace Pooshit.Scripting.Extensions {
             case Operator.AndAssign:
             case Operator.OrAssign:
             case Operator.XorAssign:
-                return 15;
+                return 16;
             default:
                 // this is only thrown when the script parser logic is actually broken so no indices need to be provided
                 throw new ScriptParserException(-1, -1, -1, "Unsupported operator");

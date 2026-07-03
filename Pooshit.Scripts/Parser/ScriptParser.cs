@@ -1403,6 +1403,21 @@ public class ScriptParser : IScriptParser {
                     done = true;
                 break;
                 case '?': {
+                    if(index + 1 < data.Length && data[index + 1] == '?') {
+                        if(concat)
+                            throw new ScriptParserException(starttoken, index, linenumber, "Left operand expected before '??'");
+                        index += 2;
+                        NullCoalesce nc = new() {
+                            LineNumber = linenumber,
+                            TextIndex = starttoken,
+                            TokenLength = 2
+                        };
+                        indexlist.Add(new(tokenlist.Count, nc));
+                        tokenlist.Add(nc);
+                        concat = true;
+                        break;
+                    }
+
                     if(concat)
                         throw new ScriptParserException(starttoken, index, linenumber, "Condition expected before '?'");
                     ++index;

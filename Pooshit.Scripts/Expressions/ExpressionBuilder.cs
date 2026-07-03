@@ -7,6 +7,7 @@ using System.Reflection;
 using Pooshit.Scripting.Control;
 using Pooshit.Scripting.Extensions;
 using Pooshit.Scripting.Extern;
+using Pooshit.Scripting.Operations;
 using Pooshit.Scripting.Operations.Assign;
 using Pooshit.Scripting.Operations.Comparision;
 using Pooshit.Scripting.Operations.Logic;
@@ -315,6 +316,12 @@ public class ExpressionBuilder {
 			return trueBranch.Type == falseBranch.Type
 				? Expression.Condition(cond, trueBranch, falseBranch, trueBranch.Type)
 				: Expression.Condition(cond, Convert(trueBranch, typeof(object)), Convert(falseBranch, typeof(object)), typeof(object));
+		}
+
+		if (token is NullCoalesce nullCoalesce) {
+			Expression lhs = Convert(Build(nullCoalesce.Lhs, variables, labels), typeof(object));
+			Expression rhs = Convert(Build(nullCoalesce.Rhs, variables, labels), typeof(object));
+			return Expression.Coalesce(lhs, rhs);
 		}
 
 		if (token is Switch switchToken) {

@@ -149,6 +149,11 @@
         LogicXor,
 
         /// <summary>
+        /// returns the left-hand side value when it is non-null, otherwise evaluates and returns the right-hand side
+        /// </summary>
+        NullCoalesce,
+
+        /// <summary>
         /// Assigns the value of the right hand side expression to the left hand side token
         /// </summary>
         Assignment,
