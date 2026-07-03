@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Pooshit.Scripting;
 using Pooshit.Scripting.Data;
@@ -6,6 +7,8 @@ using Pooshit.Scripting.Errors;
 using Pooshit.Scripting.Expressions;
 using Pooshit.Scripting.Formatters;
 using Pooshit.Scripting.Parser;
+using Pooshit.Scripting.Tokens;
+using Pooshit.Scripting.Visitors;
 using Scripting.Tests.Data;
 
 namespace Scripting.Tests {
@@ -13,6 +16,12 @@ namespace Scripting.Tests {
     [TestFixture, Parallelizable]
     public class TernaryTests {
         readonly ScriptParser parser = new();
+
+        class VariableCollector : ScriptVisitor {
+            readonly List<string> names = [];
+            public IReadOnlyList<string> Names => names;
+            public override void VisitVariable(ScriptVariable variable) => names.Add(variable.Name);
+        }
 
         [Test, Parallelizable]
         public void TernaryBasicTrue() {
@@ -109,6 +118,36 @@ namespace Scripting.Tests {
                 new LambdaParameter<int>("f"));
             Assert.AreEqual(10, function(true, 10, 20));
             Assert.AreEqual(20, function(false, 10, 20));
+        }
+
+        [Test, Parallelizable]
+        public void TernaryVisitorRecursesIntoAllBranches() {
+            IScript script = parser.Parse("$c ? $t : $f");
+            VariableCollector collector = new();
+            collector.Visit(script);
+            CollectionAssert.Contains(collector.Names, "c");
+            CollectionAssert.Contains(collector.Names, "t");
+            CollectionAssert.Contains(collector.Names, "f");
+        }
+
+        [Test, Parallelizable]
+        public void TernaryCompiledDelegateMismatchedBranchTypes() {
+            ScriptParser compiledParser = new();
+            Func<bool, object> function = compiledParser.ParseDelegate<Func<bool, object>>(
+                "c ? 1 : \"x\"",
+                new LambdaParameter<bool>("c"));
+            Assert.AreEqual(1, function(true));
+            Assert.AreEqual("x", function(false));
+        }
+
+        [Test, Parallelizable]
+        public void TernaryOperatorAssignGraftTrueCondition() {
+            Assert.AreEqual(15, parser.Parse("$x=5; $x += 3>2 ? 10 : 20; $x").Execute());
+        }
+
+        [Test, Parallelizable]
+        public void TernaryOperatorAssignGraftFalseCondition() {
+            Assert.AreEqual(25, parser.Parse("$x=5; $x += 1>2 ? 10 : 20; $x").Execute());
         }
     }
 }
