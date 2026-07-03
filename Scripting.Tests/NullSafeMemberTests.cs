@@ -38,6 +38,14 @@ namespace Scripting.Tests {
             public override void VisitVariable(ScriptVariable variable) => names.Add(variable.Name);
         }
 
+        class CAFinder : ScriptVisitor {
+            public ConditionalAccess Found;
+            public override void VisitConditionalAccess(ConditionalAccess ca) {
+                Found ??= ca;
+                base.VisitConditionalAccess(ca);
+            }
+        }
+
         IVariableProvider Vars(string name, object value) =>
             new VariableProvider(new Variable(name, value));
 
@@ -89,7 +97,10 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void ShortCircuitNullReceiverSkipsContinuation() {
-            Assert.IsNull(parser.Parse("$a?.Value").Execute(Vars("a", null)));
+            Outer rcv = null;
+            IVariableProvider vars = new VariableProvider(new Variable("rcv", rcv));
+            Assert.Throws<ScriptRuntimeException>(() => parser.Parse("$rcv.Inner").Execute(vars));
+            Assert.IsNull(parser.Parse("$rcv?.Inner").Execute(vars));
         }
 
         [Test, Parallelizable]
@@ -207,6 +218,25 @@ namespace Scripting.Tests {
         [Test, Parallelizable]
         public void ParserRejectsAssignmentToNullConditional() {
             Assert.Throws<ScriptParserException>(() => parser.Parse("$a?.Value = 5"));
+        }
+
+        [Test, Parallelizable]
+        public void CompiledPathValueTypeReceiver() {
+            Func<DateTime, object> f = parser.ParseDelegate<Func<DateTime, object>>(
+                "a?.Year", new LambdaParameter<DateTime>("a"));
+            Assert.AreEqual(2025, f(new DateTime(2025, 6, 15)));
+        }
+
+        [Test, Parallelizable]
+        public void ConditionalAccessTokenSymbols() {
+            IScript script = parser.Parse("$a?.Value");
+            CAFinder finder = new();
+            finder.Visit(script);
+            Assert.Multiple(() => {
+                Assert.That(finder.Found, Is.Not.Null);
+                Assert.That(finder.Found.Literal, Is.EqualTo("?."));
+                Assert.That(finder.Found.ToString(), Is.EqualTo("$a?.Value"));
+            });
         }
     }
 }

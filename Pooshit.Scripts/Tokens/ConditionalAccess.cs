@@ -10,9 +10,8 @@ namespace Pooshit.Scripting.Tokens;
 /// </remarks>
 public class ConditionalAccess : ScriptToken {
 
-    internal ConditionalAccess(IScriptToken receiver, ReceiverPlaceholder placeholder, IScriptToken continuation) {
+    internal ConditionalAccess(IScriptToken receiver, IScriptToken continuation) {
         Receiver = receiver;
-        Placeholder = placeholder;
         Continuation = continuation;
     }
 
@@ -20,11 +19,6 @@ public class ConditionalAccess : ScriptToken {
     /// expression evaluated once to produce the receiver; null causes the whole expression to return null
     /// </summary>
     public IScriptToken Receiver { get; }
-
-    /// <summary>
-    /// placeholder that is bound to the evaluated receiver value in the child scope
-    /// </summary>
-    public ReceiverPlaceholder Placeholder { get; }
 
     /// <summary>
     /// member-access chain evaluated against the receiver when the receiver is non-null

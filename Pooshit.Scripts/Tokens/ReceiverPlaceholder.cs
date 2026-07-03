@@ -1,6 +1,3 @@
-using Pooshit.Scripting.Errors;
-using Pooshit.Scripting.Parser;
-
 namespace Pooshit.Scripting.Tokens;
 
 /// <summary>
@@ -27,9 +24,6 @@ public class ReceiverPlaceholder : ScriptToken {
 
     /// <inheritdoc />
     protected override object ExecuteToken(ScriptContext context) {
-        IVariableProvider provider = context.Arguments.GetProvider(ReservedName);
-        if (provider != null)
-            return provider.GetVariable(ReservedName);
-        throw new ScriptRuntimeException("Receiver placeholder evaluated without a bound receiver", this);
+        return context.Arguments.GetVariable(ReservedName);
     }
 }

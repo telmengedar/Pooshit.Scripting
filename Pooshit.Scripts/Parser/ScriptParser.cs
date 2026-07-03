@@ -868,7 +868,7 @@ public class ScriptParser : IScriptParser {
     IScriptToken WrapNullConditional(IScriptToken receiver, ref string data, ref int index, ref int linenumber) {
         ReceiverPlaceholder placeholder = new();
         IScriptToken continuation = ParseMember(placeholder, ref data, ref index, ref linenumber);
-        return new ConditionalAccess(receiver, placeholder, continuation);
+        return new ConditionalAccess(receiver, continuation);
     }
 
     IScriptToken ParseMember(IScriptToken host, ref string data, ref int index, ref int linenumber) {
@@ -1231,9 +1231,6 @@ public class ScriptParser : IScriptParser {
             if (data[index] == '.') {
                 ++index;
                 token = ApplyDotAccess(token, ref data, ref index, ref linenumber);
-            } else if (index + 1 < data.Length && data[index] == '?' && data[index + 1] == '.') {
-                index += 2;
-                token = WrapNullConditional(token, ref data, ref index, ref linenumber);
             } else break;
         }
 
