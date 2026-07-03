@@ -62,6 +62,8 @@ public class ScriptVisitor : IScriptVisitor {
             VisitScriptParameter(parameter);
         else if (token is ExpliciteTypeCast explicittypecast)
             VisitExplicitTypeCast(explicittypecast);
+        else if (token is ConditionalToken conditional)
+            VisitConditional(conditional);
     }
 
     /// <summary>
@@ -70,6 +72,16 @@ public class ScriptVisitor : IScriptVisitor {
     /// <param name="explicittypecast">type cast token</param>
     public virtual void VisitExplicitTypeCast(ExpliciteTypeCast explicittypecast) {
         VisitParameterContainer(explicittypecast);
+    }
+
+    /// <summary>
+    /// visits a conditional token (<c>cond ? a : b</c>)
+    /// </summary>
+    /// <param name="conditional">conditional token to visit</param>
+    public virtual void VisitConditional(ConditionalToken conditional) {
+        VisitToken(conditional.Condition);
+        VisitToken(conditional.WhenTrue);
+        VisitToken(conditional.WhenFalse);
     }
 
     /// <summary>
