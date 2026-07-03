@@ -857,6 +857,20 @@ public class ScriptParser : IScriptParser {
         return new ScriptValue(membername.ToString());
     }
         
+    IScriptToken ApplyDotAccess(IScriptToken host, ref string data, ref int index, ref int linenumber) {
+        if (host is ConditionalAccess ca) {
+            ca.Continuation = ParseMember(ca.Continuation, ref data, ref index, ref linenumber);
+            return host;
+        }
+        return ParseMember(host, ref data, ref index, ref linenumber);
+    }
+
+    IScriptToken WrapNullConditional(IScriptToken receiver, ref string data, ref int index, ref int linenumber) {
+        ReceiverPlaceholder placeholder = new();
+        IScriptToken continuation = ParseMember(placeholder, ref data, ref index, ref linenumber);
+        return new ConditionalAccess(receiver, placeholder, continuation);
+    }
+
     IScriptToken ParseMember(IScriptToken host, ref string data, ref int index, ref int linenumber) {
         int start = index;
         StringBuilder membername = new StringBuilder();
@@ -1213,9 +1227,14 @@ public class ScriptParser : IScriptParser {
             break;
         }
 
-        while (data[index] == '.') {
-            ++index;
-            token = ParseMember(token, ref data, ref index, ref linenumber);
+        while (index < data.Length) {
+            if (data[index] == '.') {
+                ++index;
+                token = ApplyDotAccess(token, ref data, ref index, ref linenumber);
+            } else if (index + 1 < data.Length && data[index] == '?' && data[index + 1] == '.') {
+                index += 2;
+                token = WrapNullConditional(token, ref data, ref index, ref linenumber);
+            } else break;
         }
 
         return token;
@@ -1312,7 +1331,7 @@ public class ScriptParser : IScriptParser {
                 break;
                 case '.':
                     ++index;
-                    tokenlist[tokenlist.Count - 1] = ParseMember(tokenlist[tokenlist.Count - 1], ref data, ref index, ref linenumber);
+                    tokenlist[tokenlist.Count - 1] = ApplyDotAccess(tokenlist[tokenlist.Count - 1], ref data, ref index, ref linenumber);
                     concat = false;
                 break;
                 case '$':
@@ -1403,6 +1422,15 @@ public class ScriptParser : IScriptParser {
                     done = true;
                 break;
                 case '?': {
+                    if(index + 1 < data.Length && data[index + 1] == '.') {
+                        if(concat)
+                            throw new ScriptParserException(starttoken, index, linenumber, "Receiver expected before '?.'");
+                        index += 2;
+                        tokenlist[tokenlist.Count - 1] = WrapNullConditional(tokenlist[tokenlist.Count - 1], ref data, ref index, ref linenumber);
+                        concat = false;
+                        break;
+                    }
+
                     if(index + 1 < data.Length && data[index + 1] == '?') {
                         if(concat)
                             throw new ScriptParserException(starttoken, index, linenumber, "Left operand expected before '??'");

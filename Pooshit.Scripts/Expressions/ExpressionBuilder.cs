@@ -375,7 +375,32 @@ public class ExpressionBuilder {
 			               Build(foreachToken.Body, variables, labels),
 			               labels);
 		}
-		
+
+		if (token is ReceiverPlaceholder)
+			return variables.FirstOrDefault(v => v.Name == ReceiverPlaceholder.ReservedName)
+			       ?? throw new NotSupportedException("ReceiverPlaceholder used outside ConditionalAccess context");
+
+		if (token is ConditionalAccess conditionalAccess) {
+			Expression receiverExpr = Build(conditionalAccess.Receiver, variables, labels);
+			List<ParameterExpression> caVariables = [..variables];
+			ParameterExpression rcvTmp = Expression.Variable(receiverExpr.Type, ReceiverPlaceholder.ReservedName);
+			caVariables.Add(rcvTmp);
+			Expression continuationExpr = Build(conditionalAccess.Continuation, caVariables, labels);
+
+			if (receiverExpr.Type.IsValueType && !receiverExpr.Type.IsNullable())
+				return Expression.Block(typeof(object), [rcvTmp],
+				                        Expression.Assign(rcvTmp, receiverExpr),
+				                        Convert(continuationExpr, typeof(object)));
+
+			return Expression.Block(typeof(object), [rcvTmp],
+			                        Expression.Assign(rcvTmp, receiverExpr),
+			                        Expression.Condition(
+			                                             Expression.Equal(Expression.Convert(rcvTmp, typeof(object)), Expression.Constant(null, typeof(object))),
+			                                             Expression.Constant(null, typeof(object)),
+			                                             Convert(continuationExpr, typeof(object)),
+			                                             typeof(object)));
+		}
+
 		throw new NotSupportedException(token.GetType().Name);
 	}
 

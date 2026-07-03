@@ -64,6 +64,8 @@ public class ScriptVisitor : IScriptVisitor {
             VisitExplicitTypeCast(explicittypecast);
         else if (token is ConditionalToken conditional)
             VisitConditional(conditional);
+        else if (token is ConditionalAccess conditionalAccess)
+            VisitConditionalAccess(conditionalAccess);
     }
 
     /// <summary>
@@ -82,6 +84,15 @@ public class ScriptVisitor : IScriptVisitor {
         VisitToken(conditional.Condition);
         VisitToken(conditional.WhenTrue);
         VisitToken(conditional.WhenFalse);
+    }
+
+    /// <summary>
+    /// visits a null-conditional access token (<c>a?.b</c>); does not dispatch the internal placeholder
+    /// </summary>
+    /// <param name="conditionalAccess">token to visit</param>
+    public virtual void VisitConditionalAccess(ConditionalAccess conditionalAccess) {
+        VisitToken(conditionalAccess.Receiver);
+        VisitToken(conditionalAccess.Continuation);
     }
 
     /// <summary>
