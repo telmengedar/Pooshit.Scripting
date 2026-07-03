@@ -1402,6 +1402,22 @@ public class ScriptParser : IScriptParser {
                     ++index;
                     done = true;
                 break;
+                case '?': {
+                    if(concat)
+                        throw new ScriptParserException(starttoken, index, linenumber, "Condition expected before '?'");
+                    ++index;
+                    IScriptToken condFolded = FoldExpression(tokenlist, indexlist, parsestart, index, linenumber);
+                    int ternaryStart = parsestart;
+                    int ternaryNewlines = 0;
+                    IScriptToken trueBranch = Parse(parent, ref data, ref index, ref ternaryNewlines, ref linenumber, false, true);
+                    SkipWhitespaces(data, ref index, ref linenumber);
+                    if(index >= data.Length || data[index] != ':')
+                        throw new ScriptParserException(ternaryStart, index, linenumber, "':' expected in conditional operator");
+                    ++index;
+                    int ternaryNewlines2 = 0;
+                    IScriptToken falseBranch = Parse(parent, ref data, ref index, ref ternaryNewlines2, ref linenumber, false, suppressformat);
+                    return GraftConditional(condFolded, trueBranch, falseBranch, ternaryStart, index, linenumber);
+                }
                 default:
                     if(!concat) {
                         done = true;
@@ -1422,6 +1438,10 @@ public class ScriptParser : IScriptParser {
                 newlines = SkipWhitespaces(data, ref index, ref linenumber);
         }
 
+        return FoldExpression(tokenlist, indexlist, parsestart, index, linenumber);
+    }
+
+    IScriptToken FoldExpression(List<IScriptToken> tokenlist, List<OperatorIndex> indexlist, int parsestart, int index, int linenumber) {
         if(tokenlist.Count > 1) {
             indexlist.Sort((lhs, rhs) =>
                                lhs.Token.Operator.GetOrderNumber().CompareTo(rhs.Token.Operator.GetOrderNumber()));
@@ -1431,7 +1451,6 @@ public class ScriptParser : IScriptParser {
                 if(operatorindex.Token is IUnaryToken unary) {
                     if(unary.IsPostToken) {
                         if(operatorindex.Index == 0)
-                            // TODO: provide indices if this can actually happen
                             throw new ScriptParserException(parsestart, index, linenumber, "Posttoken at beginning of tokenlist detected");
 
                         unary.Operand = tokenlist[operatorindex.Index - 1];
@@ -1465,10 +1484,25 @@ public class ScriptParser : IScriptParser {
             }
         }
 
-        // there has to be a single statement or nothing at this point
         if (tokenlist.Count > 1)
             return new StatementBlock(tokenlist.ToArray());
         return tokenlist.SingleOrDefault();
+    }
+
+    IScriptToken GraftConditional(IScriptToken folded, IScriptToken whenTrue, IScriptToken whenFalse, int parsestart, int index, int linenumber) {
+        if (folded is Assignment assignment) {
+            assignment.Rhs = GraftConditional(assignment.Rhs, whenTrue, whenFalse, parsestart, index, linenumber);
+            return assignment;
+        }
+        if (folded is OperatorAssign opAssign) {
+            opAssign.Rhs = GraftConditional(opAssign.Rhs, whenTrue, whenFalse, parsestart, index, linenumber);
+            return opAssign;
+        }
+        return new ConditionalToken(folded, whenTrue, whenFalse) {
+            LineNumber = linenumber,
+            TextIndex = parsestart,
+            TokenLength = index - parsestart
+        };
     }
 
     IScriptToken ParseDictionary(IScriptToken parent, ref string data, ref int index, ref int linenumber) {

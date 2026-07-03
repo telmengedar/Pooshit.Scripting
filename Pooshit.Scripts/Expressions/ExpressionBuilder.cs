@@ -308,6 +308,15 @@ public class ExpressionBuilder {
 			                            trueBranch.Type);
 		}
 		
+		if (token is ConditionalToken conditionalToken) {
+			Expression cond = Convert(Build(conditionalToken.Condition, variables, labels), typeof(bool));
+			Expression trueBranch = Build(conditionalToken.WhenTrue, variables, labels);
+			Expression falseBranch = Build(conditionalToken.WhenFalse, variables, labels);
+			return trueBranch.Type == falseBranch.Type
+				? Expression.Condition(cond, trueBranch, falseBranch, trueBranch.Type)
+				: Expression.Condition(cond, Convert(trueBranch, typeof(object)), Convert(falseBranch, typeof(object)), typeof(object));
+		}
+
 		if (token is Switch switchToken) {
 			Expression condition = Build(switchToken.Parameters.Single(), variables, labels);
 			SwitchCase[] cases = switchToken.Cases.Select(c => Expression.SwitchCase(

@@ -18,7 +18,7 @@ namespace Pooshit.Scripting.Formatters.Tokens {
                 current = current.BaseType;
             }
 
-            foreach(Type type in key.GetInterfaces().Reverse())
+            foreach(Type type in Enumerable.Reverse(key.GetInterfaces()))
                 typestosearch.Add(type);
 
             foreach (Type type in typestosearch)
