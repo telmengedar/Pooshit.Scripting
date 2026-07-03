@@ -4,6 +4,8 @@
 
 Provides a parser for scripts which execute controlled scripts on a C# backend.
 
+For the full language & extensibility reference see **[docs/pooscript-language-reference.md](docs/pooscript-language-reference.md)**.
+
 ## Environment
 
 To use the script engine effectively it is necessary to add types to instantiate or function providers of which to call methods. The script engine can be used without doing this but only a limited functionality is available then like computing expressions.
@@ -11,11 +13,18 @@ To use the script engine effectively it is necessary to add types to instantiate
 ### Global Variables
 The most simple way to extend functionality of the script engine is to provide instances with some functionality using global variables. These variables are read-only and every instance method can be called on that variable using it's keyword.
 
+`ScriptParser` has only a **parameterless** constructor. Global variables are bound at execute time, not at parser construction:
+
 ``` csharp
-// HttpProvider is just an example for an thinkable instance and not available in library
-IScriptParser parser=new ScriptParser(new Variable("http", new HttpProvider()))
-IScript script=parser.Parse("http.get(\"http://www.google.de/\")");
-script.Execute();
+// HttpProvider is just an example for a thinkable instance and not available in library
+IScriptParser parser = new ScriptParser();
+IScript script = parser.Parse("http.get(\"http://www.google.de/\")");
+
+// Option A — VariableProvider wrapping named Variable objects
+script.Execute(new VariableProvider(new Variable("http", new HttpProvider())));
+
+// Option B — dictionary
+script.Execute(new Dictionary<string, object> { ["http"] = new HttpProvider() });
 ```
 
 ### Add Types
