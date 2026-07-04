@@ -24,11 +24,8 @@ jobs:
         id: ver
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Test (exclude known-flaky timing test #2937)
-        run: >
-          dotnet test Scripting.Tests/Scripting.Tests.csproj
-          -c Release
-          --filter "FullyQualifiedName!~CachingConstructorsHasSomeEffect"
+      - name: Test
+        run: dotnet test Scripting.Tests/Scripting.Tests.csproj -c Release
 
       - name: Pack
         run: >
