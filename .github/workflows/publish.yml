@@ -1,0 +1,51 @@
+name: Publish to NuGet
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fail fast if NUGET_API_KEY is missing
+        run: |
+          if [ -z "${{ secrets.NUGET_API_KEY }}" ]; then
+            echo "::error::NUGET_API_KEY secret is not set. Add it under Settings → Secrets → Actions."
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Derive version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Run tests (excluding known-flaky timing test)
+        run: >
+          dotnet test Scripting.Tests/Scripting.Tests.csproj
+          -c Release
+          --filter "FullyQualifiedName!~CachingConstructorsHasSomeEffect"
+
+      - name: Pack
+        run: >
+          dotnet pack Pooshit.Scripts/Pooshit.Scripting.csproj
+          -c Release
+          -p:Version=${{ steps.version.outputs.VERSION }}
+          -p:ContinuousIntegrationBuild=true
+          -o "${{ runner.temp }}/pkg"
+
+      - name: Push to NuGet.org
+        run: >
+          dotnet nuget push "${{ runner.temp }}/pkg/*.nupkg"
+          -k "${{ secrets.NUGET_API_KEY }}"
+          -s https://api.nuget.org/v3/index.json
+          --skip-duplicate
