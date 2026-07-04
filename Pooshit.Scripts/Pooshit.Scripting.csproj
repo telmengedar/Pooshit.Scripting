@@ -5,15 +5,15 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>Provides an environment to parse and execute scripts</Description>
     <Copyright>Toni Gottschall</Copyright>
-    <PackageProjectUrl>https://github.com/telmengedar/NightlyCode.Scripting</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/telmengedar/NightlyCode.Scripting</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/telmengedar/Pooshit.Scripting</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/telmengedar/Pooshit.Scripting</RepositoryUrl>
     <PackageTags>script, parser, code, dynamic, expression</PackageTags>
     <Authors>Toni Gottschall</Authors>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <AssemblyVersion>0.18.31</AssemblyVersion>
-    <PackageVersion>0.18.31-preview</PackageVersion>
+    <Version>0.18.31</Version>
     <LangVersion>default</LangVersion>
     <PackageId>Pooshit.Scripting</PackageId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   
   <ItemGroup>
@@ -22,5 +22,6 @@
 
   <ItemGroup>
     <None Include="LICENSE" Pack="true" PackagePath="" />
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>
