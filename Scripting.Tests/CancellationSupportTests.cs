@@ -367,10 +367,6 @@ namespace Scripting.Tests {
             Assert.That(task.IsCanceled, Is.True);
         }
 
-        // ---------------------------------------------------------------------------------------------
-        // QA round 1 (DiVoid #7717) regressions and coverage closures
-        // ---------------------------------------------------------------------------------------------
-
         /// <summary>
         /// CF-1: <c>AssignableToken.Assign</c> executes the right-hand side inline; a cancellation raised
         /// while evaluating it (here, a guarded <c>count()</c> call over an infinite host sequence) must
