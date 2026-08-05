@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +10,18 @@ namespace Pooshit.Scripting.Extensions.Script {
     /// extensions for scripts with <see cref="IEnumerable"/> results
     /// </summary>
     public class EnumerableExtensions {
+
+        /// <summary>
+        /// wraps an enumeration with a per-element checkpoint, so a host-supplied infinite or long-running
+        /// sequence bounds its cancellation and step-limit observation to one call per element rather than
+        /// being pulled to exhaustion with no engine observation point at all
+        /// </summary>
+        static IEnumerable<object> Guarded(IEnumerable enumeration, ScriptContext context) {
+            foreach (object item in enumeration) {
+                context.Guard();
+                yield return item;
+            }
+        }
 
         /// <summary>
         /// filters an enumeration
@@ -61,39 +73,43 @@ namespace Pooshit.Scripting.Extensions.Script {
         /// get last element of enumeration or null if enumeration contains no elements
         /// </summary>
         /// <param name="enumeration">enumeration</param>
+        /// <param name="context">execution context; injected by the engine, not by the script call</param>
         /// <returns>last element of enumeration or null if enumeration contains no elements</returns>
-        public static object LastOrDefault(IEnumerable enumeration)
+        public static object LastOrDefault(IEnumerable enumeration, ScriptContext context)
         {
-            return enumeration.Cast<object>().LastOrDefault();
+            return Guarded(enumeration, context).LastOrDefault();
         }
 
         /// <summary>
         /// get last element of enumeration
         /// </summary>
         /// <param name="enumeration">enumeration</param>
+        /// <param name="context">execution context; injected by the engine, not by the script call</param>
         /// <returns>last element of enumeration</returns>
-        public static object Last(IEnumerable enumeration)
+        public static object Last(IEnumerable enumeration, ScriptContext context)
         {
-            return enumeration.Cast<object>().Last();
+            return Guarded(enumeration, context).Last();
         }
 
         /// <summary>
         /// get minimum value of enumeration of values
         /// </summary>
         /// <param name="enumeration">enumeration of values</param>
+        /// <param name="context">execution context; injected by the engine, not by the script call</param>
         /// <returns>minimum value of enumeration</returns>
-        public static object Min(IEnumerable enumeration) {
-            return enumeration.Cast<object>().Min();
+        public static object Min(IEnumerable enumeration, ScriptContext context) {
+            return Guarded(enumeration, context).Min();
         }
 
         /// <summary>
         /// get maximum value of enumeration of values
         /// </summary>
         /// <param name="enumeration">enumeration of values</param>
+        /// <param name="context">execution context; injected by the engine, not by the script call</param>
         /// <returns>maximum value of enumeration</returns>
-        public static object Max(IEnumerable enumeration)
+        public static object Max(IEnumerable enumeration, ScriptContext context)
         {
-            return enumeration.Cast<object>().Max();
+            return Guarded(enumeration, context).Max();
         }
 
         /*/// <summary>
@@ -118,55 +134,60 @@ namespace Pooshit.Scripting.Extensions.Script {
         /// get an enumeration of ordered elements
         /// </summary>
         /// <param name="enumeration">enumeration of values</param>
+        /// <param name="context">execution context; injected by the engine, not by the script call</param>
         /// <returns>ordered enumeration of values</returns>
-        public static IEnumerable Order(IEnumerable enumeration) {
-            return enumeration.Cast<object>().OrderBy(e => e);
+        public static IEnumerable Order(IEnumerable enumeration, ScriptContext context) {
+            return Guarded(enumeration, context).OrderBy(e => e);
         }
 
         /// <summary>
-        /// get an enumeration of values in descending order 
+        /// get an enumeration of values in descending order
         /// </summary>
         /// <param name="enumeration">enumeration</param>
+        /// <param name="context">execution context; injected by the engine, not by the script call</param>
         /// <returns>values in descending order</returns>
-        public static IEnumerable OrderDesc(IEnumerable enumeration) {
-            return enumeration.Cast<object>().OrderByDescending(e => e);
+        public static IEnumerable OrderDesc(IEnumerable enumeration, ScriptContext context) {
+            return Guarded(enumeration, context).OrderByDescending(e => e);
         }
 
         /// <summary>
         /// get the number of elements in an enumeration
         /// </summary>
         /// <param name="enumeration">enumeration</param>
+        /// <param name="context">execution context; injected by the engine, not by the script call</param>
         /// <returns>number of elements in enumeration</returns>
-        public static int Count(IEnumerable enumeration) {
-            return enumeration.Cast<object>().Count();
+        public static int Count(IEnumerable enumeration, ScriptContext context) {
+            return Guarded(enumeration, context).Count();
         }
 
         /// <summary>
         /// converts an enumeration to an array
         /// </summary>
         /// <param name="enumeration">enumeration to convert</param>
+        /// <param name="context">execution context; injected by the engine, not by the script call</param>
         /// <returns>array containing elements of the enumeration</returns>
-        public static Array ToArray(IEnumerable enumeration) {
-            return enumeration.Cast<object>().ToArray();
+        public static Array ToArray(IEnumerable enumeration, ScriptContext context) {
+            return Guarded(enumeration, context).ToArray();
         }
 
         /// <summary>
-        /// returns index of first matching item 
+        /// returns index of first matching item
         /// </summary>
         /// <param name="enumeration">enumeration to iterate</param>
         /// <param name="value">item to match against</param>
+        /// <param name="context">execution context; injected by the engine, not by the script call</param>
         /// <returns>index of first item which matches predicate</returns>
-        public static int IndexOf(IEnumerable enumeration, object value) {
+        public static int IndexOf(IEnumerable enumeration, object value, ScriptContext context) {
             int index = 0;
             if (value == null) {
-                foreach (object item in enumeration) {
+                foreach (object item in Guarded(enumeration, context)) {
                     if (item==null)
                         return index;
                     ++index;
                 }
             }
             else {
-                foreach (object item in enumeration) {
+                foreach (object item in Guarded(enumeration, context)) {
                     if (value.Equals(item))
                         return index;
                     ++index;
@@ -177,7 +198,7 @@ namespace Pooshit.Scripting.Extensions.Script {
         }
 
         /// <summary>
-        /// returns index of first item which matches a predicate 
+        /// returns index of first item which matches a predicate
         /// </summary>
         /// <param name="enumeration">enumeration to iterate</param>
         /// <param name="predicate">predicate for item to match</param>
@@ -194,24 +215,25 @@ namespace Pooshit.Scripting.Extensions.Script {
         }
 
         /// <summary>
-        /// returns last item which matches a value 
+        /// returns last item which matches a value
         /// </summary>
         /// <param name="enumeration">enumeration to iterate</param>
         /// <param name="value">item to match</param>
+        /// <param name="context">execution context; injected by the engine, not by the script call</param>
         /// <returns>index of last item which matches predicate</returns>
-        public static int LastIndexOf(IEnumerable enumeration, object value) {
+        public static int LastIndexOf(IEnumerable enumeration, object value, ScriptContext context) {
             int lastIndexOf = -1;
             int index = 0;
 
             if (value == null) {
-                foreach (object item in enumeration) {
+                foreach (object item in Guarded(enumeration, context)) {
                     if (item == null)
                         lastIndexOf = index;
                     ++index;
                 }
             }
             else {
-                foreach (object item in enumeration) {
+                foreach (object item in Guarded(enumeration, context)) {
                     if (value.Equals(item))
                         lastIndexOf = index;
                     ++index;
@@ -222,7 +244,7 @@ namespace Pooshit.Scripting.Extensions.Script {
         }
 
         /// <summary>
-        /// returns index of last item which matches a predicate 
+        /// returns index of last item which matches a predicate
         /// </summary>
         /// <param name="enumeration">enumeration to iterate</param>
         /// <param name="predicate">predicate for item to match</param>
@@ -230,7 +252,7 @@ namespace Pooshit.Scripting.Extensions.Script {
         public static int LastIndexOf(IEnumerable enumeration, LambdaMethod predicate) {
             int lastIndexOf = -1;
             int index = 0;
-            
+
             foreach (object item in enumeration) {
                 if (predicate.Invoke(item) is bool result && result)
                     lastIndexOf = index;

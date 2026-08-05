@@ -35,11 +35,22 @@ namespace Pooshit.Scripting.Control {
         public override string Literal => "throw";
 
         /// <inheritdoc />
+        /// <remarks>
+        /// <see cref="Context"/> and <see cref="Message"/> are arbitrary expressions (eg. <c>throw($src.count())</c>)
+        /// and can themselves raise an engine cancellation or step-limit abort while being evaluated; both
+        /// must reach the caller unwrapped rather than being downgraded into an ordinary throw failure.
+        /// </remarks>
         protected override object ExecuteToken(ScriptContext scriptcontext) {
             string messagetext;
             object contextdata;
             try {
                 contextdata = Context?.Execute(scriptcontext);
+            }
+            catch (OperationCanceledException) {
+                throw;
+            }
+            catch (ScriptException) {
+                throw;
             }
             catch (Exception e) {
                 throw new ScriptRuntimeException($"Unable to create context data for throw\n{e.Message}", this, e);
@@ -47,6 +58,12 @@ namespace Pooshit.Scripting.Control {
 
             try {
                 messagetext = message.Execute(scriptcontext)?.ToString();
+            }
+            catch (OperationCanceledException) {
+                throw;
+            }
+            catch (ScriptException) {
+                throw;
             }
             catch (Exception e) {
                 throw new ScriptRuntimeException($"Unable to create message for throw\n{e.Message}", this, e);

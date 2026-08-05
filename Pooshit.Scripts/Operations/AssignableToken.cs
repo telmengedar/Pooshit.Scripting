@@ -10,9 +10,17 @@ namespace Pooshit.Scripting.Operations {
     public abstract class AssignableToken : ScriptToken, IAssignableToken {
 
         /// <inheritdoc />
+        /// <remarks>
+        /// <see cref="AssignToken"/> (eg. <c>ScriptVariable.AssignToken</c>) executes the right-hand side
+        /// expression inline, so a cancellation or step-limit abort raised while evaluating it (eg.
+        /// <c>$c = $src.count()</c>) must reach the caller unwrapped, exactly like any other checkpoint.
+        /// </remarks>
         public object Assign(IScriptToken token, ScriptContext context) {
             try {
                 return AssignToken(token, context);
+            }
+            catch (OperationCanceledException) {
+                throw;
             }
             catch (ScriptException) {
                 throw;

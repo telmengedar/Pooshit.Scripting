@@ -25,7 +25,7 @@ namespace Pooshit.Scripting.Control {
         protected override object ExecuteToken(ScriptContext context) {
             ScriptContext loopcontext = new ScriptContext(context);
             while(condition.Execute(loopcontext).ToBoolean()) {
-                loopcontext.CancellationToken.ThrowIfCancellationRequested();
+                loopcontext.Guard();
 
                 object value = Body.Execute(loopcontext);
                 if(value is Return)

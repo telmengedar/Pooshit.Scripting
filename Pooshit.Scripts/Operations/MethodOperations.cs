@@ -31,6 +31,19 @@ namespace Pooshit.Scripting.Operations {
             return Array.IndexOf(integerlist, type) > -1;
         }
 
+        /// <summary>
+        /// scores how well a candidate method's parameters match a set of call-site argument values
+        /// </summary>
+        /// <remarks>
+        /// A <see cref="ScriptContext"/> parameter is supplied by the engine, not by the script call: it
+        /// consumes no script argument and contributes nothing to the match score, so it is skipped via
+        /// <c>continue</c> without advancing <c>index</c> (the source-argument cursor, tracked separately
+        /// from the target-parameter cursor <c>i</c> for exactly this reason).
+        /// </remarks>
+        /// <param name="method">method to score</param>
+        /// <param name="parameters">call-site argument values</param>
+        /// <param name="isextension">determines whether the method is an extension method (its first parameter is skipped)</param>
+        /// <returns>match score, or -1 when the method cannot be called with these parameters</returns>
         public static int GetMethodMatchValue<T>(T method, object[] parameters, bool isextension = false)
         where T : MethodBase {
             int result = 0; //isextension ? 0 : 0;
@@ -40,6 +53,9 @@ namespace Pooshit.Scripting.Operations {
 
             int index=0;
             for(int i=0;i<methodparameters.Length;++i) {
+                if (methodparameters[i].ParameterType == typeof(ScriptContext))
+                    continue;
+
                 int multiplicator = 1;
                 Type methodparameter = i == methodparameters.Length - 1 && (hasparams || methodparameters[i].ParameterType.IsByRef) ? methodparameters[i].ParameterType.GetElementType() : methodparameters[i].ParameterType;
 
@@ -170,17 +186,19 @@ namespace Pooshit.Scripting.Operations {
         }
 
         /// <summary>
-        /// determines whether a method could be called using the provided parameters 
+        /// determines whether a method could be called using the provided parameters
         /// </summary>
         /// <remarks>
-        /// this does not determine whether the parameter types actually matches, it only determines whether the parameter count matches
+        /// This does not determine whether the parameter types actually match, it only determines whether
+        /// the parameter count matches. A <see cref="ScriptContext"/> parameter is supplied by the engine,
+        /// not the script call, so it is excluded from both the required and the maximum parameter counts.
         /// </remarks>
         /// <param name="method">method to check</param>
         /// <param name="parametercount">number of parameters</param>
         /// <param name="isextension">determines whether the method is an extension method</param>
         /// <returns>true if method count matches, false otherwise</returns>
         public static bool MatchesParameterCount(MethodBase method, int parametercount, bool isextension = false) {
-            ParameterInfo[] methodparameters = method.GetParameters();
+            ParameterInfo[] methodparameters = method.GetParameters().Where(p => p.ParameterType != typeof(ScriptContext)).ToArray();
             bool hasparams = methodparameters.Length > 0 && Attribute.IsDefined(methodparameters.Last(), typeof(ParamArrayAttribute));
             int minimumcount = methodparameters.Count(p => !p.HasDefaultValue);
             if (hasparams)
@@ -225,14 +243,35 @@ namespace Pooshit.Scripting.Operations {
             }
         }
 
+        /// <summary>
+        /// converts script argument values to reflection call parameters and invokes a resolved host method
+        /// </summary>
+        /// <remarks>
+        /// An engine-driven cancellation or step-limit abort raised by a reflected host call (eg. a
+        /// <see cref="ScriptContext"/>-guarded <c>EnumerableExtensions</c>/<c>TaskHost</c> method, or a
+        /// lambda invoked from within one) must reach the caller unwrapped, exactly like any other
+        /// checkpoint. Reflection always wraps it in a <see cref="TargetInvocationException"/>, so it is
+        /// unwrapped explicitly rather than falling into the generic <see cref="ScriptRuntimeException"/>
+        /// translation used for every other failure. An ordinary <see cref="ScriptRuntimeException"/> raised
+        /// by the host method itself is deliberately still wrapped, unchanged, so the calling site remains
+        /// part of the diagnostic.
+        /// </remarks>
+        /// <param name="methodcall">token that triggered the call, used for error reporting</param>
+        /// <param name="host">host instance the method is called on (null for extension/static methods)</param>
+        /// <param name="method">resolved method to call</param>
+        /// <param name="parameters">script-evaluated argument values</param>
+        /// <param name="context">execution context, injected into any <see cref="ScriptContext"/> parameter</param>
+        /// <param name="refparameters">reference/out parameter bindings to write back after the call</param>
+        /// <param name="extension">determines whether the method is an extension method</param>
+        /// <returns>result of the method call</returns>
         public static object CallMethod(IScriptToken methodcall, object host, MethodInfo method, object[] parameters, ScriptContext context, IEnumerable<ReferenceParameter> refparameters=null, bool extension=false) {
             ParameterInfo[] targetparameters = method.GetParameters();
 
             object[] callparameters;
             try {
                 if (extension)
-                    callparameters = CreateParameters(host, targetparameters.Skip(1).ToArray(), parameters).ToArray();
-                else callparameters = CreateParameters(targetparameters, parameters).ToArray();
+                    callparameters = CreateParameters(host, targetparameters.Skip(1).ToArray(), parameters, context).ToArray();
+                else callparameters = CreateParameters(targetparameters, parameters, context).ToArray();
             }
             catch (ScriptRuntimeException e) {
                 throw new ScriptRuntimeException($"Unable to convert parameters for {host.GetType().Name}.{method.Name}({string.Join(",", targetparameters.Select(p => p.ParameterType.Name + " " + p.Name))})\n{e.Message}", methodcall, e);
@@ -250,6 +289,9 @@ namespace Pooshit.Scripting.Operations {
 
                 return result;
             }
+            catch (TargetInvocationException e) when (e.InnerException is OperationCanceledException or ScriptStepLimitExceededException or ScriptTimeoutException) {
+                throw e.InnerException;
+            }
             catch (TargetInvocationException e) {
                 throw new ScriptRuntimeException($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)})\n{e.InnerException?.Message ?? e.Message}", methodcall, e.InnerException ?? e);
             }
@@ -258,8 +300,16 @@ namespace Pooshit.Scripting.Operations {
             }
         }
 
-        public static IEnumerable<object> CreateParameters(ParameterInfo[] targetparameters, object[] sourceparameters) {
-            return CreateParameters(null, targetparameters, sourceparameters);
+        /// <summary>
+        /// converts script argument values to reflection call parameters, injecting <paramref name="context"/>
+        /// into any target parameter of type <see cref="ScriptContext"/>
+        /// </summary>
+        /// <param name="targetparameters">parameters of the method being called</param>
+        /// <param name="sourceparameters">script-evaluated argument values</param>
+        /// <param name="context">execution context to inject; null when the caller has none (eg. constructors)</param>
+        /// <returns>parameters ready to pass to <see cref="MethodBase.Invoke(object,object[])"/></returns>
+        public static IEnumerable<object> CreateParameters(ParameterInfo[] targetparameters, object[] sourceparameters, ScriptContext context = null) {
+            return CreateParameters(null, targetparameters, sourceparameters, context);
         }
 
         public static object ConvertParameter(object value, Type targettype) {
@@ -346,14 +396,35 @@ namespace Pooshit.Scripting.Operations {
             return null;
         }
 
-        public static IEnumerable<object> CreateParameters(object staticparameter, ParameterInfo[] targetparameters, object[] sourceparameters)
+        /// <summary>
+        /// converts script argument values to reflection call parameters, injecting <paramref name="context"/>
+        /// into any target parameter of type <see cref="ScriptContext"/>
+        /// </summary>
+        /// <remarks>
+        /// <c>sourceindex</c> tracks the position within <paramref name="sourceparameters"/> separately from
+        /// the target-parameter index <c>i</c>, since an injected <see cref="ScriptContext"/> parameter
+        /// consumes a target slot but no script argument.
+        /// </remarks>
+        /// <param name="staticparameter">extended-type instance to yield first for an extension method call, or null</param>
+        /// <param name="targetparameters">parameters of the method being called (excluding the extended type for an extension method)</param>
+        /// <param name="sourceparameters">script-evaluated argument values</param>
+        /// <param name="context">execution context to inject; null when the caller has none (eg. constructors)</param>
+        /// <returns>parameters ready to pass to <see cref="MethodBase.Invoke(object,object[])"/></returns>
+        public static IEnumerable<object> CreateParameters(object staticparameter, ParameterInfo[] targetparameters, object[] sourceparameters, ScriptContext context = null)
         {
             if (staticparameter != null)
                 yield return staticparameter;
 
+            int sourceindex = 0;
             for (int i = 0; i < targetparameters.Length; ++i) {
                 ParameterInfo targetparameter = targetparameters[i];
-                if (i >= sourceparameters.Length) {
+
+                if (targetparameter.ParameterType == typeof(ScriptContext)) {
+                    yield return context;
+                    continue;
+                }
+
+                if (sourceindex >= sourceparameters.Length) {
                     if (Attribute.IsDefined(targetparameter, typeof(ParamArrayAttribute))) {
                         // ReSharper disable once AssignNullToNotNullAttribute
                         yield return Array.CreateInstance(targetparameter.ParameterType.GetElementType(), 0);
@@ -371,14 +442,9 @@ namespace Pooshit.Scripting.Operations {
                     if (targettype == null)
                         throw new ScriptRuntimeException("Methodparameter without type detected", null);
 
-                    if (i >= sourceparameters.Length) {
-                        yield return Array.CreateInstance(targettype, 0);
-                        yield break;
-                    }
-
                     Array sourcearray = null;
-                    if (i == sourceparameters.Length - 1) {
-                        value = sourceparameters[i];
+                    if (sourceindex == sourceparameters.Length - 1) {
+                        value = sourceparameters[sourceindex];
                         if (value is Array array)
                             sourcearray = array;
                         else if (value is IEnumerable enumerable && !(value is string))
@@ -386,7 +452,7 @@ namespace Pooshit.Scripting.Operations {
                     }
 
                     if (sourcearray == null)
-                        sourcearray = sourceparameters.Skip(i).ToArray();
+                        sourcearray = sourceparameters.Skip(sourceindex).ToArray();
 
                     Array targetarray = Array.CreateInstance(targettype, sourcearray.Length);
                     for (int k = 0; k < targetarray.Length; ++k)
@@ -395,7 +461,8 @@ namespace Pooshit.Scripting.Operations {
                     yield break;
                 }
 
-                value = sourceparameters[i];
+                value = sourceparameters[sourceindex];
+                ++sourceindex;
                 if (value == null) {
                     if (targetparameter.ParameterType.IsValueType && !targetparameter.ParameterType.IsNullable())
                         throw new ScriptRuntimeException($"Unable to convert null to {targetparameter.ParameterType.Name} since a valuetype is needed", null);

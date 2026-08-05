@@ -70,6 +70,14 @@ public class ScriptMethod : ScriptToken, IParameterContainer {
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// An imported script's own cancellation, step-limit or timeout abort must reach the caller unwrapped
+    /// rather than being downgraded into a generic runtime error; an ordinary <see cref="ScriptRuntimeException"/>
+    /// raised by the imported script (eg. a failing statement) is deliberately still wrapped, unchanged, so
+    /// the outer call site remains part of the diagnostic. The same applies to a cancellation, step-limit or
+    /// timeout abort raised by any other <see cref="ScriptContext"/>-guarded method call (eg. a
+    /// <c>task.waitall</c> or an <c>EnumerableExtensions</c> iterator).
+    /// </remarks>
     protected override object ExecuteToken(ScriptContext context) {
         object host = Host.Execute(context);
         if(host == null)
@@ -77,7 +85,16 @@ public class ScriptMethod : ScriptToken, IParameterContainer {
 
         if(host is IExternalMethod externmethod && MethodName.ToLower() == "invoke") {
             try {
-                return externmethod.Invoke(context.Arguments, Parameters.Select(a => a.Execute(context)).ToArray());
+                return externmethod.Invoke(context, Parameters.Select(a => a.Execute(context)).ToArray());
+            }
+            catch(OperationCanceledException) {
+                throw;
+            }
+            catch(ScriptStepLimitExceededException) {
+                throw;
+            }
+            catch(ScriptTimeoutException) {
+                throw;
             }
             catch(Exception e) {
                 throw new ScriptRuntimeException($"Error calling external method '{externmethod}'", this, e);
@@ -99,6 +116,15 @@ public class ScriptMethod : ScriptToken, IParameterContainer {
         try {
             IResolvedMethod method = resolver.Resolve(host, MethodName, parametervalues, references.ToArray(), genericparameters);
             return method.Call(this, host, parametervalues, context);
+        }
+        catch(OperationCanceledException) {
+            throw;
+        }
+        catch(ScriptStepLimitExceededException) {
+            throw;
+        }
+        catch(ScriptTimeoutException) {
+            throw;
         }
         catch(ScriptRuntimeException e) {
             throw new ScriptRuntimeException(e.Message, this, e.InnerException);

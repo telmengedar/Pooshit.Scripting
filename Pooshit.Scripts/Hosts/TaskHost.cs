@@ -42,8 +42,10 @@ namespace Pooshit.Scripting.Hosts {
         /// waits for all tasks to complete
         /// </summary>
         /// <param name="tasks">tasks to wait for</param>
-        public void WaitAll(IEnumerable<Task> tasks) {
-            Task.WaitAll(tasks.ToArray());
+        /// <param name="context">execution context supplying the cancellation token to observe; injected by the engine, not by the script call</param>
+        public void WaitAll(IEnumerable<Task> tasks, ScriptContext context) {
+            // the script unwinds on cancellation; the tasks are the host's own and are not cancelled here
+            Task.WaitAll(tasks.ToArray(), context.CancellationToken);
         }
     }
 }

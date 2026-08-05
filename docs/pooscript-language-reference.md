@@ -20,7 +20,7 @@
 | `new Type(…)` + object initializer | ✓ | casts / `typeof` | ✓ |
 | `using` (dispose), `wait`, `await` (async) | ✓ | custom host functions/types | ✓ (host registers them) |
 | `import` external scripts | ✓ (host must wire an `ImportProvider`) | regex match `~~` / `!~` | ✓ (interpreter only) |
-| restrict to expressions-only / sandbox | ✓ (§12) | built-in execution timeout | ✗ (host must impose one) |
+| restrict to expressions-only / sandbox | ✓ (§12) | built-in execution timeout, step limit, regex timeout | ✓ (§12, opt-in via `parser.Limits`, off by default) |
 
 Statement terminators (`;`) are **optional**. Variables are `$name` to declare/assign, `name` (bare) to read (the `$` is a convention, not required).
 
@@ -29,7 +29,7 @@ Statement terminators (`;`) are **optional**. Variables are `$name` to declare/a
 ## 2. Execution model
 
 - **Pipeline:** source → parser builds a **tree of tokens** → each token executes to a value (and can be re-rendered to source by the formatters).
-- **Run it:** `IScriptParser parser = new ScriptParser(); IScript s = parser.Parse(code); object v = s.Execute(vars);` (see §11 for `vars`). Typed: `s.Execute<int>(vars)`. Async: `s.ExecuteAsync(vars, ct)`.
+- **Run it:** `IScriptParser parser = new ScriptParser(); IScript s = parser.Parse(code); object v = s.Execute(vars);` (see §11 for `vars`). Typed: `s.Execute<int>(vars)`. Async: `s.ExecuteAsync(vars, ct)`. A synchronous, cancellable overload also exists for hosts that cannot await a `Task` (eg. a frame-locked update loop): `s.Execute(vars, ct)` / `s.Execute<int>(vars, ct)` — see §12.
 - **Statement separation:** newline or `;`, both optional/mixable. An empty body after a header: `for(…);`.
 - **Comments:** `// line` and `/* block */`. Only recognized when `/` starts a statement/expression (mid-expression `/` is division). Discarded unless `parser.MetatokensEnabled = true`.
 - **`{}` block vs `{k:v}` dictionary:** `{` is a **dictionary** at the top level, after an operator (e.g. after `=`), or as a value; it's a **statement block** as a control-flow/lambda body. To return a dictionary from a body position, wrap it: `if(c) { { "k":"v" } }`. Empty `{}` = empty dictionary (valid); an empty statement block throws.
@@ -173,7 +173,7 @@ script.Execute();
 
 ### 11.3 Extension methods — `parser.Extensions`
 
-`IExtensionProvider`: `AddExtensions<T>()` / `AddExtensions(Type)`. Convention: **public static** methods; the **first parameter is the extended type** (the class need **not** be `static`, no `this` keyword). Generic first param → indexed under the generic definition (applies to all `IEnumerable<>`). Extension and instance methods compete on equal footing in resolution (best score wins).
+`IExtensionProvider`: `AddExtensions<T>()` / `AddExtensions(Type)`. Convention: **public static** methods; the **first parameter is the extended type** (the class need **not** be `static`, no `this` keyword). Generic first param → indexed under the generic definition (applies to all `IEnumerable<>`). Extension and instance methods compete on equal footing in resolution (best score wins). A method (extension or instance) may declare a trailing `ScriptContext` parameter — never first, since the first parameter of an extension method determines the extended type — and the engine supplies it automatically; it consumes no script argument and is invisible to script call sites. Use it to observe cancellation/step-limit guards (§12) inside a host method.
 
 ```csharp
 IScriptParser parser = new ScriptParser();
@@ -192,7 +192,7 @@ Case-insensitive names; overloads by argument type; optional/default params; `pa
 
 ### 11.6 Hosts — `TaskHost`, `TypeHost`
 
-Plain objects you bind as globals. `TaskHost`: `Run(lambda)`, `FromResult`, `WaitAll` — used with `await` and lambdas (`task.run([] => {…})`). `TypeHost(parser.Types)`: `Create("TypeName", { …dict… })` builds a registered type from a dictionary (⚠ sandbox-weakening — expose deliberately).
+Plain objects you bind as globals. `TaskHost`: `Run(lambda)`, `FromResult`, `WaitAll` — used with `await` and lambdas (`task.run([] => {…})`). `WaitAll` (like several `EnumerableExtensions` methods, §12) declares a trailing `ScriptContext` parameter that the engine injects automatically to observe cancellation — it is invisible to script code (`task.waitall($tasks)` still takes one script-visible argument) and only matters if you call these methods directly from C#. `TypeHost(parser.Types)`: `Create("TypeName", { …dict… })` builds a registered type from a dictionary (⚠ sandbox-weakening — expose deliberately).
 
 ### 11.7 Custom operators — `parser.OperatorTree`
 
@@ -215,7 +215,18 @@ Plain objects you bind as globals. `TaskHost`: `Run(lambda)`, `FromResult`, `Wai
 | `AllowSingleQuotesForStrings` | `false` | (on ⇒ `'…'` is a string, not a char) |
 | `MetatokensEnabled` | `false` | (on ⇒ keep comments/newlines for tooling/round-trip) |
 
-**Execution safety.** Cancellation via `ExecuteAsync(vars, ct)` → `ScriptContext.CancellationToken`: `foreach` checks it each iteration; **`wait` ignores it** — it calls `Thread.Sleep()` directly and cannot be cancelled mid-wait. **No built-in timeout** — a runaway `while(true)` will block the host thread; impose your own timeout at the host level (note: a tight CPU loop or `wait` will not observe cancellation). Errors surface as `ScriptParserException` (parse) / `ScriptRuntimeException` (execute); script `throw` and downstream .NET exceptions propagate (`await` unwraps inner exceptions).
+**Execution safety.** The engine guarantees an interruption checkpoint at every point where control returns to the engine (every statement, every loop iteration, every lambda invocation, every enumerated element) — it guarantees nothing *inside* a single host call. Concretely:
+
+- **Cancellation is complete.** `ExecuteAsync(vars, ct)` / the sync `Execute(vars, ct)` overload propagate `ct` (or, on the parameterless overloads, `CancellationToken.None`) into every checkpoint: `while`/`for`/`foreach` per iteration, every statement in a block, every lambda invocation (`task.run` bodies, `.where()`/`.indexof(predicate)` callbacks and any host extension that invokes a script lambda), the pure-iteration `EnumerableExtensions` methods (`count`, `order`, `toarray`, …), `wait` (now an **interruptible** sleep — cancelling mid-wait returns immediately instead of blocking for the full duration), `await`/`task.waitall` (the awaited/joined tasks themselves are the host's and are **not** cancelled — only the script unwinds), and an **imported script** (`import(...)`) — it inherits the caller's token, so it can no longer run in a completely uncancellable region.
+- **`try`/`catch` cannot swallow an engine cancellation.** This is an intentional, breaking behavior change: previously a script could wrap cancellable work in `try { … } catch($e) { }` and the host would see `ExecuteAsync` complete *successfully* despite the cancel. Now, when the context's own token is the one that was cancelled, the `OperationCanceledException` (and a step-limit abort) rethrows through any surrounding `try`/`catch`. A task cancelled by a host's own *unrelated* token is unaffected and remains ordinary, catchable script control flow.
+- **Three opt-in guards on `parser.Limits`** (`ScriptLimits`), all `null`/off by default — a default-configured parser behaves exactly as before:
+  - `Timeout` (`TimeSpan?`) — a wall-clock deadline, realised as a linked cancellation token so every checkpoint above already honors it for free, on **both** the sync and async paths. On expiry (with no caller cancellation) the host sees `ScriptTimeoutException`; a genuine caller cancel still surfaces as `OperationCanceledException`/`TaskCanceledException` — the two are always distinguishable.
+  - `MaxSteps` (`long?`) — bounds *script-driven looping* by counting engine checkpoints (not instructions); overrun throws `ScriptStepLimitExceededException`. Does not bound a single expensive host call, a huge allocation, or a runaway regex.
+  - `RegexTimeout` (`TimeSpan?`) — bounds a single `~~`/`!~` match; on timeout the host sees a `ScriptRuntimeException` wrapping a `RegexMatchTimeoutException`, carrying the offending token's source position. This is the **only** in-process mechanism against catastrophic regex backtracking — no token or step counter can interrupt a single `Regex` call.
+- **What the engine still cannot guarantee, even with every guard configured:** a host-supplied method that itself blocks (sync IO, a lock, a raw `Thread.Sleep` in host code); a host-supplied sequence whose single `MoveNext` blocks; unbounded memory allocation inside one iteration (`$s = $s + $s` in a loop); stack overflow from unbounded recursion (uncatchable, terminates the process); a detached `task.run(...)` the script never awaits (its body still observes cancellation and unwinds on its own, but the engine cannot join it). For genuinely untrusted scripts these are mitigations, not a security boundary — process/container isolation is the only complete answer.
+- **The compiled path (`ParseDelegate`, §13) has none of this.** It has no `ScriptContext` plumbing at all, so it is **not cancellable** by any mechanism above and must not be used to run untrusted code; use the interpreter (`Execute`/`ExecuteAsync`) instead.
+
+Errors surface as `ScriptParserException` (parse) / `ScriptRuntimeException` (execute) / `ScriptTimeoutException` / `ScriptStepLimitExceededException` (guards); script `throw` and downstream .NET exceptions propagate (`await` unwraps inner exceptions). Full design and test plan: `docs/architecture/cancellation-support.md`.
 
 ---
 
@@ -227,6 +238,8 @@ Compiling to a LINQ delegate is faster but covers a subset; unsupported tokens t
 
 **NOT supported (use `Execute()` instead):** `^^`, `<<<`/`>>>` rotate, regex `~~`/`!~`, `new`, lambdas, `break`/`continue`, `throw`, `using`, `wait`, `await`, `import`, `cast`/`typeof`/`parameter`.
 
+⚠ **Not cancellable.** The compiled path has no `ScriptContext` plumbing at all — none of §12's cancellation coverage or execution guards apply to it, at any level. Do not use `ParseDelegate` to run untrusted code; use the interpreter (`Execute`/`ExecuteAsync`) instead.
+
 ---
 
 ## 14. Known limitations & gotchas (user-facing)
@@ -236,7 +249,7 @@ Compiling to a LINQ delegate is faster but covers a subset; unsupported tokens t
 - **`d` suffix = decimal, not double** — `3.5d` is a `decimal`; changes overload resolution and arithmetic result types.
 - **char/small-int promote to int** for overload selection; numeric widening drives resolution and can surprise.
 - **`{…}` block-vs-dictionary ambiguity** — wrap a dictionary in an extra `{ }` when it sits in a body position.
-- **No execution timeout** — host must add one. `wait` is non-cancellable (calls `Thread.Sleep()`).
+- **`try`/`catch` no longer swallows an engine cancellation** (§12) — an intentional, breaking change. A script that wraps cancellable work in `try { … } catch($e) { }` previously masked a host cancel; now the cancellation rethrows through the `catch`. Unrelated task cancellations (a host task cancelled by its *own* token) are unaffected and remain catchable.
 - **`Converter.RegisterConverter` is process-global and not thread-safe** — register converters once at startup, never from concurrent code.
 
 ---

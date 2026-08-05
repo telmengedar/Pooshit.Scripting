@@ -28,6 +28,12 @@ public class Await : ScriptToken, IParameterContainer {
     public override string Literal => "await";
 
     /// <inheritdoc />
+    /// <remarks>
+    /// A cancellation of <see cref="ScriptContext.CancellationToken"/> surfaces from <see cref="Task.Wait(System.Threading.CancellationToken)"/>
+    /// as a plain <see cref="OperationCanceledException"/> (not wrapped in an <see cref="AggregateException"/>)
+    /// and flows past the unwrap block below untouched. The host owns the awaited task itself and it keeps
+    /// running — the engine never created it and must not attempt to cancel it.
+    /// </remarks>
     protected override object ExecuteToken(ScriptContext context) {
         object result = token.Execute(context);
         if (!(result is Task task))
@@ -37,7 +43,7 @@ public class Await : ScriptToken, IParameterContainer {
             task.Start();
 
         try {
-            task.Wait();
+            task.Wait(context.CancellationToken);
         }
         catch (AggregateException e) {
             Exception unwrapped = e;
@@ -45,7 +51,7 @@ public class Await : ScriptToken, IParameterContainer {
                 unwrapped = agg.InnerException;
             throw unwrapped;
         }
-            
+
 
         if (!task.GetType().IsGenericType)
             return null;
