@@ -51,7 +51,7 @@ namespace Pooshit.Scripting.Control {
             ScriptContext blockcontext = new ScriptContext(context);
             object result = null;
             foreach(IScriptToken statement in statements) {
-                blockcontext.CancellationToken.ThrowIfCancellationRequested();
+                blockcontext.Guard();
 
                 try {
                     result = statement.Execute(blockcontext);

@@ -17,8 +17,13 @@ namespace Pooshit.Scripting.Data {
         }
 
         /// <inheritdoc />
-        public object Invoke(IVariableProvider parentvariables, params object[] arguments) {
-            return script.Execute(new VariableProvider(new Variable("arguments", arguments)));
+        /// <remarks>
+        /// The caller's cancellation token (and, when a timeout is configured, its deadline) carries through
+        /// so an imported script can no longer run in a completely uncancellable region. The step budget
+        /// deliberately does not cross this boundary — see docs/architecture/cancellation-support.md §7.8.
+        /// </remarks>
+        public object Invoke(ScriptContext context, params object[] arguments) {
+            return script.Execute(new VariableProvider(new Variable("arguments", arguments)), context.CancellationToken);
         }
 
         /// <inheritdoc />

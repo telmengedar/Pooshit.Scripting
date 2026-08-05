@@ -1,4 +1,5 @@
 ﻿using System;
+using Pooshit.Scripting.Errors;
 using Pooshit.Scripting.Tokens;
 
 namespace Pooshit.Scripting.Control {
@@ -15,9 +16,24 @@ namespace Pooshit.Scripting.Control {
         public override string Literal => "try";
 
         /// <inheritdoc />
+        /// <remarks>
+        /// An engine-driven cancellation must never be swallowable by script <c>try</c>/<c>catch</c>, or a
+        /// host watchdog cancelling the context's own token could never reliably stop a script — hence the
+        /// dedicated rethrow below, guarded on the context token's own cancelled state rather than a
+        /// blanket exception-type check. A task cancelled by a host's own <em>unrelated</em> token is not
+        /// affected: it is not this context's token, so it still reaches the generic catch as ordinary,
+        /// catchable script control flow. A step-limit overrun is likewise the engine aborting execution,
+        /// not a script-level error, and is rethrown unconditionally.
+        /// </remarks>
         protected override object ExecuteToken(ScriptContext context) {
             try {
                 return Body.Execute(context);
+            }
+            catch(OperationCanceledException) when (context.CancellationToken.IsCancellationRequested) {
+                throw;
+            }
+            catch(ScriptStepLimitExceededException) {
+                throw;
             }
             catch(Exception e) {
                 if(Catch != null) {

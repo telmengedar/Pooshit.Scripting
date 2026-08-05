@@ -20,8 +20,15 @@ namespace Pooshit.Scripting.Control {
         public override string Literal => "using";
 
         /// <inheritdoc />
+        /// <remarks>
+        /// Tracks whether an exception (including a host cancellation) is already unwinding via the local
+        /// <c>faulted</c> flag, so the dispose-failure report below never replaces it. A <c>throw</c> from
+        /// a <c>finally</c> block replaces the in-flight exception outright, which would otherwise silently
+        /// destroy a caller's cancellation and defeat the very watchdog that raised it.
+        /// </remarks>
         protected override object ExecuteToken(ScriptContext context) {
             List<IDisposable> values=new List<IDisposable>();
+            bool faulted = false;
             try {
                 foreach (IScriptToken token in disposables) {
                     object value = token.Execute(context);
@@ -31,6 +38,10 @@ namespace Pooshit.Scripting.Control {
                 }
 
                 return Body.Execute(context);
+            }
+            catch {
+                faulted = true;
+                throw;
             }
             finally {
                 StringBuilder log=new StringBuilder();
@@ -43,7 +54,7 @@ namespace Pooshit.Scripting.Control {
                     }
                 }
 
-                if (log.Length > 0)
+                if (log.Length > 0 && !faulted)
                     throw new ScriptRuntimeException($"Error disposing values: {log}", this);
             }
         }

@@ -17,15 +17,18 @@ namespace Pooshit.Scripting;
 class Script : IScript {
     readonly ITypeProvider typeprovider;
     readonly IScriptToken script;
+    readonly ScriptLimits limits;
 
     /// <summary>
     /// creates a new <see cref="Script"/>
     /// </summary>
     /// <param name="script">root token of script to be executed</param>
     /// <param name="typeprovider">access to installed types</param>
-    internal Script(IScriptToken script, ITypeProvider typeprovider) {
+    /// <param name="limits">execution guards captured from the parser at parse time</param>
+    internal Script(IScriptToken script, ITypeProvider typeprovider, ScriptLimits limits) {
         this.script = script;
         this.typeprovider = typeprovider;
+        this.limits = limits ?? ScriptLimits.None;
     }
 
     T ConvertResult<T>(object result) {
@@ -66,7 +69,18 @@ class Script : IScript {
 
     /// <inheritdoc />
     public object Execute(IVariableProvider variables = null) {
-        return script.Execute(new(variables, typeprovider));
+        return Execute(variables, CancellationToken.None);
+    }
+
+    /// <inheritdoc />
+    public object Execute(IVariableProvider variables, CancellationToken cancellationToken) {
+        using GuardedExecution execution = GuardedExecution.Prepare(variables, typeprovider, cancellationToken, limits);
+        try {
+            return script.Execute(execution.Context);
+        }
+        catch (OperationCanceledException e) {
+            return execution.Convert(e);
+        }
     }
 
     /// <inheritdoc />
@@ -75,13 +89,25 @@ class Script : IScript {
     }
 
     /// <inheritdoc />
+    public T Execute<T>(IVariableProvider variables, CancellationToken cancellationToken) {
+        object result = Execute(variables, cancellationToken);
+        return ConvertResult<T>(result);
+    }
+
+    /// <inheritdoc />
     public Task<object> ExecuteAsync(IDictionary<string, object> variables, CancellationToken cancellationtoken = default) {
         return ExecuteAsync(new VariableProvider(variables), cancellationtoken);
     }
 
     /// <inheritdoc />
-    public Task<object> ExecuteAsync(IVariableProvider variables = null, CancellationToken cancellationtoken = default) {
-        return Task.Run(() => script.Execute(new(variables, typeprovider, cancellationtoken)), cancellationtoken);
+    public async Task<object> ExecuteAsync(IVariableProvider variables = null, CancellationToken cancellationtoken = default) {
+        using GuardedExecution execution = GuardedExecution.Prepare(variables, typeprovider, cancellationtoken, limits);
+        try {
+            return await Task.Run(() => script.Execute(execution.Context), execution.ExecutionToken);
+        }
+        catch (OperationCanceledException e) {
+            return execution.Convert(e);
+        }
     }
 
     /// <inheritdoc />

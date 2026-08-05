@@ -33,7 +33,7 @@ namespace Pooshit.Scripting.Control {
             initializer?.Execute(forcontext);
 
             while(condition.Execute(forcontext).ToBoolean()) {
-                forcontext.CancellationToken.ThrowIfCancellationRequested();
+                forcontext.Guard();
 
                 object value = Body?.Execute(forcontext);
                 if(value is Return)

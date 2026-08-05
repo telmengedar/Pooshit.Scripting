@@ -26,11 +26,19 @@ namespace Pooshit.Scripting.Providers {
         /// <summary>
         /// invokes the method
         /// </summary>
+        /// <remarks>
+        /// The <see cref="ScriptContext.Guard"/> call here is the single highest-leverage checkpoint in the
+        /// engine: it covers every path where control is handed back to script code from host-driven
+        /// iteration or callbacks (<c>where</c>, <c>indexof</c>/<c>lastindexof</c> with a predicate,
+        /// <c>task.run</c> bodies, and any host-registered extension that invokes a lambda).
+        /// </remarks>
         /// <param name="arguments">arguments for lamda</param>
         /// <returns>execution result</returns>
         public object Invoke(params object[] arguments) {
             if(parameters.Length != arguments.Length)
                 throw new ScriptRuntimeException($"Argument count doesn't match up parameter count:\n{string.Join(", ", parameters)}", expression);
+
+            context.Guard();
 
             ScriptContext lambdacontext = new ScriptContext(context);
             for(int i = 0; i < parameters.Length; ++i)

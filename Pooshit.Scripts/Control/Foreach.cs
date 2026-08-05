@@ -44,7 +44,7 @@ namespace Pooshit.Scripting.Control {
             object collectionvalue = collection.Execute(loopcontext);
             if(collectionvalue is IEnumerable enumeration) {
                 foreach(object value in enumeration.Cast<object>()) {
-                    context.CancellationToken.ThrowIfCancellationRequested();
+                    loopcontext.Guard();
 
                     variable.Assign(new ScriptValue(value), loopcontext);
                     object bodyvalue = Body?.Execute(loopcontext);

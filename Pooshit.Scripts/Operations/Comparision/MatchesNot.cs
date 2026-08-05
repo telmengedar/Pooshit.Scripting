@@ -20,7 +20,7 @@ namespace Pooshit.Scripting.Operations.Comparision {
             if (value == null)
                 return false;
 
-            return !Regex.IsMatch(value, pattern);
+            return !Regex.IsMatch(value, pattern, RegexOptions.None, context.Limits.RegexTimeout ?? Regex.InfiniteMatchTimeout);
         }
 
         /// <inheritdoc />
