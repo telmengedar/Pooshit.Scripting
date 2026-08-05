@@ -255,6 +255,15 @@ namespace Pooshit.Scripting.Operations {
         /// translation used for every other failure. An ordinary <see cref="ScriptRuntimeException"/> raised
         /// by the host method itself is deliberately still wrapped, unchanged, so the calling site remains
         /// part of the diagnostic.
+        /// <para>
+        /// DiVoid #7744 CF-2: <c>TaskHost.WaitAll</c> reflects <see cref="Task.WaitAll(Task[])"/>, which wraps
+        /// a faulted task's exception in an <see cref="AggregateException"/> before reflection wraps that in
+        /// turn in the <see cref="TargetInvocationException"/> this method already unwraps — so an abort
+        /// raised inside a <c>task.run</c> body arrives here two layers deep, not one, and the single-type
+        /// filter below missed it. <see cref="UnwrapAbortOrCancellation"/> searches (a flattened)
+        /// <see cref="AggregateException.InnerExceptions"/> for the same two shapes before giving up, so the
+        /// passthrough covers both the direct and the task-wrapped route with one filter.
+        /// </para>
         /// </remarks>
         /// <param name="methodcall">token that triggered the call, used for error reporting</param>
         /// <param name="host">host instance the method is called on (null for extension/static methods)</param>
@@ -289,8 +298,8 @@ namespace Pooshit.Scripting.Operations {
 
                 return result;
             }
-            catch (TargetInvocationException e) when (e.InnerException is OperationCanceledException or ScriptStepLimitExceededException or ScriptTimeoutException) {
-                throw e.InnerException;
+            catch (TargetInvocationException e) when (IsAbortOrCancellation(e.InnerException)) {
+                throw UnwrapAbortOrCancellation(e.InnerException);
             }
             catch (TargetInvocationException e) {
                 throw new ScriptRuntimeException($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)})\n{e.InnerException?.Message ?? e.Message}", methodcall, e.InnerException ?? e);
@@ -298,6 +307,33 @@ namespace Pooshit.Scripting.Operations {
             catch (Exception e) {
                 throw new ScriptRuntimeException($"Unable to call {host.GetType().Name}.{method.Name}({string.Join(",", callparameters)})\n{e.Message}", methodcall, e);
             }
+        }
+
+        /// <summary>
+        /// determines whether <paramref name="exception"/> is, or (recursively, via a flattened
+        /// <see cref="AggregateException"/>) contains, a cancellation or an engine abort that must reach the
+        /// host unwrapped
+        /// </summary>
+        /// <param name="exception">exception to inspect; the inner exception of a caught <see cref="TargetInvocationException"/></param>
+        /// <returns>true if <paramref name="exception"/> is or carries a passthrough-worthy exception</returns>
+        static bool IsAbortOrCancellation(Exception exception) {
+            return exception switch {
+                OperationCanceledException or ScriptAbortException => true,
+                AggregateException aggregate => aggregate.Flatten().InnerExceptions.Any(IsAbortOrCancellation),
+                _ => false
+            };
+        }
+
+        /// <summary>
+        /// extracts the cancellation or engine abort <see cref="IsAbortOrCancellation"/> already confirmed is
+        /// present, unwrapping a flattened <see cref="AggregateException"/> if that is where it was found
+        /// </summary>
+        /// <param name="exception">exception <see cref="IsAbortOrCancellation"/> returned true for</param>
+        /// <returns>the cancellation or engine abort exception to rethrow</returns>
+        static Exception UnwrapAbortOrCancellation(Exception exception) {
+            return exception is AggregateException aggregate
+                ? aggregate.Flatten().InnerExceptions.First(IsAbortOrCancellation)
+                : exception;
         }
 
         /// <summary>

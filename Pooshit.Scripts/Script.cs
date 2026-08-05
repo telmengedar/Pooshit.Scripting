@@ -74,7 +74,22 @@ class Script : IScript {
 
     /// <inheritdoc />
     public object Execute(IVariableProvider variables, CancellationToken cancellationToken) {
-        using GuardedExecution execution = GuardedExecution.Prepare(variables, typeprovider, cancellationToken, limits);
+        return Execute(variables, cancellationToken, null);
+    }
+
+    /// <summary>
+    /// executes the script for an <see cref="Data.ExternalScriptMethod"/> invocation, sharing the caller's
+    /// depth budget so recursion through an <c>import</c> boundary is counted against the same physical call
+    /// stack as the caller's own recursion; not part of <see cref="IScript"/> because a foreign
+    /// <see cref="IScript"/> implementation has no way to accept an inherited budget and falls back to
+    /// <see cref="Execute(IVariableProvider,CancellationToken)"/>
+    /// </summary>
+    /// <param name="variables">arguments provided at runtime</param>
+    /// <param name="cancellationToken">token used to abort script execution</param>
+    /// <param name="inheritedDepthBudget">depth budget shared by the calling script, or <c>null</c></param>
+    /// <returns>script result</returns>
+    internal object Execute(IVariableProvider variables, CancellationToken cancellationToken, DepthBudget inheritedDepthBudget) {
+        using GuardedExecution execution = GuardedExecution.Prepare(variables, typeprovider, cancellationToken, limits, inheritedDepthBudget);
         try {
             return script.Execute(execution.Context);
         }

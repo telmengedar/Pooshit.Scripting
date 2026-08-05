@@ -76,7 +76,13 @@ public class ScriptMethod : ScriptToken, IParameterContainer {
     /// raised by the imported script (eg. a failing statement) is deliberately still wrapped, unchanged, so
     /// the outer call site remains part of the diagnostic. The same applies to a cancellation, step-limit or
     /// timeout abort raised by any other <see cref="ScriptContext"/>-guarded method call (eg. a
-    /// <c>task.waitall</c> or an <c>EnumerableExtensions</c> iterator).
+    /// <c>task.waitall</c> or an <c>EnumerableExtensions</c> iterator). The <see cref="ScriptRuntimeException"/>
+    /// clause below mirrors the resolved-method chain further down (DiVoid #7744 CF-4): without it, any
+    /// <see cref="IExternalMethod"/> implementation whose own body raises an ordinary script error — a
+    /// <see cref="LambdaMethod"/> since DiVoid #7749 routes <c>$lambda.invoke(...)</c> here, or an imported
+    /// script that was always dispatched here — has that error's message discarded into a generic "Error
+    /// calling external method" wrapper, with the actual cause demoted to an inner exception a host's
+    /// <c>.Message</c>-based logging never sees.
     /// </remarks>
     protected override object ExecuteToken(ScriptContext context) {
         object host = Host.Execute(context);
@@ -90,11 +96,11 @@ public class ScriptMethod : ScriptToken, IParameterContainer {
             catch(OperationCanceledException) {
                 throw;
             }
-            catch(ScriptStepLimitExceededException) {
+            catch(ScriptAbortException) {
                 throw;
             }
-            catch(ScriptTimeoutException) {
-                throw;
+            catch(ScriptRuntimeException e) {
+                throw new ScriptRuntimeException(e.Message, this, e.InnerException);
             }
             catch(Exception e) {
                 throw new ScriptRuntimeException($"Error calling external method '{externmethod}'", this, e);
@@ -120,10 +126,7 @@ public class ScriptMethod : ScriptToken, IParameterContainer {
         catch(OperationCanceledException) {
             throw;
         }
-        catch(ScriptStepLimitExceededException) {
-            throw;
-        }
-        catch(ScriptTimeoutException) {
+        catch(ScriptAbortException) {
             throw;
         }
         catch(ScriptRuntimeException e) {

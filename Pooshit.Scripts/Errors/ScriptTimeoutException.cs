@@ -7,7 +7,7 @@ namespace Pooshit.Scripting.Errors {
     /// without the caller having requested cancellation itself; distinguishes "the script misbehaved"
     /// from "the host asked to stop" (<see cref="OperationCanceledException"/>)
     /// </summary>
-    public class ScriptTimeoutException : ScriptException {
+    public class ScriptTimeoutException : ScriptAbortException {
 
         /// <summary>
         /// creates a new <see cref="ScriptTimeoutException"/>
