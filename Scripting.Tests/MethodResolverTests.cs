@@ -23,31 +23,20 @@ public class MethodResolverTests {
     [Test, Parallelizable]
     public void CachingMethodsHasSomeEffect() {
         IScriptParser parser = new ScriptParser();
-        ((MethodResolver)((ScriptParser)parser).MethodCallResolver).EnableCaching = false;
-        IScript script1 = parser.Parse("$host.someweirdmethod(122,111,null,\"weird\")");
-        IScript script2 = parser.Parse("$host.someweirdmethod(\"weird\",null,\"2019-10-02\",\"2019-10-03\")");
-        TimeSpan expected = new TimeSpan(1, 0, 0, 0);
+        MethodResolver resolver = (MethodResolver)((ScriptParser)parser).MethodCallResolver;
+        object[] parameters = [122, 111, null, "weird"];
 
-        DateTime start = DateTime.Now;
-        for(int i = 0; i < 1024; ++i) {
-            Assert.AreEqual(233, script1.Execute(new VariableProvider(new Variable("host", this))));
-            Assert.AreEqual(expected, script2.Execute(new VariableProvider(new Variable("host", this))));
-        }
-        TimeSpan withoutcache = DateTime.Now - start;
-        Console.WriteLine($"Without cache: {withoutcache}");
+        resolver.EnableCaching = false;
+        IResolvedMethod uncached1 = resolver.Resolve(this, "someweirdmethod", parameters, null);
+        IResolvedMethod uncached2 = resolver.Resolve(this, "someweirdmethod", parameters, null);
+        Assert.That(uncached2, Is.Not.SameAs(uncached1), "disabled caching should resolve a fresh method every call");
 
-        ((MethodResolver)((ScriptParser)parser).MethodCallResolver).EnableCaching = true;
-
-        start = DateTime.Now;
-        for(int i = 0; i < 1024; ++i) {
-            Assert.AreEqual(233, script1.Execute(new VariableProvider(new Variable("host", this))));
-            Assert.AreEqual(expected, script2.Execute(new VariableProvider(new Variable("host", this))));
-        }
-        TimeSpan withcache = DateTime.Now - start;
-        Console.WriteLine($"With cache: {withcache}");
-
-        Assert.Less(withcache, withoutcache, "Caching has no effect");
-
+        // caching's observable effect is instance reuse, not speed; assert that directly instead of
+        // racing a wall clock against the rest of the parallel suite for cores
+        resolver.EnableCaching = true;
+        IResolvedMethod cached1 = resolver.Resolve(this, "someweirdmethod", parameters, null);
+        IResolvedMethod cached2 = resolver.Resolve(this, "someweirdmethod", parameters, null);
+        Assert.That(cached2, Is.SameAs(cached1), "enabled caching should reuse the resolved method instead of re-resolving");
     }
 
     [Test, Parallelizable, Explicit("Flaky wall-clock timing assertion (cached vs uncached construction time); run manually. Real fix tracked separately.")]
