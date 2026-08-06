@@ -6,6 +6,7 @@ using System.Reflection;
 using Pooshit.Scripting.Errors;
 using Pooshit.Scripting.Extern;
 using Pooshit.Scripting.Operations;
+using Pooshit.Scripting.Parser.Resolvers;
 
 namespace Pooshit.Scripting.Tokens;
 
@@ -47,6 +48,9 @@ public class ScriptIndexer : AssignableToken, IParameterContainer {
     protected override object ExecuteToken(ScriptContext context) {
         object host = Host.Execute(context);
 
+        if (TypeGuard.IsForbiddenReflectiveReceiver(host.GetType()))
+            throw new ScriptRuntimeException($"Reflective access to '{host.GetType().Name}' is not permitted from script", this);
+
         PropertyInfo[] indexer = host.GetType().GetProperties().Where(p => {
                                                                           ParameterInfo[] parameters = p.GetIndexParameters();
                                                                           if(parameters.Length == 0)
@@ -81,6 +85,10 @@ public class ScriptIndexer : AssignableToken, IParameterContainer {
     /// <inheritdoc />
     protected override object AssignToken(IScriptToken token, ScriptContext context) {
         object host = Host.Execute(context);
+
+        if (TypeGuard.IsForbiddenReflectiveReceiver(host.GetType()))
+            throw new ScriptRuntimeException($"Reflective access to '{host.GetType().Name}' is not permitted from script", this);
+
         if(Parameters.Length == 1) {
             if(host is Array array) {
                 object value = token.Execute(context);

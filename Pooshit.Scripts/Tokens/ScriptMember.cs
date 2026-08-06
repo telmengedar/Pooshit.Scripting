@@ -7,6 +7,7 @@ using Pooshit.Scripting.Errors;
 using Pooshit.Scripting.Extensions;
 using Pooshit.Scripting.Extern;
 using Pooshit.Scripting.Operations;
+using Pooshit.Scripting.Parser.Resolvers;
 
 namespace Pooshit.Scripting.Tokens;
 
@@ -54,7 +55,9 @@ public class ScriptMember : AssignableToken {
             }
             return dictionary[Member];
         }
-                
+
+        if (TypeGuard.IsForbiddenReflectiveReceiver(host.GetType()))
+            throw new ScriptRuntimeException($"Reflective access to '{host.GetType().Name}' is not permitted from script", this);
 
         string member = membername.ToLower();
         PropertyInfo property = host.GetType().GetProperties().FirstOrDefault(p => p.Name.ToLower() == member);
@@ -130,6 +133,9 @@ public class ScriptMember : AssignableToken {
         object host = hosttoken.Execute(context);
         if (host is IDictionary dictionary)
             return dictionary[Member] = token.Execute(context);
+
+        if (TypeGuard.IsForbiddenReflectiveReceiver(host.GetType()))
+            throw new ScriptRuntimeException($"Reflective access to '{host.GetType().Name}' is not permitted from script", this);
 
         string member = membername.ToLower();
         PropertyInfo property = host.GetType().GetProperties().FirstOrDefault(p => p.Name.ToLower() == member);

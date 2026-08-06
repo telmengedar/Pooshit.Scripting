@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using Pooshit.Scripting.Data;
 using Pooshit.Scripting.Extensions;
 #if WINDOWS_UWP
 using System.Reflection;
@@ -26,7 +27,7 @@ namespace Pooshit.Scripting.Extern {
             specificconverters[new ConversionKey(typeof(string), typeof(int[]))] = o => ((string)o).Split(';').Select(int.Parse).ToArray();
             specificconverters[new ConversionKey(typeof(long), typeof(TimeSpan))] = o => TimeSpan.FromTicks((long)o);
             specificconverters[new ConversionKey(typeof(TimeSpan), typeof(long))] = v => ((TimeSpan)v).Ticks;
-            specificconverters[new ConversionKey(typeof(string), typeof(Type))] = o => Type.GetType((string)o);
+            specificconverters[new ConversionKey(typeof(ScriptType), typeof(Type))] = o => ((ScriptType)o).Unwrap();
             specificconverters[new ConversionKey(typeof(long), typeof(DateTime))] = v => new DateTime((long)v);
             specificconverters[new ConversionKey(typeof(DateTime), typeof(long))] = v => ((DateTime)v).Ticks;
             specificconverters[new ConversionKey(typeof(Version), typeof(string))] = o => o.ToString();

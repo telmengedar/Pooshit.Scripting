@@ -53,7 +53,9 @@ public class ScriptParameter : ScriptToken, IParameterContainer {
 
     /// <inheritdoc />
     protected override object ExecuteToken(ScriptContext context) {
-        if (Type.Execute(context) is not Type type)
+        // read the parse-time type; never materialise a runtime Type value here
+        Type type = Type.Type;
+        if (type == null)
             throw new ScriptRuntimeException("Type token does not execute to type", null);
 
         object value;

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Pooshit.Scripting.Control;
+using Pooshit.Scripting.Data;
 using Pooshit.Scripting.Extensions;
 using Pooshit.Scripting.Extern;
 using Pooshit.Scripting.Operations;
@@ -14,6 +15,7 @@ using Pooshit.Scripting.Operations.Logic;
 using Pooshit.Scripting.Operations.Unary;
 using Pooshit.Scripting.Operations.Values;
 using Pooshit.Scripting.Parser;
+using Pooshit.Scripting.Parser.Resolvers;
 using Pooshit.Scripting.Tokens;
 
 namespace Pooshit.Scripting.Expressions;
@@ -257,6 +259,8 @@ public class ExpressionBuilder {
 
 		if (token is ScriptIndexer indexer) {
 			Expression indexHost = Build(indexer.Host, variables, labels);
+			if (TypeGuard.IsForbiddenReflectiveReceiver(indexHost.Type))
+				throw new NotSupportedException($"Reflective access to '{indexHost.Type.Name}' is not permitted from script");
 			if (indexHost.Type.IsArray)
 				return Expression.ArrayIndex(indexHost, indexer.Parameters.Select(p => Build(p, variables, labels)).ToArray());
 			return Expression.Property(indexHost, "Item", indexer.Parameters.Select(p => Build(p, variables, labels)).ToArray());
@@ -264,7 +268,9 @@ public class ExpressionBuilder {
 
 		if (token is ScriptMember member) {
 			Expression host = Build(member.Host, variables, labels);
-			if (typeof(IDictionary).IsAssignableFrom(host.Type) || 
+			if (TypeGuard.IsForbiddenReflectiveReceiver(host.Type))
+				throw new NotSupportedException($"Reflective access to '{host.Type.Name}' is not permitted from script");
+			if (typeof(IDictionary).IsAssignableFrom(host.Type) ||
 			    host.Type.IsGenericType && host.Type.GetGenericTypeDefinition() == typeof(IDictionary<,>) ||
 			    host.Type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)))
 				return Expression.Property(host, "Item", Expression.Constant(member.Member));
@@ -346,7 +352,7 @@ public class ExpressionBuilder {
 		}
 
 		if (token is TypeToken type)
-			return Expression.Constant(type.Type);
+			return Expression.Constant(ScriptType.Of(type.Type), typeof(ScriptType));
 
 		if (token is While whileToken) {
 			LabelTarget loopEnd = Expression.Label("label" + labels.LabelCounter++);
@@ -530,6 +536,19 @@ public class ExpressionBuilder {
 	
 	Expression BuildMethod(ScriptMethod method, List<ParameterExpression> variables, Labels labels) {
 		Expression host = Build(method.Host, variables, labels);
+
+		// gettype must yield an opaque handle, never a live Type; ScriptType.Of is internal, so wrap via a delegate constant
+		if (method.MethodName == "gettype" && method.Parameters.Length == 0) {
+			Func<Type, ScriptType> wrapType = ScriptType.Of;
+			MethodInfo objectGetType = typeof(object).GetMethod("GetType");
+			return Expression.Invoke(Expression.Constant(wrapType), Expression.Call(Expression.Convert(host, typeof(object)), objectGetType));
+		}
+
+		if (TypeGuard.IsForbiddenReflectiveReceiver(host.Type))
+			throw new NotSupportedException($"Reflective access to '{host.Type.Name}' is not permitted from script");
+		if (TypeGuard.IsForbiddenReflectiveMethodName(method.MethodName))
+			throw new NotSupportedException($"Method '{method.MethodName}' is not permitted from script");
+
 		Expression[] scriptParameters = method.Parameters.Select(p => Build(p, variables, labels))
 		                                      .ToArray();
 		Type[] genericScriptParameters = method.GenericParameters?.Cast<TypeToken>().Select(p => p.Type).ToArray() ?? [];
