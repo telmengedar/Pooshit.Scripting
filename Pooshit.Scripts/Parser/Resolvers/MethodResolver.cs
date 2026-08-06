@@ -42,14 +42,22 @@ namespace Pooshit.Scripting.Parser.Resolvers {
         
         /// <inheritdoc />
         public IResolvedMethod Resolve(object host, string methodname, object[] parameters, ReferenceParameter[] referenceparameters, Type[] genericparameters=null) {
+            Type hosttype = host.GetType();
+
+            // refused before cache and binding: a denied receiver must never be cached as resolvable
+            if (TypeGuard.IsForbiddenReflectiveReceiver(hosttype))
+                throw new ScriptRuntimeException($"Reflective access to '{hosttype.Name}' is not permitted from script", null);
+            if (TypeGuard.IsForbiddenReflectiveMethodName(methodname))
+                throw new ScriptRuntimeException($"Method '{methodname}' is not permitted from script", null);
+
             MethodCacheKey cachekey=null;
             if (EnableCaching) {
-                cachekey = new MethodCacheKey(host?.GetType(), methodname, parameters.Select(p => p?.GetType()).ToArray(), referenceparameters, genericparameters);
+                cachekey = new MethodCacheKey(hosttype, methodname, parameters.Select(p => p?.GetType()).ToArray(), referenceparameters, genericparameters);
                 if (methodcache.TryGetValue(cachekey, out IResolvedMethod method))
                     return method;
             }
 
-            MethodInfo[] methods = GetCandidates(host.GetType().GetMethods(), methodname, parameters, genericparameters, false);
+            MethodInfo[] methods = GetCandidates(hosttype.GetMethods(BindingFlags.Public | BindingFlags.Instance), methodname, parameters, genericparameters, false);
             
             List<Tuple<Type, MethodInfo, int, bool>> evaluation = new List<Tuple<Type, MethodInfo, int, bool>>(methods.Select(m => {
                 int result = MethodOperations.GetMethodMatchValue(m, parameters);

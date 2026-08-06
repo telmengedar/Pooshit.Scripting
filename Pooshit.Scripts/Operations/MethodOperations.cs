@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using Pooshit.Scripting.Data;
 using Pooshit.Scripting.Errors;
 using Pooshit.Scripting.Extensions;
 using Pooshit.Scripting.Extern;
@@ -176,6 +177,12 @@ namespace Pooshit.Scripting.Operations {
 
                 if (parameter is Dictionary<object, object>) {
                     result += 120 * multiplicator;
+                    continue;
+                }
+
+                // K7: a ScriptType argument matches a System.Type parameter; Converter unwraps it on the call
+                if (parameter is ScriptType && typeof(Type).IsAssignableFrom(methodparameter)) {
+                    result += 30 * multiplicator;
                     continue;
                 }
 

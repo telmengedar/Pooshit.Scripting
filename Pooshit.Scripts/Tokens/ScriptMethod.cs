@@ -61,12 +61,11 @@ public class ScriptMethod : ScriptToken, IParameterContainer {
 
     Type CreateGenericParameters(ScriptContext context, IScriptToken token) {
         object value = token.Execute(context);
-        if (value is Type type)
-            return type;
+        if (value is ScriptType scriptType)
+            return scriptType.Unwrap();
 
         string typename = value.ToString();
-        type = context.TypeProvider.GetType(typename)?.ProvidedType;
-        return type;
+        return context.TypeProvider.GetType(typename)?.ProvidedType;
     }
 
     /// <inheritdoc />
@@ -84,6 +83,10 @@ public class ScriptMethod : ScriptToken, IParameterContainer {
         object host = Host.Execute(context);
         if(host == null)
             throw new ScriptRuntimeException($"'{Host}' results in null", this);
+
+        // getType() always yields an opaque handle here, never the raw reflective Type, regardless of receiver
+        if(MethodName == "gettype" && Parameters.Length == 0)
+            return ScriptType.Of(host.GetType());
 
         if(host is IExternalMethod externmethod && MethodName.ToLower() == "invoke") {
             try {

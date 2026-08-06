@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Pooshit.Scripting.Data;
 
 namespace Pooshit.Scripting.Tokens;
 
@@ -22,7 +23,7 @@ public class TypeOfToken : ScriptToken, IParameterContainer {
     /// <inheritdoc />
     protected override object ExecuteToken(ScriptContext context) {
         object result = token.Execute(context);
-        return result?.GetType();
+        return ScriptType.Of(result?.GetType());
     }
 
     /// <inheritdoc />

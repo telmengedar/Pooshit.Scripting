@@ -1,4 +1,5 @@
 ﻿using System;
+using Pooshit.Scripting.Data;
 
 namespace Pooshit.Scripting.Tokens;
 
@@ -26,6 +27,6 @@ public class TypeToken : ScriptToken {
 
     /// <inheritdoc />
     protected override object ExecuteToken(ScriptContext context) {
-        return type;
+        return ScriptType.Of(type);
     }
 }

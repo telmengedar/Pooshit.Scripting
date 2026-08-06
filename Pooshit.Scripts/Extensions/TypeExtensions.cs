@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.Reflection;
 using Pooshit.Scripting.Errors;
 using Pooshit.Scripting.Parser;
 
@@ -23,43 +21,18 @@ namespace Pooshit.Scripting.Extensions {
             if (isarray)
                 typename = typename.Substring(0, typename.Length - 2);
 
+            // resolved against the registered Types set only (primitives are registered too); no
+            // Type.GetType/AppDomain scan/Assembly.Load - a script type name must never reach an
+            // arbitrary assembly
             ITypeInstanceProvider instanceprovider = provider.GetType(typename);
-            if (instanceprovider != null) {
-                Type type = instanceprovider.ProvidedType;
-                if (type == null)
-                    throw new ScriptParserException(-1, -1, -1, $"type '{typename}' does not provide type information");
+            if (instanceprovider == null)
+                throw new ScriptParserException(-1, -1, -1, $"Unknown type '{typename}'");
 
-                if (isarray)
-                    return type.MakeArrayType();
-                return type;
-            }
-            else {
-                // try to load type dynamically
-                Type type = Type.GetType(typename);
+            Type type = instanceprovider.ProvidedType;
+            if (type == null)
+                throw new ScriptParserException(-1, -1, -1, $"type '{typename}' does not provide type information");
 
-                if (!typename.Contains(","))
-                {
-                    foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
-                    {
-                        type = assembly.GetTypes().FirstOrDefault(t => t.FullName == typename || t.Name == typename);
-                        if (type != null)
-                            return type;
-                    }
-
-                    foreach (AssemblyName assembly in Assembly.GetExecutingAssembly().GetReferencedAssemblies()) {
-                        type = Assembly.Load(assembly).GetTypes().FirstOrDefault(t => t.FullName == typename || t.Name == typename);
-                        if (type != null)
-                            return type;
-                    }
-                }
-
-                if (type == null)
-                    throw new ScriptParserException(-1, -1, -1, $"Unknown type '{typename}'");
-
-                if(isarray)
-                    return type.MakeArrayType();
-                return type;
-            }
+            return isarray ? type.MakeArrayType() : type;
         }
 
         /// <summary>
