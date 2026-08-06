@@ -59,6 +59,33 @@ namespace Scripting.Tests {
         /// <returns>result of the callback invocation</returns>
         public static object InvokeCallback(LambdaMethod callback, int n) => callback.Invoke(n);
 
+        /// <summary>
+        /// test-local host extension exercising both public <see cref="LambdaMethod"/> invocation entry
+        /// points against the same lambda, so the split between them (design §7.7) can be pinned without
+        /// <see cref="EnumerableExtensions"/> masking it - converting an in-repo caller could otherwise make
+        /// a regression here pass unnoticed
+        /// </summary>
+        class InvokeSplitExtensions {
+
+            /// <summary>
+            /// invokes <paramref name="callback"/> through the invoking context rather than the context it
+            /// was captured in
+            /// </summary>
+            /// <param name="callback">lambda to invoke</param>
+            /// <param name="argument">argument passed to the lambda</param>
+            /// <param name="context">invoking context; injected by the engine, not by the script call</param>
+            /// <returns>result of the callback invocation</returns>
+            public static object InvokeFromCaller(LambdaMethod callback, object argument, ScriptContext context) => callback.InvokeFrom(context, argument);
+
+            /// <summary>
+            /// invokes <paramref name="callback"/> through its own captured context
+            /// </summary>
+            /// <param name="callback">lambda to invoke</param>
+            /// <param name="argument">argument passed to the lambda</param>
+            /// <returns>result of the callback invocation</returns>
+            public static object InvokeFromCapture(LambdaMethod callback, object argument) => callback.Invoke(argument);
+        }
+
         static IScript ParseRecursiveFactorial(ScriptParser parser, string invocation) {
             return parser.Parse(ScriptCode.Create(
                 "$fac = $n=>{",
@@ -320,6 +347,78 @@ namespace Scripting.Tests {
             LambdaMethod wrapper = (LambdaMethod) definitions.Execute(variables);
 
             Assert.DoesNotThrow(() => RunConcurrentInvokeOnNewStack(wrapper, taskCount));
+        }
+
+        [Test, Parallelizable, MaxTime(5000)]
+        [Description("DiVoid #7782 T9a: a test-local host extension declaring a trailing ScriptContext and calling InvokeFrom must not accumulate concurrency as depth - pins §11.6's prescribed host-extension pattern against the exact shape QA #7744 round 3 measured. Deliberately not EnumerableExtensions, so converting an in-repo caller can never make this pass without fixing the extension under test.")]
+        public void Depth_HostExtensionInvokeFromDoesNotSpuriouslyBreach() {
+            const int taskCount = SafeMaxDepth + 1;
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxDepth = SafeMaxDepth}
+            };
+            parser.Extensions.AddExtensions<InvokeSplitExtensions>();
+            IScript definitions = parser.Parse(ScriptCode.Create(
+                "$pred = $x=>{",
+                "  $gate.Arrive()",
+                "  return(true)",
+                "}",
+                "$wrapper = []=>{ $pred.invokefromcaller(1) }",
+                "$wrapper"
+            ));
+
+            SyncGate gate = new(taskCount);
+            VariableProvider variables = new(new Variable("gate", gate));
+            LambdaMethod wrapper = (LambdaMethod) definitions.Execute(variables);
+
+            Assert.DoesNotThrow(() => RunConcurrentInvokeOnNewStack(wrapper, taskCount));
+        }
+
+        [Test, Parallelizable, MaxTime(5000)]
+        [Description("DiVoid #7782 T9b - characterisation test: the same test-local extension's second method, calling Invoke(args) instead of InvokeFrom, charges every concurrent callback to the defining script's single counter. Pins §7.7's decision that Invoke's captured-context semantics are deliberate; a failure here means the contract changed and that must be a re-argued decision, not a silent one.")]
+        public void Depth_HostExtensionInvokeArgsSpuriouslyBreaches() {
+            const int taskCount = SafeMaxDepth + 1;
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxDepth = SafeMaxDepth}
+            };
+            parser.Extensions.AddExtensions<InvokeSplitExtensions>();
+            IScript definitions = parser.Parse(ScriptCode.Create(
+                "$pred = $x=>{",
+                "  $gate.Arrive()",
+                "  return(true)",
+                "}",
+                "$wrapper = []=>{ $pred.invokefromcapture(1) }",
+                "$wrapper"
+            ));
+
+            // pred's own captured (shared, root) budget allows exactly SafeMaxDepth concurrent Enter()s to
+            // succeed - one per unit of MaxDepth - so exactly that many threads ever reach the gate; the
+            // (SafeMaxDepth + 1)th thread breaches on Enter() before it can arrive, which is the assertion
+            // below. Sizing the gate to SafeMaxDepth keeps it satisfiable instead of waiting out its timeout.
+            SyncGate gate = new(SafeMaxDepth);
+            VariableProvider variables = new(new Variable("gate", gate));
+            LambdaMethod wrapper = (LambdaMethod) definitions.Execute(variables);
+
+            Assert.Throws<ScriptDepthLimitExceededException>(() => RunConcurrentInvokeOnNewStack(wrapper, taskCount));
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7782 T9c - the load-bearing test: recursion routed through the test-local Invoke(args) extension at every level must still throw ScriptDepthLimitExceededException. This is what fails if Invoke is ever given a fresh budget per call (§7.7 option d), which would otherwise read depth 1 forever while the physical stack grows unbounded. The recursion literal is finite and well above MaxDepth but well below the measured crash depth - an unbounded literal would kill the test runner instead of failing the assertion under that regression.")]
+        public void Depth_RecursionThroughInvokeArgsExtensionAtEveryLevelThrows() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxDepth = SafeMaxDepth}
+            };
+            parser.Extensions.AddExtensions<InvokeSplitExtensions>();
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$fac = $n=>{",
+                "  if($n>0) {",
+                "    return($fac.invokefromcapture($n-1))",
+                "  }",
+                "  return(0)",
+                "}",
+                "$fac.invokefromcapture(32)"
+            ));
+
+            Assert.Throws<ScriptDepthLimitExceededException>(() => script.Execute());
         }
 
         [Test, Parallelizable, MaxTime(2000)]

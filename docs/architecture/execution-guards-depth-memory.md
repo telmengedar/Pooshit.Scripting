@@ -1,6 +1,6 @@
 # Architectural Document: Recursion-Depth & Variable-Usage Execution Guards
 
-> **Repo path:** `C:\dev\claude\Pooshit.Scripting\docs\architecture\execution-guards-depth-memory.md` (working tree; not committed — the operator owns packaging). The DiVoid node is the graph copy of this file.
+> **Repo path:** `docs/architecture/execution-guards-depth-memory.md` (committed; `master` @ `834adbf`). The DiVoid node **#7736** is the graph copy of this file — when the two diverge, this file wins and the node is re-synced from it.
 
 **Repo:** `Pooshit.Scripting` (project `Pooshit.Scripts/`), branch point `master` @ `9b969ec`
 **DiVoid:** task **#7715** · derived from design **#7712** (`docs/architecture/cancellation-support.md`, merged) · engine rule **#7718** · driver **#7407** (Uberkarl) · predecessor task **#7409** · QA **#7717** / **#7719** · operator crawl **#7711** · language reference **#2946**
@@ -8,6 +8,8 @@
 **Status:** design for implementation by john-backend-dev. No code in this document.
 
 **Verified against merged code, not against #7712.** Two QA rounds changed details after #7712 was written. Where this document and #7712 disagree, this document reflects the merged tree at `9b969ec` and wins.
+
+**Amended 2026-08-06 (DiVoid #7782)** — verified against `master` @ `834adbf`, the merged depth guard, not against this document's own earlier drafts. One contract decision added and its consequences threaded through: **§7.7** (new — the three `LambdaMethod` entry points, and why `Invoke(params object[])` keeps the captured budget), **§7.2** (row corrected), **§7.6** (defect closed; residual redirected to §7.7), **§11** item 6, **§11.5** (new bullet), **§11.6** (new — the host rule and the `pooscript-language-reference.md` §12 replacement wording), **§12/B19** (the "unchanged" claim qualified as a decision), **§13** (T9a/T9b/T9c), **§16** (R11 closed, R12 added), **§17.2** (OQ-9).
 
 ---
 
@@ -264,7 +266,7 @@ Both errors are avoided by the same choice, which is also the shape #7712 §7.6 
 
 | Construct | Site | Counts |
 |---|---|---|
-| Lambda invocation | `Providers/LambdaMethod.cs:37` (`Invoke`) | **Yes** — the single choke point for every lambda call, whether reached by reflection (`$f.invoke(…)`), by `EnumerableExtensions` (`.where(…)`, `.indexof(pred)`), or by `task.run`. |
+| Lambda invocation | `Providers/LambdaMethod.InvokeCore` — the shared body behind all three entry points | **Yes** — the single choke point for every lambda call, whether reached by reflection (`$f.invoke(…)`), by a host extension (`.where(…)`, `.indexof(pred)`, any host-registered method taking a `LambdaMethod`), or by `task.run`. **All three entry points count; they differ in *which* budget they count against — see §7.7.** |
 | Imported-script invocation | `Data/ExternalScriptMethod.cs:25` (`Invoke`) | **Yes** |
 | Block / loop / `catch` scope | the four other derivation sites | **No** — see §7.1 Error 1 |
 | Host method call (reflected) | `MethodOperations.CallMethod` | **No** — the engine does not recurse there; the host's own stack usage is host-contract territory (§11). |
@@ -306,9 +308,9 @@ Justification: re-entry is the *host's* decision, made in host code, on a script
 
 **The residual is real and must be stated, not hidden:** the physical stack keeps growing across a host re-entry, so a host that re-enters recursively can still overflow. That belongs in the host contract (§11) alongside the existing "host method that blocks" residual, and it is another instance of the same underlying truth: **in-process guards are a mitigation, not a boundary** (#7712 §10).
 
-### 7.6 ⚠ OPEN DEFECT — concurrent `task.run` bodies share one depth counter
+### 7.6 ~~⚠ OPEN DEFECT~~ **RESOLVED** — concurrent `task.run` bodies share one depth counter
 
-**Found while verifying this design against the shipped implementation. Flagged to the operator; not worked around here.**
+> **Status, 2026-08-06 (DiVoid #7749, #7782).** **Resolved as specified below**, in three parts: `TaskHost.Run` now calls `LambdaMethod.InvokeOnNewStack`, which mints a fresh `DepthBudget` carrying the parent's `Limit`; `LambdaMethod` implements `IExternalMethod`, so engine dispatch (`ScriptMethod.ExecuteToken`) resolves the budget from the *invoking* context; and the three lambda-taking `EnumerableExtensions` methods take an engine-injected `ScriptContext` and invoke through `InvokeFrom`. T8 passes. **The residual is not the defect below but its mirror image on the public surface — the third entry point, `Invoke(params object[])`, still resolves from the captured context. §7.7 decides that contract; it is a documented property, not an open defect.** *(Originally found while verifying this design against the shipped implementation, and flagged to the operator rather than worked around.)* The analysis below is retained as the record of that finding.
 
 `DepthBudget` holds a single `depth` field mutated with `Interlocked.Increment`/`Decrement`, and is shared **by reference** across every derived `ScriptContext` — including the contexts used by `task.run` bodies, which its own XML remarks state explicitly. `TaskHost.Run` is `Task.Run(() => method.Invoke())`, and `LambdaMethod.Invoke` calls `Enter()` on that shared budget.
 
@@ -321,6 +323,60 @@ Justification: re-entry is the *host's* decision, made in host code, on a script
 **Rejected alternative: accept the over-count as conservative.** Over-counting is normally the safe direction, but at a ceiling of ~8 it produces routine false positives on non-adversarial scripts, which would push hosts to raise `MaxDepth` — straight into the R9 footgun. The safe direction becomes the dangerous one.
 
 *(Ironically, the `[ThreadStatic]` shape rejected in §7.1 would have got this case right for free. The rejection still stands on the #7713 grounds given there; the correct resolution is a fresh budget per new stack, which keeps the async-safe context-carried shape and fixes the semantics.)*
+
+### 7.7 The three invocation entry points — and why `Invoke(params object[])` keeps the captured budget
+
+**Decision (DiVoid #7782, 2026-08-06): `LambdaMethod.Invoke(params object[])` keeps its current semantics unchanged. No behaviour change, no deprecation, no new public surface. The gap it leaves is closed by documentation and pinned by test, because every alternative trades a visible, catchable false positive for an invisible, uncatchable false negative — and beneath `MaxDepth` there is nothing.**
+
+`LambdaMethod` has three entry points into the same `InvokeCore` body. They all enter and exit a budget; they differ only in **which** budget:
+
+| Entry point | Visibility | Budget resolved from | Reached by |
+|---|---|---|---|
+| `Invoke(params object[])` | public | the context **captured when the lambda was defined** | host C# code calling a `LambdaMethod` directly |
+| `InvokeFrom(ScriptContext, params object[])` | public | the **invoking** context | `IExternalMethod.Invoke` (engine dispatch of `$f.invoke(…)`), `EnumerableExtensions`, any host extension that declares a `ScriptContext` parameter |
+| `InvokeOnNewStack(params object[])` | **internal** | a **fresh** budget carrying the same `Limit` | `TaskHost.Run` only |
+
+#### The gap, stated precisely
+
+`EnumerableExtensions` is **not registered by default** — it is a worked example of a host extension, not a privileged one. #7749's sweep converted every *in-repo* caller to `InvokeFrom`; it could not convert callers that do not exist yet. A host writing its own lambda-taking extension reaches for the shorter, undeprecated `Invoke(args)` and gets pre-#7749 accounting: *N* concurrent, **non-recursive** invocations of one shared lambda charge one shared counter, and a `MaxDepth` of *N-1* aborts a script that never recursed. QA #7744 round 3 measured exactly this and rated the failure mode critical twice.
+
+#### Why the budget must not be widened — the asymmetry that decides it
+
+The tempting fix is a fourth option not in #7782: give `Invoke(args)` a **fresh** budget with the same `Limit`, exactly as `InvokeOnNewStack` does, on the reasoning that "no invoking context" means "a new logical stack". **It is wrong, and this repo already contains the counter-example.**
+
+`Scripting.Tests/ExecutionGuardTests.InvokeCallback` is a test-local host extension whose whole body is `callback.Invoke(n)`. Route the recursion *through it at every level* — `$fac = $n=>{ if($n>0) { return($fac.invokecallback($n-1)) } return(0) }` — and trace it:
+
+```
+script  →  reflected InvokeCallback  →  lambda.Invoke(n)     [budget A, depth 1]
+              body  →  .invokecallback  →  lambda.Invoke(n-1) [budget B, depth 1]
+                          body  →  …                          [budget C, depth 1]
+```
+
+`Invoke` resolves from the **captured** context, and the captured context is the *definition site* — the same one at every level. A fresh budget per call therefore reads **1 forever** while the physical stack grows without bound. This is §7.1 Error 2 exactly, re-introduced through the public surface: *"a depth counted along the context chain would read 1 forever while the physical stack grows."*
+
+Three properties make that unacceptable rather than merely looser:
+
+1. **There is no backstop.** The `EnsureSufficientExecutionStack` probe was built, measured, and dropped: recursion through reflection went from completing normally to hard process death with **no** window in which the probe fired. `MaxDepth` is not a ceiling with a margin behind it — it is the only mechanism watching. A false negative here is an uncatchable `StackOverflowException`, not a late abort.
+2. **The unguarded shape would be the *most expensive* one.** §11.1 measured a reflected host-callback chain safely aborting only to depth **16**, against **21** for direct `$f.invoke`. The fresh-budget option removes the guard from precisely the dispatch shape that consumes the most stack per level.
+3. **The two errors are not comparable in kind.** A false positive is a `ScriptDepthLimitExceededException` — catchable, carrying its `Limit`, diagnosable, and avoidable by the host at zero cost. A false negative is process death with no diagnostic and no recovery. **Over-counting is the direction that fails safe. §7.6 rejected "accept the over-count" for the `task.run` case because a *fresh physical stack* genuinely resets the resource being measured; `Invoke` has no such justification — nothing about it implies a new stack.**
+
+#### Why the false positive is a documentation defect, not a contract defect
+
+**The engine already hands every host extension the correct answer for free.** `MethodOperations.CreateParameters` injects the invoking `ScriptContext` into any extension-method parameter of that type, consuming a target slot but **no script argument** — the parameter is invisible at the script call site (this is the B20 mechanism, already verified by QA against the pre-existing `.where(`/`.indexof(` tests). So a host extension that wants correct depth accounting adds one parameter and calls `InvokeFrom`. There is **no host-extension case in which the invoking context is unavailable.** The remaining legitimate audience for `Invoke(args)` — host C# driving a lambda returned from `Execute`, a unit test constructing one by hand — genuinely has no invoking context, and for them the captured budget is the only budget there is.
+
+#### The three options in #7782, and why each is rejected
+
+- **(b) `[Obsolete]`-warn `Invoke`.** Rejected: it warns on **correct** code. `Invoke(args)` is the right call whenever no invoking context exists, and there is no non-obsolete alternative for that audience (`InvokeOnNewStack` is internal). A deprecation that has no correct replacement for a legitimate call teaches callers to suppress the warning, which is worse than silence.
+- **(c) Throw, or fall back, when a budget is configured and no invoking context is available.** Rejected: it converts a *conditional, rare* false positive into an *unconditional* hard failure for every host that calls `Invoke` with `MaxDepth` set — including this repo's own `InvokeCallback`-shaped tests. It also cannot distinguish "host forgot to take the context" from "there genuinely is no context", because both arrive as the same call.
+- **(d) Fresh budget** (not in #7782; considered here). Rejected on the false-negative argument above. **This is the option most likely to be proposed again later, which is why T9c exists to fail if it lands.**
+
+#### What ships instead
+
+1. XML remarks on `Invoke` naming the concrete failure (concurrency counted as nesting) and the concrete remedy (declare a `ScriptContext` parameter; call `InvokeFrom`) — not a bare "prefer `InvokeFrom`".
+2. The §12 correction in `docs/pooscript-language-reference.md`, scoping its claim to engine-dispatched invocation (§11.6 below carries the wording).
+3. T9a/T9b/T9c (§13), written against a **test-local** host extension so that converting an in-repo caller can never again make them pass without addressing the method.
+
+**Residual, recorded not hidden:** a host that drives a returned `LambdaMethod` on **its own threads** has neither an invoking context nor access to `InvokeOnNewStack`, and reproduces the shared-counter shape with no engine hook that would notice. §11.6 states it as a host-contract limitation and OQ-9 asks whether it needs a public entry point. **It is not fixed here, because no named consumer needs it today (#1136 §2) and the mitigation — size `MaxDepth` above your own concurrency — is available now.**
 
 ### 7.5 Rejected: consolidating the three budgets into one object
 
@@ -607,6 +663,7 @@ The engine now bounds recursion it drives, and sustained growth of the variable 
 3. **Memory reachable through host-injected surfaces.** A variable holding one host object that owns 500 MB is charged an opaque constant. **This is the boundary the user drew and it is deliberate.**
 4. **A single allocation between two checkpoints.** `$s = $s + $s` doubles within one statement; the guard observes it at the next checkpoint, after the allocation has happened. The guard bounds *sustained* growth, not peak.
 5. **Process RSS.** The measurement approximates retained payload of script-owned variables. It is not a heap measurement and must never be documented as one.
+6. **Depth accounting for a lambda a host invokes through `LambdaMethod.Invoke(params object[])`.** That overload resolves the budget from the context the lambda was *defined* in, so concurrent invocations of one shared lambda are charged to one shared counter. A host extension avoids this by declaring a `ScriptContext` parameter and calling `InvokeFrom`; a host driving a returned lambda on its own threads cannot, and must size `MaxDepth` above its own concurrency. §7.7 decides the contract; §11.6 states the host-facing rule.
 
 > **For genuinely untrusted code, items 2–5 mean the in-process guards are a mitigation, not a boundary. Process or container isolation remains the only complete answer** — the same conclusion #7712 §10 reached, now with two fewer holes on the fast path. Uberkarl should treat the six guards as the fast path and isolation as the containment story. *(No isolation work is designed here; it is out of scope per §2.)*
 
@@ -663,7 +720,23 @@ Considered: an engine-enforced hard maximum, so a host cannot configure its own 
 - **Recursive lambdas inside a single script are the load-bearing case, not imports.** Toni has confirmed imports are *not expected to be enabled* (§1). The import-boundary depth inheritance (§7.3) is still correct and still cheap, but it is not what protects Uberkarl — the lambda call site is.
 - **A ceiling in the high single digits bounds legitimate recursive traversal hard.** Any community script doing recursive tree or graph walking will hit it. Toni's position is that recursion is not expected in community scripts but **must be assumed possible because the scripts are user-authored** — so a low ceiling is acceptable. It is nonetheless a real consequence: **in practice, configuring `MaxDepth` for an adversarial threat model means recursion is effectively unavailable to script authors.** That is a product decision the host is making, and it should be made knowingly rather than discovered.
 - **The threat model is adversarial, not accidental.** Guidance is framed for an author *actively trying to kill the host*, not one who wrote an accidental infinite recursion. An adversary will find the deepest legal shape; the ceiling must hold against that, not against the average case.
+- **A host extension that takes a `LambdaMethod` must take a `ScriptContext` too.** This is the one host-side rule the depth guard imposes, and it is invisible unless stated (§7.7). Uberkarl registers its own extensions; every one of them that accepts and invokes a script lambda needs the parameter, or its callbacks are charged to the defining script's counter.
 - **Follow-up worth filing (out of scope here, do not design it):** the root cause of the low ceiling is that even a *direct* lambda call is dispatched through `MethodOperations.CallMethod` reflection. A fast path that invokes `LambdaMethod.Invoke` directly when the resolved target is already a `LambdaMethod` would remove both the invoke-stub frames on descent **and** the `TargetInvocationException` filter frames on unwind — plausibly raising the usable ceiling by a large factor and speeding up every lambda-heavy script as a side effect. **This is a performance/architecture task in its own right and is explicitly not part of this design.**
+
+### 11.6 Invoking a script lambda from host code — the rule, and the §12 correction it requires
+
+**The rule, in one line: if the engine handed you a `ScriptContext`, invoke through it.**
+
+| You are… | Call | Because |
+|---|---|---|
+| a host **extension method** taking a `LambdaMethod` | declare a trailing `ScriptContext` parameter; `lambda.InvokeFrom(context, …)` | the engine injects the parameter (`MethodOperations.CreateParameters`) and it consumes **no script argument** — the script call site is unchanged. This is the only way to get correct depth accounting. |
+| host **C# code** driving a lambda returned from `Execute` | `lambda.Invoke(…)` | there is no invoking context; the captured budget is the only budget. Correct — but see the residual below. |
+
+**Residual (item 6 above):** driving one returned lambda on *M* of your own threads charges all *M* to one counter. There is no public entry point that mints a fresh budget (`InvokeOnNewStack` is internal, `TaskHost.Run`-only). Mitigation today: size `MaxDepth` above *M*. Whether this deserves public surface is **OQ-9**.
+
+**`docs/pooscript-language-reference.md` §12 currently overstates the fix** and must be corrected — it is the section host authors read, and it currently promises a guarantee that does not extend to the overload they will actually call. Replace the final claim of the "what the engine still cannot guarantee" bullet with:
+
+> `task.run` bodies get an independent depth budget per task. On **every engine-dispatched invocation** — `$f.invoke(…)` in script, a `task.run` body, and any host extension method that declares a `ScriptContext` parameter and invokes through it — the budget is resolved from whichever context is actually invoking the lambda at the moment of the call rather than from wherever that lambda happened to be defined, so a shared helper lambda captured outside a `task.run` body and invoked from inside it is bounded correctly too, the same as one defined inline. ⚠ **This does not extend to `LambdaMethod.Invoke(params object[])`, the overload host C# code calls directly** — that one resolves the budget from the context the lambda was *defined* in. **A host extension that accepts a `LambdaMethod` must declare a trailing `ScriptContext` parameter** — the engine injects it, it consumes no script argument, and the script-level call is unchanged — **and invoke through `InvokeFrom(context, …)`.** An extension that calls `Invoke(…)` instead charges every concurrent callback to the defining script's single counter, so *N* simultaneous non-recursive callbacks abort a `MaxDepth` of *N-1* with no recursion involved. `Invoke(…)` is correct only where there is no invoking context at all — host code or a test driving a lambda returned from `Execute`; such a host driving one lambda on several of its own threads hits the same shared-counter shape and must size `MaxDepth` above its own concurrency.
 
 ---
 
@@ -694,7 +767,7 @@ Considered: an engine-enforced hard maximum, so a host cannot configure its own 
 | B16 | `ScriptContext` gains two internal by-reference budget fields | **No** | `ScriptContext.Limits` stays public-get/private-set; the new fields are internal, matching `StepBudget` |
 | B17 | `Operations/Values/ValueOperation.ExecuteToken` charges its result against the budget (M1/M2) | **No** with default limits | `VariableBudget` is null when neither variable knob is set, so the added code is one null check. With `MaxVariableBytes` set, an arithmetic result exceeding the budget now aborts — the intended behaviour. |
 | B18 | `Operations/AssignableToken.Assign` charges the assigned value against the budget (M1/M2) | **No** with default limits | Same. Note this is the **base** class, so it covers variables, members, indexers and compound-assign in one place. |
-| B19 | `Providers/LambdaMethod` now implements `IExternalMethod` (DiVoid #7744/#7749, CF-1/CF-5 residual fix) | **No**, additive | Not a compile break — the explicit `IExternalMethod.Invoke` implementation delegates to a new, distinctly-named public method (`InvokeFrom(ScriptContext, object[])`, DiVoid #7744 round 4 — an earlier version added a second `Invoke` overload instead, which QA test-compiled and found ambiguous, `CS0121`, for ordinary calls like `lambda.Invoke(null)`; the rename retires that ambiguity structurally rather than documenting it), and the existing `Invoke(object[])` is unchanged. The observable behavioural change: any code doing `value is IExternalMethod` now also matches a `LambdaMethod` instance, where it previously matched only `ExternalScriptMethod`. Low risk (no known consumer does this type test outside the engine's own `ScriptMethod.ExecuteToken`, which is precisely the dispatch this exists to reach), but unrecorded until now — see the correction to A2 below. |
+| B19 | `Providers/LambdaMethod` now implements `IExternalMethod` (DiVoid #7744/#7749, CF-1/CF-5 residual fix) | **No**, additive | Not a compile break — the explicit `IExternalMethod.Invoke` implementation delegates to a new, distinctly-named public method (`InvokeFrom(ScriptContext, object[])`, DiVoid #7744 round 4 — an earlier version added a second `Invoke` overload instead, which QA test-compiled and found ambiguous, `CS0121`, for ordinary calls like `lambda.Invoke(null)`; the rename retires that ambiguity structurally rather than documenting it), and the existing `Invoke(object[])` is unchanged — **and stays unchanged, deliberately (DiVoid #7782, §7.7): it resolves the depth budget from the context the lambda was *defined* in, where the two new entry points resolve from the invoking context and from a fresh one respectively. That split is a documented property of the public surface, not an oversight; "unchanged" in this row is a decision, not an omission.** The observable behavioural change: any code doing `value is IExternalMethod` now also matches a `LambdaMethod` instance, where it previously matched only `ExternalScriptMethod`. Low risk (no known consumer does this type test outside the engine's own `ScriptMethod.ExecuteToken`, which is precisely the dispatch this exists to reach), but unrecorded until now — see the correction to A2 below. |
 | B20 | `EnumerableExtensions.Where`, `.IndexOf(predicate)` and `.LastIndexOf(predicate)` each gain a trailing `ScriptContext` parameter (DiVoid #7744 CF-5) | **YES** — compile, direct C# callers only | Same class as #7409's B4 (`cancellation-support.md` row 396): a compile break for direct C# callers, script surface unaffected. Script-level `.where(...)`/`.indexof(predicate)`/`.lastindexof(predicate)` calls are unchanged — the parameter is engine-injected via `MethodOperations.CreateParameters` and invisible to script code; verified independently by QA against the eight-plus pre-existing `.where(`/`.indexof(` tests in `EnumerableExtensionTests.cs`, unmodified and passing. See the correction to `cancellation-support.md` §7.5 ("one line, one site") below, which is the claim this row falsifies. |
 
 **Superseded, 2026-08 (DiVoid #7744/#7749).** The line below claimed zero public-interface changes across this whole design; that held for phases 1–3 as merged, until the CF-1/CF-5 residual fix (`LambdaMethod : IExternalMethod`, plus the `EnumerableExtensions` signature changes in B20) landed as part of closing out #7744/#7749. B19 is additive, not a break; B20 is a compile break, scoped to direct C# callers only, per the B4 precedent. "Zero public-interface changes" is no longer literally true and should not be quoted as such. Retained below for the historical record of the original design intent.
@@ -722,6 +795,9 @@ Convention: a new `Scripting.Tests/ExecutionGuardTests.cs`, mirroring `Cancellat
 | T7 | Imported script's own step budget with `MaxDepth` set | Nested `StepBudget` still independent — pins #7712 §7.8 is unchanged |
 | **T8** | **`MaxDepth + 1` concurrent `task.run` lambda bodies, each nesting only one level** | **Must NOT throw.** Each `task.run` body runs on its own pool thread with its own stack, so it must not consume the parent's depth. **This test currently fails against the shipped implementation — see §7.6 and R11.** It is the test that pins the fix. |
 | T9 | `.where($x => …)` / `.indexof(pred)` over a large collection, `MaxDepth = 4` | **Does not throw** — callback invocations are sequential, not nested. Guards against an `Enter`-without-`Exit` bug that a naive implementation would show here first. |
+| **T9a** | **A *test-local* host extension declaring a trailing `ScriptContext` and calling `InvokeFrom`**, driven with `MaxDepth + 1` concurrent invocations of one shared predicate captured outside the task bodies, `Barrier`-forced, **zero recursion** | **Must NOT throw.** Pins §11.6's prescribed host-extension pattern against the exact shape QA #7744 round 3 measured. Must not use `EnumerableExtensions`. |
+| **T9b** | **The same test-local extension, second method, calling `Invoke(args)` instead**, same concurrent shape | **Throws `ScriptDepthLimitExceededException`.** A *characterisation* test: it pins §7.7's decision that `Invoke`'s captured-context semantics are deliberate. Its failure means someone changed the contract; that must be a re-argued decision, not a silent one. |
+| **T9c** | **Recursion routed through the test-local `Invoke(args)` extension at *every level*** (`$fac = $n=>{ if($n>0) { return($fac.<ext>($n-1)) } return(0) }`), recursion bounded to a **finite** literal well above `MaxDepth` (≈32) and well below the measured crash depth | **Throws `ScriptDepthLimitExceededException`.** The load-bearing test: it is what fails if `Invoke` is ever given a fresh budget (§7.7 option d), which would otherwise read depth 1 forever. **The finite bound is mandatory** — with an unbounded literal (`1000000`) a regression would not fail the assertion, it would kill the test runner. |
 
 > ⚠ **Every depth test must use a `SafeMaxDepth` constant in the high single digits, never a "realistic-looking" value.** Measured: `MaxDepth = 20` produces an uncatchable `StackOverflowException` on the *unwind* path; `10` is safe; the shipped suite uses `8`. See §11.1–11.2. A test that hard-codes `MaxDepth = 50` does not fail — **it kills the test runner.**
 
@@ -863,7 +939,8 @@ Each phase is independently reviewable and leaves the tree green. See the PR-spl
 | R7 | #7713's async rewrite invalidates the depth mechanism | Explicitly designed against (§7.1): the budget flows on `ScriptContext`, which flows with the logical call. The `finally` pairing survives `await`. Nothing to rip out. |
 | R8 | Phase 1 (the exception re-parent) is not the no-op it must be | Shipped and suite-run in isolation before anything else (§14). If it is not a no-op, the reasoning in §9.2 is wrong and the design should bounce. |
 | **R9** | **`MaxDepth` set too *high* by a host — the guard kills the process while enforcing itself** | **The severe one, and the only risk here with no mechanical mitigation.** Measured: `20` overflows on the *unwind* through stacked `TargetInvocationException` filter frames (§11.2). Mitigated by documentation only — the measured numbers, the self-defeat property stated as a property, and the calibration procedure with its halving rule, carried into the `MaxDepth` XML docs and the language reference. **No engine clamp**, because the safe ceiling depends on the host's thread stack size and a clamp would be a false guarantee (§11.4). Residual risk is real and accepted; the structural fix is the reflection fast path in §11.5, which is a separate task. |
-| **R11** | **Concurrent `task.run` bodies share one depth counter and abort spuriously** | **OPEN DEFECT in the shipped depth guard — see §7.6.** Flagged to the operator rather than worked around. Pinned by T8. |
+| **R11** | **Concurrent `task.run` bodies share one depth counter and abort spuriously** | ~~OPEN DEFECT~~ **RESOLVED 2026-08-06** (#7749): `TaskHost.Run` → `InvokeOnNewStack`, `LambdaMethod : IExternalMethod`, `EnumerableExtensions` on `InvokeFrom`. Pinned by T8. The public-surface residual is R12. |
+| **R12** | **A host extension calling `LambdaMethod.Invoke(args)` gets pre-#7749 accounting — concurrency counted as nesting on a lambda captured outside the concurrent bodies** | **Accepted as a documented property, not fixed (§7.7).** Every mechanical alternative trades this catchable false positive for an uncatchable false negative, and there is no backstop beneath `MaxDepth` (§11.2). Mitigated by: XML remarks naming the failure and the remedy, the §11.6 rule, the §12 correction, and T9a/T9b/T9c. **Residual is real:** a host that never reads the documentation and configures `MaxDepth` can still see a spurious abort. Severity is bounded — the abort is catchable and carries its `Limit`, where the alternative is process death. |
 | **R10** | **M1/M2's checks regress the arithmetic hot path** | Both sites early-out on a failed type test for the numeric case (`$i = $i + 1`), and `VariableBudget` is null when unconfigured. Pinned by T18c. If T18c shows a measurable regression, narrow the M1 site to `Addition` only — losing coverage of any future size-increasing operator but preserving the hot path. |
 
 ---
@@ -887,5 +964,7 @@ Each phase is independently reviewable and leaves the tree green. See the PR-spl
 **OQ-6 — Does the `MaxDepth` ceiling of ~8 change Uberkarl's script-authoring guidance?** A ceiling in the high single digits means **recursion is effectively unavailable to community script authors** (§11.5). That is an acceptable consequence of the adversarial threat model, but it is a *product* statement, not just an engine one: if any published example, template or tutorial script uses a recursive lambda, it will break. Worth a scan before the knob is turned on in Uberkarl.
 
 **OQ-7 — Should the reflection fast path for direct lambda calls be filed now?** §11.5 — dispatching a direct `LambdaMethod` call without going through `MethodOperations.CallMethod` reflection would remove both the invoke-stub frames on descent and the `TargetInvocationException` filter frames on unwind, plausibly raising the usable `MaxDepth` by a large factor and speeding up every lambda-heavy script. It is the **structural** fix for R9, which currently has documentation-only mitigation. Out of scope here; recommended as a follow-up task with a measured before/after.
+
+**OQ-9 — Does a host need a public "invoke on a new stack" entry point?** §7.7 / §11.6. A host driving a returned `LambdaMethod` on *M* of its own threads charges all *M* to one counter, has no invoking context to pass to `InvokeFrom`, and cannot reach `InvokeOnNewStack` (internal, `TaskHost.Run`-only). Making it public is additive and one method, but it is **new public surface with no named consumer today** (#1136 §2), and the library has just absorbed B19/B20. **Not designed here.** Turn it into a task only if a real host reports the shape; until then the mitigation is "size `MaxDepth` above your own concurrency", recorded in §11.6.
 
 **OQ-8 — Does any host run the interpreter on a non-default thread stack?** §11.3 step 5 offers "raise the thread's stack size and re-calibrate" as the escape hatch for a host that needs more depth. If Uberkarl already runs scripts on a pooled thread with a known stack size, the calibration should be run there rather than on the default, or the resulting number will not transfer.
