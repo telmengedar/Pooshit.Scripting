@@ -44,9 +44,8 @@ public class ScriptLimits {
 
     /// <summary>
     /// maximum call depth a script may reach through lambda invocation and imported-script invocation before
-    /// it is aborted, or <c>null</c> for no depth ceiling (today's behavior); guards against a
-    /// <see cref="StackOverflowException"/>, which is uncatchable in .NET and terminates the process, so this
-    /// is the only one of the four limits that protects the host itself rather than just the script
+    /// it is aborted, or <c>null</c> for no depth ceiling (today's behavior); guards against an uncatchable
+    /// <see cref="StackOverflowException"/>
     /// </summary>
     public int? MaxDepth { get; init; }
 }

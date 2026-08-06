@@ -44,12 +44,7 @@ sealed class GuardedExecution : IDisposable {
     /// <param name="typeprovider">access to available types</param>
     /// <param name="callertoken">token supplied by the caller</param>
     /// <param name="limits">execution guards configured on the parser that produced this script</param>
-    /// <param name="inheritedDepthBudget">
-    /// depth budget inherited from the caller of an imported script, or <c>null</c> for a top-level execution.
-    /// When supplied it is used as-is instead of allocating a fresh budget from <paramref name="limits"/>'s
-    /// own <see cref="ScriptLimits.MaxDepth"/> — depth is a shared physical resource (one call stack), so a
-    /// nested script's own opinion on the ceiling does not override the caller's already-shared budget
-    /// </param>
+    /// <param name="inheritedDepthBudget">depth budget inherited from the caller of an imported script, used as-is instead of allocating a fresh one, or <c>null</c> for a top-level execution</param>
     /// <returns>a guarded execution ready to run; must be disposed once the run completes</returns>
     public static GuardedExecution Prepare(IVariableProvider variables, ITypeProvider typeprovider, CancellationToken callertoken, ScriptLimits limits, DepthBudget inheritedDepthBudget = null) {
         StepBudget stepbudget = limits.MaxSteps.HasValue ? new StepBudget(limits.MaxSteps.Value) : null;

@@ -24,11 +24,7 @@ public class ScriptContext {
     /// constructor, but substituting <paramref name="depthBudget"/> for the inherited one
     /// </summary>
     /// <param name="context">context to base this context on</param>
-    /// <param name="depthBudget">
-    /// depth budget to use instead of <paramref name="context"/>'s own — used when a lambda invocation begins
-    /// a new physical call stack (eg. a <c>task.run</c> body executing on its own thread pool thread, DiVoid
-    /// #7744 CF-1) and must not accumulate depth against however deep the caller's own stack already was
-    /// </param>
+    /// <param name="depthBudget">depth budget to use instead of <paramref name="context"/>'s own</param>
     internal ScriptContext(ScriptContext context, DepthBudget depthBudget)
         : this(new VariableProvider(context.Arguments), context.TypeProvider, context.CancellationToken) {
         Limits = context.Limits;
@@ -101,10 +97,7 @@ public class ScriptContext {
 
     /// <summary>
     /// depth budget tracking call depth through lambda invocation and imported-script invocation, or
-    /// <c>null</c> when no depth limit is configured. Entered and left explicitly at the two constructs that
-    /// recurse through the engine, not at every checkpoint — but <see cref="Guard"/> still consults its
-    /// <see cref="Errors.ScriptDepthLimitExceededException"/> latch (DiVoid #7744 CF-2), so a breach that was
-    /// swallowed somewhere still re-raises at the next checkpoint anywhere downstream
+    /// <c>null</c> when no depth limit is configured
     /// </summary>
     internal DepthBudget DepthBudget { get; private set; }
 

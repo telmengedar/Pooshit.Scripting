@@ -78,11 +78,9 @@ class Script : IScript {
     }
 
     /// <summary>
-    /// executes the script for an <see cref="Data.ExternalScriptMethod"/> invocation, sharing the caller's
-    /// depth budget so recursion through an <c>import</c> boundary is counted against the same physical call
-    /// stack as the caller's own recursion; not part of <see cref="IScript"/> because a foreign
-    /// <see cref="IScript"/> implementation has no way to accept an inherited budget and falls back to
-    /// <see cref="Execute(IVariableProvider,CancellationToken)"/>
+    /// executes the script sharing the caller's depth budget, for an <see cref="Data.ExternalScriptMethod"/>
+    /// invocation; not part of <see cref="IScript"/> since a foreign implementation has no way to accept an
+    /// inherited budget
     /// </summary>
     /// <param name="variables">arguments provided at runtime</param>
     /// <param name="cancellationToken">token used to abort script execution</param>

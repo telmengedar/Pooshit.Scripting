@@ -254,16 +254,10 @@ namespace Pooshit.Scripting.Operations {
         /// unwrapped explicitly rather than falling into the generic <see cref="ScriptRuntimeException"/>
         /// translation used for every other failure. An ordinary <see cref="ScriptRuntimeException"/> raised
         /// by the host method itself is deliberately still wrapped, unchanged, so the calling site remains
-        /// part of the diagnostic.
-        /// <para>
-        /// DiVoid #7744 CF-2: <c>TaskHost.WaitAll</c> reflects <see cref="Task.WaitAll(Task[])"/>, which wraps
-        /// a faulted task's exception in an <see cref="AggregateException"/> before reflection wraps that in
-        /// turn in the <see cref="TargetInvocationException"/> this method already unwraps — so an abort
-        /// raised inside a <c>task.run</c> body arrives here two layers deep, not one, and the single-type
-        /// filter below missed it. <see cref="UnwrapAbortOrCancellation"/> searches (a flattened)
-        /// <see cref="AggregateException.InnerExceptions"/> for the same two shapes before giving up, so the
-        /// passthrough covers both the direct and the task-wrapped route with one filter.
-        /// </para>
+        /// part of the diagnostic. The same abort or cancellation may also arrive wrapped a layer deeper, in
+        /// a flattened <see cref="AggregateException"/> (eg. from <c>Task.WaitAll</c>) inside the
+        /// <see cref="TargetInvocationException"/>; <see cref="IsAbortOrCancellation"/> and
+        /// <see cref="UnwrapAbortOrCancellation"/> cover both the direct and the wrapped route.
         /// </remarks>
         /// <param name="methodcall">token that triggered the call, used for error reporting</param>
         /// <param name="host">host instance the method is called on (null for extension/static methods)</param>
@@ -310,11 +304,10 @@ namespace Pooshit.Scripting.Operations {
         }
 
         /// <summary>
-        /// determines whether <paramref name="exception"/> is, or (recursively, via a flattened
-        /// <see cref="AggregateException"/>) contains, a cancellation or an engine abort that must reach the
-        /// host unwrapped
+        /// determines whether <paramref name="exception"/> is, or contains via a flattened
+        /// <see cref="AggregateException"/>, a cancellation or an engine abort
         /// </summary>
-        /// <param name="exception">exception to inspect; the inner exception of a caught <see cref="TargetInvocationException"/></param>
+        /// <param name="exception">exception to inspect</param>
         /// <returns>true if <paramref name="exception"/> is or carries a passthrough-worthy exception</returns>
         static bool IsAbortOrCancellation(Exception exception) {
             return exception switch {
@@ -325,11 +318,10 @@ namespace Pooshit.Scripting.Operations {
         }
 
         /// <summary>
-        /// extracts the cancellation or engine abort <see cref="IsAbortOrCancellation"/> already confirmed is
-        /// present, unwrapping a flattened <see cref="AggregateException"/> if that is where it was found
+        /// extracts the cancellation or engine abort exception found by <see cref="IsAbortOrCancellation"/>
         /// </summary>
         /// <param name="exception">exception <see cref="IsAbortOrCancellation"/> returned true for</param>
-        /// <returns>the cancellation or engine abort exception to rethrow</returns>
+        /// <returns>the exception to rethrow</returns>
         static Exception UnwrapAbortOrCancellation(Exception exception) {
             return exception is AggregateException aggregate
                 ? aggregate.Flatten().InnerExceptions.First(IsAbortOrCancellation)

@@ -52,11 +52,7 @@ namespace Scripting.Tests {
         /// <summary>
         /// reflected host method that calls back into a script lambda; used to exercise the
         /// <see cref="System.Reflection.TargetInvocationException"/> passthrough at
-        /// <c>Operations/MethodOperations.cs:292</c>. Since DiVoid #7749, <c>$lambda.invoke()</c> itself no
-        /// longer goes through reflection (<see cref="LambdaMethod"/> implements <see cref="IExternalMethod"/>,
-        /// so <c>ScriptMethod</c>'s fast path calls it directly) — this method is the one remaining call shape
-        /// in this file that genuinely reflects, exercising the filter on the way <em>out</em> as a breach
-        /// deep in <paramref name="callback"/>'s own recursion propagates back through this one reflected frame
+        /// <c>Operations/MethodOperations.cs:292</c>
         /// </summary>
         /// <param name="callback">lambda to invoke</param>
         /// <param name="n">argument passed to the lambda</param>
@@ -76,11 +72,8 @@ namespace Scripting.Tests {
         }
 
         /// <summary>
-        /// safe recursion ceiling for tests in this file — deliberately in the high single digits, not a
-        /// "realistic-looking" value; see docs/architecture/execution-guards-depth-memory.md §11.1/§11.2 for
-        /// the measured 20/10/8 table and why a ceiling this low is a hard property of the reflected-invoke
-        /// dispatch path, not a tuning preference. <c>InvokeCallback</c>-shaped recursion (still reflected) is
-        /// the case this value must stay safe for; raising it here needs re-measuring against that shape
+        /// safe recursion ceiling for tests in this file, measured against the reflected-invoke dispatch path
+        /// (see docs/architecture/execution-guards-depth-memory.md §11.1/§11.2); raising it needs re-measuring
         /// </summary>
         const int SafeMaxDepth = 8;
 
@@ -216,7 +209,6 @@ namespace Scripting.Tests {
         /// <summary>
         /// synchronisation gate that releases only once every participant has arrived, used to make N
         /// concurrent invocations provably simultaneously "in flight" rather than depending on scheduling luck
-        /// to reproduce DiVoid #7744 CF-1/CF-5 (concurrency counted as nesting) deterministically
         /// </summary>
         class SyncGate {
             readonly Barrier barrier;
@@ -228,16 +220,10 @@ namespace Scripting.Tests {
         }
 
         /// <summary>
-        /// drives <paramref name="count"/> invocations of <see cref="LambdaMethod.InvokeOnNewStack"/> from that
-        /// many dedicated, test-owned <see cref="Thread"/> instances rather than the .NET thread pool (DiVoid
-        /// #7744/#7749 W-G). The prior <c>task.run</c>/<c>Task.Run</c>-based version of these tests needed N
-        /// pool threads available at essentially the same moment, which a starved or throttled CI runner does
-        /// not guarantee, and separately raced NUnit's own <see cref="MaxTimeAttribute"/> against
-        /// <see cref="SyncGate"/>'s internal wait timeout with the wrong ordering. A dedicated
-        /// <see cref="Thread"/> starts immediately regardless of pool state, so the only synchronisation left
-        /// is the in-script <see cref="SyncGate"/> itself — this still exercises the exact production method
-        /// <see cref="Hosts.TaskHost.Run"/> calls, just without depending on a scheduler to actually run it
-        /// concurrently
+        /// drives <paramref name="count"/> invocations of <see cref="LambdaMethod.InvokeOnNewStack"/> from
+        /// that many dedicated, test-owned <see cref="Thread"/> instances rather than the .NET thread pool, so
+        /// concurrency does not depend on pool availability; still exercises the exact production method
+        /// <see cref="Hosts.TaskHost.Run"/> calls
         /// </summary>
         static void RunConcurrentInvokeOnNewStack(LambdaMethod lambda, int count) {
             Exception[] exceptions = new Exception[count];
@@ -537,25 +523,12 @@ namespace Scripting.Tests {
         }
 
         /// <summary>
-        /// compile-only regression guard for DiVoid #7744 round 4/5 — deliberately never called, and must
-        /// not be "cleaned up" as an apparently-unused private method. An earlier version of the CF-5 fix
-        /// added a second public <c>Invoke</c> overload (<c>Invoke(ScriptContext, params object[])</c>)
-        /// alongside the existing <c>Invoke(params object[])</c>. QA test-compiled the fallout rather than
-        /// reasoning about it and found the <em>bare <c>null</c> literal</em> specifically — not a
-        /// statically-<c>object</c>-typed argument, which round 4's first version of this guard used and
-        /// which QA found was <em>never</em> ambiguous under either shape — stopped compiling at all
-        /// (<c>CS0121</c>, ambiguous between the two overloads). That is why the line below is exactly
-        /// <c>lambda.Invoke(null)</c>, not <c>lambda.Invoke((object) null)</c>: only the former exercises the
-        /// ambiguity CS0121 reports on.
-        /// <para>
-        /// This method is never invoked because calling it would throw — a bare <c>null</c> literal against
-        /// today's single <c>Invoke(params object[])</c> overload binds in <em>normal</em> form (the whole
-        /// array reference is <c>null</c>), which <c>LambdaMethod.CheckArguments</c> now handles explicitly
-        /// (see <see cref="Invoke_NullArgumentArrayIsTreatedAsZeroArguments"/> for the runtime half of this pair).
-        /// Its only job is to exist as compiled code: if a second <c>Invoke</c> overload is ever
-        /// reintroduced, this line stops compiling and breaks the whole project's build — the only way CS0121
-        /// can be observed at all, since it is a compile-time diagnostic with no runtime trace to assert on.
-        /// </para>
+        /// compile-only regression guard: never called, and must not be "cleaned up" as an apparently-unused
+        /// private method. If a second <c>Invoke</c> overload is ever reintroduced, the line below stops
+        /// compiling (<c>CS0121</c>, ambiguous between the two overloads) and breaks the build — the only way
+        /// to observe that regression, since it is a compile-time diagnostic with no runtime trace to assert
+        /// on. Must stay exactly <c>lambda.Invoke(null)</c>, not <c>lambda.Invoke((object) null)</c>: only the
+        /// bare literal exercises the ambiguity
         /// </summary>
         // ReSharper disable once UnusedMember.Local
         static void CompileOnly_InvokeBareNullLiteralResolvesToSingleOverload(LambdaMethod lambda) {

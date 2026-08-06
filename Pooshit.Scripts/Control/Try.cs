@@ -24,11 +24,7 @@ namespace Pooshit.Scripting.Control {
         /// affected: it is not this context's token, so it still reaches the generic catch as ordinary,
         /// catchable script control flow. Any <see cref="ScriptAbortException"/> — a step-limit overrun, an
         /// execution timeout, or a recursion-depth breach — is likewise the engine aborting execution, not a
-        /// script-level error, and is rethrown unconditionally. This closes DiVoid #7734: an imported
-        /// script's own <see cref="ScriptTimeoutException"/> reaches this <c>try</c> from inside the outer
-        /// script's token tree, and was previously swallowed here because only the step-limit type was
-        /// named; catching the base rather than enumerating leaf types covers every abort, present and
-        /// future, without this site needing to be revisited again.
+        /// script-level error, and is rethrown unconditionally.
         /// </remarks>
         protected override object ExecuteToken(ScriptContext context) {
             try {
