@@ -89,24 +89,12 @@ namespace Pooshit.Scripting.Providers {
         /// to call this method too.
         /// </para>
         /// <para>
-        /// Deliberately not the <c>[ThreadStatic]</c>/<c>AsyncLocal</c> route design §7.1 rejected for #7713
-        /// (the async interpreter rewrite): nothing here is read from thread- or execution-context-local
-        /// state, only from a parameter passed down the same explicit call chain every other context-aware
-        /// dispatch in the engine already uses, so it survives an eventual async rewrite exactly as the rest
-        /// of the context-carried budget design does. As a side effect, a script-level <c>$lambda.invoke()</c>
-        /// call no longer goes through reflection at all (<c>ScriptMethod</c>'s <see cref="IExternalMethod"/>
-        /// fast path calls this method directly), unlike a lambda reached through a reflected host method.
-        /// </para>
-        /// <para>
-        /// One further consequence worth recording explicitly: after the CF-1/CF-5 fixes, a lambda captured
-        /// outside a <c>task.run</c> body and invoked from inside it (whether via <c>.invoke()</c> or via a
-        /// host extension calling this method) resolves the <em>task-local</em> budget the invoking
-        /// <c>task.run</c> body was given, not the shared root budget it used to resolve before the fix.
-        /// <see cref="DepthBudget.CheckBreached"/>'s latch, whose only currently-exercised value (per DiVoid
-        /// #7744/#7749 measurement) was exactly a breach landing on that shared root budget while wrapped by
-        /// <see cref="System.AggregateException"/>, therefore has no scenario in this test suite that
-        /// currently forces it to fire — see its own remarks. It remains in place as insurance against a
-        /// still-undiscovered swallow route on a genuinely shared budget.
+        /// Deliberately not the <c>[ThreadStatic]</c>/<c>AsyncLocal</c> route design §7.1 rejected for the
+        /// async interpreter rewrite: nothing here is read from thread- or execution-context-local state,
+        /// only from a parameter passed down the same explicit call chain every other context-aware dispatch
+        /// in the engine already uses. As a side effect, a script-level <c>$lambda.invoke()</c> call no
+        /// longer goes through reflection at all (<c>ScriptMethod</c>'s <see cref="IExternalMethod"/> fast
+        /// path calls this method directly), unlike a lambda reached through a reflected host method.
         /// </para>
         /// </remarks>
         /// <param name="invokingContext">context of the call site invoking this lambda</param>

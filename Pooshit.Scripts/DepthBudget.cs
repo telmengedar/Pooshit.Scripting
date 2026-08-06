@@ -56,25 +56,14 @@ class DepthBudget {
     /// <em>this same instance</em> re-raises.
     /// </summary>
     /// <remarks>
-    /// DiVoid #7744/#7749 status, so a future reader does not assume more coverage than this provides: this
-    /// latch is <strong>not</strong> what closes the known swallow route (<c>Task.WaitAll</c> wraps a faulted
-    /// task's exception in <see cref="System.AggregateException"/> before <c>MethodOperations.CallMethod</c>'s
-    /// reflection call re-wraps that in <see cref="System.Reflection.TargetInvocationException"/>; that is
-    /// closed unconditionally by <c>MethodOperations.IsAbortOrCancellation</c> unwrapping the aggregate).
-    /// QA's measurement (#7744/#7749) found exactly one scenario where this latch alone (with the aggregate
-    /// unwrap disabled) still correctly propagated a breach: a lambda captured outside a <c>task.run</c> body
-    /// and invoked from inside it, <em>before</em> the CF-1 residual fix — that breach landed on the shared
-    /// root <see cref="DepthBudget"/> the outer thread's own later <see cref="ScriptContext.Guard"/> calls
-    /// also consult. The CF-1 residual fix (<c>LambdaMethod</c>'s <see cref="Data.IExternalMethod"/>
-    /// implementation) closed that same case by a different route — resolving the budget from the invoking
-    /// context rather than the captured one — which means a breach reached through <c>task.run</c> now always
-    /// lands on a task-local budget instance regardless of where the lambda was captured, and this latch has,
-    /// as of that fix, <strong>no scenario in this test suite that requires it to fire</strong>. It remains in
-    /// place anyway as insurance against a still-undiscovered swallow route on a genuinely shared budget:
-    /// mirroring <see cref="StepBudget"/>'s monotonic property is the right invariant to hold uniformly across
-    /// abort types, and the cost is one cheap null-conditional check on an already-existing checkpoint. Do not
-    /// infer test coverage for this method from the presence of task.run-shaped tests elsewhere in the suite —
-    /// none of them currently exercise it.
+    /// This latch is <strong>not</strong> what closes the known swallow route where <c>Task.WaitAll</c> wraps
+    /// a faulted task's exception in <see cref="System.AggregateException"/> before
+    /// <c>MethodOperations.CallMethod</c>'s reflection call re-wraps that in
+    /// <see cref="System.Reflection.TargetInvocationException"/> — that route is closed unconditionally by
+    /// <c>MethodOperations.IsAbortOrCancellation</c> unwrapping the aggregate. This latch remains in place as
+    /// insurance against a still-undiscovered swallow route on a genuinely shared budget: mirroring
+    /// <see cref="StepBudget"/>'s monotonic property is the right invariant to hold uniformly across abort
+    /// types, and the cost is one cheap null-conditional check on an already-existing checkpoint.
     /// </remarks>
     public void CheckBreached() {
         if (Volatile.Read(ref breached) != 0)

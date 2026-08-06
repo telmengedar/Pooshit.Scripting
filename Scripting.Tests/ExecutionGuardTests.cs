@@ -76,23 +76,11 @@ namespace Scripting.Tests {
         }
 
         /// <summary>
-        /// safe recursion ceiling for tests in this file. Originally measured against
-        /// <c>$lambda.invoke()</c> recursion when that call was reflected on every level: empirically, this
-        /// interpreter's per-level stack cost through the reflected path was far higher than the "~10
-        /// physical frames per call" the design's §11 sizing guidance assumed — a depth ceiling around 20 on
-        /// that test host's default thread stack already risked a genuine, uncatchable
-        /// <see cref="System.StackOverflowException"/> while <em>unwinding</em> the breach through as many
-        /// stacked reflection/exception-filter frames, well before the "low hundreds" the design floated.
-        /// Since DiVoid #7749, <c>$lambda.invoke()</c> no longer reflects (see <see cref="LambdaMethod"/>'s
-        /// <see cref="IExternalMethod"/> implementation), which likely raises the real safe ceiling for that
-        /// specific call shape — not re-measured, since 8 remains conservatively safe either way and every
-        /// depth used below stays comfortably under it. <c>InvokeCallback</c>-shaped recursion (still
-        /// reflected) is the case this value must still stay safe for. This remains a real finding for
-        /// whoever sizes <see cref="ScriptLimits.MaxDepth"/> operationally (eg. Uberkarl, #7407) and does not
-        /// indicate a defect in the guard itself — the guard fires at exactly the configured ceiling every
-        /// time; only the margin between "configured ceiling" and "physical stack" is narrower than assumed
-        /// for calls that go through reflection, and CF-3's measurement (dropped) confirmed no engine
-        /// mechanism watches that margin.
+        /// safe recursion ceiling for tests in this file — deliberately in the high single digits, not a
+        /// "realistic-looking" value; see docs/architecture/execution-guards-depth-memory.md §11.1/§11.2 for
+        /// the measured 20/10/8 table and why a ceiling this low is a hard property of the reflected-invoke
+        /// dispatch path, not a tuning preference. <c>InvokeCallback</c>-shaped recursion (still reflected) is
+        /// the case this value must stay safe for; raising it here needs re-measuring against that shape
         /// </summary>
         const int SafeMaxDepth = 8;
 
@@ -143,12 +131,8 @@ namespace Scripting.Tests {
             Assert.AreEqual(0, script.Execute());
         }
 
-        /// <summary>
-        /// pins the <see cref="DepthBudget"/> enter/exit pairing: 1000 repetitions of a recursion that
-        /// unwinds via a script-level <c>throw</c> caught by the loop's own <c>try</c>/<c>catch</c> must not
-        /// leave any residual depth behind, or a subsequent, entirely legal call would spuriously breach
-        /// </summary>
         [Test, Parallelizable, MaxTime(5000)]
+        [Description("Pins the DepthBudget enter/exit pairing across 1000 throw-unwind repetitions; a leak here would make a later, entirely legal call spuriously breach.")]
         public void Depth_ThrowUnwindRepeatedInLoopDoesNotLeakDepth() {
             ScriptParser parser = new() {
                 Limits = new ScriptLimits {MaxDepth = SafeMaxDepth}
@@ -280,15 +264,8 @@ namespace Scripting.Tests {
                 throw first;
         }
 
-        /// <summary>
-        /// DiVoid #7744 CF-1: <c>N &gt; MaxDepth</c> concurrent, non-recursive lambda invocations, each on its
-        /// own physical stack, must not breach a ceiling none of them individually approaches. Sized at the
-        /// exact boundary QA measured (<c>N = MaxDepth + 1</c>) with a <see cref="SyncGate"/> forcing true
-        /// simultaneity, so this test fails deterministically against the pre-fix behaviour (where every
-        /// invocation entered the same shared <see cref="DepthBudget"/>) rather than passing by accident
-        /// because <c>MaxDepth</c> was sized with headroom to spare
-        /// </summary>
         [Test, Parallelizable, MaxTime(5000)]
+        [Description("DiVoid #7744 CF-1: N > MaxDepth concurrent, non-recursive lambda invocations on separate physical stacks must not breach a ceiling none of them individually approaches; sized at the exact boundary QA measured, with a SyncGate forcing true simultaneity.")]
         public void Depth_ConcurrentTaskRunLambdasDoNotSpuriouslyBreach() {
             const int taskCount = SafeMaxDepth + 1;
             ScriptParser parser = new() {
@@ -306,18 +283,8 @@ namespace Scripting.Tests {
             Assert.DoesNotThrow(() => RunConcurrentInvokeOnNewStack(wrapper, taskCount));
         }
 
-        /// <summary>
-        /// DiVoid #7749: the CF-1 residual, in QA's own reproduction shape — a lambda captured <em>outside</em>
-        /// the concurrently-invoked bodies, invoked from <em>inside</em> each of several. Before the residual
-        /// fix this measured as a genuine breach (4 bodies × depth 3 = 12 &gt; MaxDepth 8) even though no
-        /// single body individually approaches the ceiling — concurrency counted as nesting, surviving the
-        /// CF-1 fix precisely because that fix only resets the budget for the lambda passed directly to
-        /// <c>task.run</c>, not one merely invoked from within it. The <see cref="SyncGate"/> forces all four
-        /// bodies to be simultaneously at their deepest recursion level before any of them unwinds, so a pass
-        /// is evidence the shared-vs-task-local distinction is resolved correctly, not that the bodies
-        /// happened to run sequentially
-        /// </summary>
         [Test, Parallelizable, MaxTime(5000)]
+        [Description("DiVoid #7749 CF-1 residual: a lambda captured outside several concurrently-invoked task bodies, invoked from inside each, must not have concurrency counted as nesting against a shared budget.")]
         public void Depth_ConcurrentTasksThroughOuterCapturedLambdaDoNotSpuriouslyBreach() {
             const int taskCount = 4;
             const int recursionDepth = 3;
@@ -343,16 +310,8 @@ namespace Scripting.Tests {
             Assert.DoesNotThrow(() => RunConcurrentInvokeOnNewStack(wrapper, taskCount));
         }
 
-        /// <summary>
-        /// DiVoid #7744 CF-5: the same <c>N &gt; MaxDepth</c> concurrency-counted-as-nesting shape as
-        /// <see cref="Depth_ConcurrentTaskRunLambdasDoNotSpuriouslyBreach"/>, but through
-        /// <c>EnumerableExtensions.Where</c> rather than <c>$lambda.invoke()</c> — CF-1's original fix covered
-        /// only the script-level <c>.invoke()</c> dispatch and missed this one, which is the overload
-        /// <c>.where</c>/<c>.indexof(predicate)</c>/<c>.lastindexof(predicate)</c> actually use. A predicate
-        /// captured once, shared across <c>N</c> concurrently-invoked bodies (no recursion anywhere), must not
-        /// breach a ceiling none of them individually approaches
-        /// </summary>
         [Test, Parallelizable, MaxTime(5000)]
+        [Description("DiVoid #7744 CF-5: the same concurrency-counted-as-nesting shape as Depth_ConcurrentTaskRunLambdasDoNotSpuriouslyBreach, but through EnumerableExtensions.Where/IndexOf/LastIndexOf rather than $lambda.invoke(), which CF-1's original fix missed.")]
         public void Depth_ConcurrentWherePredicateDoesNotSpuriouslyBreach() {
             const int taskCount = SafeMaxDepth + 1;
             ScriptParser parser = new() {
@@ -377,19 +336,8 @@ namespace Scripting.Tests {
             Assert.DoesNotThrow(() => RunConcurrentInvokeOnNewStack(wrapper, taskCount));
         }
 
-        /// <summary>
-        /// the task.run sibling of <see cref="Try_DoesNotSwallowDepthAbort"/> (DiVoid #7744 CF-2): a depth
-        /// breach from real recursion <em>inside</em> a task.run body must still reach the host through a
-        /// script <c>try</c>/<c>catch</c> around <c>task.waitall(...)</c>. <c>Task.WaitAll</c> wraps the
-        /// faulted task's exception in <see cref="AggregateException"/> before reflection wraps that in turn
-        /// in <see cref="System.Reflection.TargetInvocationException"/> — two layers instead of the one
-        /// <c>MethodOperations.cs:292</c>'s filter originally unwrapped, which is why this specific shape
-        /// slipped through before the fix even though <see cref="Try_DoesNotSwallowDepthAbort"/> already
-        /// passed. Deliberately recurses inside the task body rather than reusing the CF-1 shape above: after
-        /// the CF-1 fix each task gets its own fresh, zeroed <see cref="DepthBudget"/>, so N non-recursive
-        /// bodies no longer breach anything at all — a real breach requires genuine recursion within one body
-        /// </summary>
         [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7744 CF-2: a depth breach from real recursion inside a task.run body must reach the host through a script try/catch around task.waitall(), even though Task.WaitAll wraps it two AggregateException/TargetInvocationException layers deep.")]
         public void Try_DoesNotSwallowDepthAbortThroughTaskRun() {
             ScriptParser parser = new() {
                 Limits = new ScriptLimits {MaxDepth = SafeMaxDepth}
@@ -418,24 +366,8 @@ namespace Scripting.Tests {
             Assert.That(flag.Caught, Is.False);
         }
 
-        /// <summary>
-        /// DiVoid #7749: same shape as <see cref="Try_DoesNotSwallowDepthAbortThroughTaskRun"/> — a lambda
-        /// captured <em>outside</em> the <c>task.run</c> body, invoked recursively from <em>inside</em> it,
-        /// wrapped in a script <c>try</c>/<c>catch</c> around <c>task.waitall(...)</c> — kept as its own test
-        /// because of what it proved during development, not because it currently behaves differently from
-        /// the sibling test. Sequenced deliberately (DiVoid #7744/#7749): written and confirmed load-bearing
-        /// <em>before</em> the CF-1 residual fix existed, when this exact shape was the one scenario where
-        /// <see cref="DepthBudget.CheckBreached"/>'s latch alone (aggregate-unwrap fix disabled) still
-        /// correctly propagated — because the breach then landed on the shared root budget the outer thread's
-        /// later <see cref="ScriptContext.Guard"/> calls also consult. Re-verified after the residual fix
-        /// landed: the latch-alone case now fails here too, exactly like the task-local sibling — the residual
-        /// fix resolves this lambda's budget from the invoking (task-local) context, not its captured one, so
-        /// the breach no longer lands on a shared instance at all. See <see cref="DepthBudget.CheckBreached"/>'s
-        /// own remarks for the up-to-date statement of what the latch actually covers now. This test still
-        /// earns its place as a permanent regression test for the aggregate-unwrap fix on this specific,
-        /// idiomatic shape (a shared helper lambda invoked from a task), independent of the latch question.
-        /// </summary>
         [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7749: same shape as Try_DoesNotSwallowDepthAbortThroughTaskRun, but with the recursive lambda captured outside the task body; kept as a permanent regression test for the aggregate-unwrap fix on this shared-helper-lambda shape.")]
         public void Try_DoesNotSwallowDepthAbortThroughOuterCapturedTaskLambda() {
             ScriptParser parser = new() {
                 Limits = new ScriptLimits {MaxDepth = SafeMaxDepth}
@@ -475,12 +407,8 @@ namespace Scripting.Tests {
             Assert.AreEqual(source.Count(x => x > 0), result);
         }
 
-        /// <summary>
-        /// CF-1-shaped: <c>AssignableToken.Assign</c> executes the right-hand side inline, so a depth breach
-        /// raised while evaluating it must reach the caller as <see cref="ScriptDepthLimitExceededException"/>,
-        /// not a wrapped <see cref="ScriptRuntimeException"/>
-        /// </summary>
         [Test, Parallelizable, MaxTime(2000)]
+        [Description("CF-1-shaped: AssignableToken.Assign executes its right-hand side inline, so a depth breach there must reach the caller unwrapped, not wrapped in ScriptRuntimeException.")]
         public void Depth_BreachDuringAssignmentRhsSurfacesUnwrapped() {
             ScriptParser parser = new() {
                 Limits = new ScriptLimits {MaxDepth = SafeMaxDepth}
@@ -490,11 +418,8 @@ namespace Scripting.Tests {
             Assert.Throws<ScriptDepthLimitExceededException>(() => script.Execute());
         }
 
-        /// <summary>
-        /// the round-2 <c>Throw.cs</c> site: <c>throw($fac.invoke(...))</c> evaluates its message expression
-        /// inline, so a depth breach there must also reach the caller unwrapped
-        /// </summary>
         [Test, Parallelizable, MaxTime(2000)]
+        [Description("The round-2 Throw.cs site: throw($fac.invoke(...)) evaluates its message expression inline, so a depth breach there must also reach the caller unwrapped.")]
         public void Depth_BreachDuringThrowExpressionSurfacesUnwrapped() {
             ScriptParser parser = new() {
                 Limits = new ScriptLimits {MaxDepth = SafeMaxDepth}
@@ -504,11 +429,8 @@ namespace Scripting.Tests {
             Assert.Throws<ScriptDepthLimitExceededException>(() => script.Execute());
         }
 
-        /// <summary>
-        /// exercises the <c>MethodOperations.cs:292</c> <see cref="System.Reflection.TargetInvocationException"/>
-        /// filter with a reflected host method distinct from <c>.invoke()</c> itself
-        /// </summary>
         [Test, Parallelizable, MaxTime(2000)]
+        [Description("Exercises the TargetInvocationException passthrough filter with a reflected host method distinct from .invoke() itself.")]
         public void Depth_BreachInsideReflectedHostCallbackSurfacesUnwrapped() {
             ScriptParser parser = new() {
                 Limits = new ScriptLimits {MaxDepth = SafeMaxDepth}
@@ -519,11 +441,8 @@ namespace Scripting.Tests {
             Assert.Throws<ScriptDepthLimitExceededException>(() => script.Execute());
         }
 
-        /// <summary>
-        /// exercises <c>ScriptMethod</c>'s <see cref="IExternalMethod"/> catch chain (the <c>import(...).invoke()</c>
-        /// shape), distinct from <see cref="Depth_MutuallyRecursiveImportChainThrows"/>'s two-parser crossing
-        /// </summary>
         [Test, Parallelizable, MaxTime(2000)]
+        [Description("Exercises ScriptMethod's IExternalMethod catch chain (the import(...).invoke() shape), distinct from Depth_MutuallyRecursiveImportChainThrows's two-parser crossing.")]
         public void Depth_BreachInsideSingleImportInvokeSurfacesUnwrapped() {
             ScriptParser innerParser = new();
             IScript imported = ParseRecursiveFactorial(innerParser, "$fac.invoke(1000000)");
@@ -551,12 +470,8 @@ namespace Scripting.Tests {
             public bool Caught { get; set; }
         }
 
-        /// <summary>
-        /// the highest-value test in this file: a script-level <c>try</c>/<c>catch</c> around a depth breach
-        /// must not swallow it. Asserts both that the exception propagates and that the <c>catch</c> body
-        /// never ran (the host-held flag was never flipped)
-        /// </summary>
         [Test, Parallelizable, MaxTime(2000)]
+        [Description("A script-level try/catch around a depth breach must not swallow it — asserts both that the exception propagates and that the catch body never ran.")]
         public void Try_DoesNotSwallowDepthAbort() {
             ScriptParser parser = new() {
                 Limits = new ScriptLimits {MaxDepth = SafeMaxDepth}
@@ -580,16 +495,8 @@ namespace Scripting.Tests {
             Assert.That(flag.Caught, Is.False);
         }
 
-        /// <summary>
-        /// concrete reachability proof for DiVoid #7734: an imported script whose own parser configures
-        /// <see cref="ScriptLimits.Timeout"/> raises <see cref="ScriptTimeoutException"/> from inside the
-        /// outer script's token tree (not at the unreachable outermost <c>Script.Execute</c> boundary), so an
-        /// outer <c>try</c>/<c>catch</c> around the call must not swallow it. Before this PR, <c>Try.cs</c>
-        /// rethrew only <see cref="ScriptStepLimitExceededException"/> by name and this scenario fell through
-        /// to the generic catch; catching the <see cref="ScriptAbortException"/> base closes the gap
-        /// structurally, without naming <see cref="ScriptTimeoutException"/> at this site at all
-        /// </summary>
         [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7734: an imported script's own ScriptTimeoutException, raised from inside the outer script's token tree, must not be swallowed by an outer try/catch that only named ScriptStepLimitExceededException.")]
         public void Try7734_ImportedScriptTimeoutIsNotSwallowedByOuterCatch() {
             ScriptParser innerParser = new() {
                 Limits = new ScriptLimits {Timeout = TimeSpan.FromMilliseconds(100)}
@@ -616,17 +523,8 @@ namespace Scripting.Tests {
             Assert.That(flag.Caught, Is.False);
         }
 
-        /// <summary>
-        /// DiVoid #7744 CF-4: the <see cref="ScriptMethod"/> <see cref="IExternalMethod"/> fast path had no
-        /// <see cref="ScriptRuntimeException"/> clause, so any ordinary script error inside a
-        /// script-invoked lambda's body fell through to the generic <c>catch(Exception)</c> and had its
-        /// specific message discarded into a boilerplate "Error calling external method" wrapper — the actual
-        /// cause survived only as an inner exception, which host logging keyed on <c>.Message</c> never sees.
-        /// This hits every error in every script-invoked lambda since DiVoid #7749 routed
-        /// <c>$lambda.invoke()</c> through this path. Mirrors the fix already in place for the resolved-method
-        /// chain (<c>ScriptMethod.cs</c>'s other <c>catch(ScriptRuntimeException e)</c> clause)
-        /// </summary>
         [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7744 CF-4: the ScriptMethod IExternalMethod fast path must not discard a script-invoked lambda's own error message into a generic wrapper — mirrors the existing fix for the resolved-method chain.")]
         public void Invoke_PreservesInnerErrorMessage() {
             ScriptParser parser = new();
             IScript script = parser.Parse(ScriptCode.Create(
@@ -658,27 +556,14 @@ namespace Scripting.Tests {
         /// reintroduced, this line stops compiling and breaks the whole project's build — the only way CS0121
         /// can be observed at all, since it is a compile-time diagnostic with no runtime trace to assert on.
         /// </para>
-        /// <para>
-        /// Falsified before being trusted: temporarily reintroduced
-        /// <c>public object Invoke(ScriptContext, params object[])</c> alongside the existing overload and
-        /// confirmed the build broke here with <c>CS0121</c>, at this exact line, before restoring the
-        /// single-overload shape and confirming the build was clean again.
-        /// </para>
         /// </summary>
         // ReSharper disable once UnusedMember.Local
         static void CompileOnly_InvokeBareNullLiteralResolvesToSingleOverload(LambdaMethod lambda) {
             lambda.Invoke(null);
         }
 
-        /// <summary>
-        /// the runtime half of the pair with <see cref="CompileOnly_InvokeBareNullLiteralResolvesToSingleOverload"/>
-        /// (DiVoid #7744 round 5): a bare <c>null</c> literal binds to <c>Invoke</c>'s <c>params object[]</c>
-        /// parameter in normal form, so <c>arguments</c> itself is <c>null</c> rather than a one-element array
-        /// — <c>LambdaMethod.CheckArguments</c> must treat that as zero arguments rather than dereferencing
-        /// <c>arguments.Length</c> directly, or a zero-parameter lambda invoked this way throws
-        /// <see cref="NullReferenceException"/> instead of succeeding
-        /// </summary>
         [Test]
+        [Description("The runtime half of the pair with CompileOnly_InvokeBareNullLiteralResolvesToSingleOverload (DiVoid #7744 round 5): a bare null literal must be treated as zero arguments, not dereferenced.")]
         public void Invoke_NullArgumentArrayIsTreatedAsZeroArguments() {
             ScriptParser parser = new();
             IScript definitions = parser.Parse(ScriptCode.Create(
@@ -717,11 +602,8 @@ namespace Scripting.Tests {
             Assert.Throws<ScriptDepthLimitExceededException>(() => script.Execute((IVariableProvider)null, CancellationToken.None));
         }
 
-        /// <summary>
-        /// a configured <see cref="ScriptLimits.MaxDepth"/> must not disturb the existing cancel/timeout
-        /// contract for a script that never triggers the depth guard
-        /// </summary>
         [Test, Parallelizable, MaxTime(2000)]
+        [Description("A configured MaxDepth must not disturb the existing cancel/timeout contract for a script that never triggers the depth guard.")]
         public async Task Depth_CallerCancelDuringDepthLimitedScriptStillCanceled() {
             ScriptParser parser = new() {
                 Limits = new ScriptLimits {MaxDepth = 1000000}
@@ -739,14 +621,8 @@ namespace Scripting.Tests {
             Assert.That(task.IsCanceled, Is.True);
         }
 
-        /// <summary>
-        /// extends <c>CancellationSupportTests.CF2_DefaultLimitsAreNotSharedMutableState</c> to
-        /// <see cref="ScriptLimits.MaxDepth"/>: a configured parser's depth ceiling must not leak onto a
-        /// separately constructed, default parser sharing <see cref="ScriptLimits.None"/>. A recursion one
-        /// level deeper than the configured (but unrelated) parser's ceiling would breach it if leaked, so a
-        /// pass is evidence of isolation, not merely of a short script
-        /// </summary>
         [Test, Parallelizable, MaxTime(2000)]
+        [Description("Extends CancellationSupportTests.CF2_DefaultLimitsAreNotSharedMutableState to MaxDepth: a configured parser's depth ceiling must not leak onto a separately constructed default parser.")]
         public void CF2Extended_MaxDepthDefaultsNullAndDoesNotLeakAcrossParsers() {
             ScriptParser configuredParser = new() {
                 Limits = new ScriptLimits {MaxDepth = SafeMaxDepth - 3}
@@ -761,12 +637,8 @@ namespace Scripting.Tests {
             Assert.DoesNotThrow(() => script.Execute());
         }
 
-        /// <summary>
-        /// T31b: a default execution (no <see cref="ScriptLimits.MaxDepth"/> configured) must not allocate a
-        /// <see cref="DepthBudget"/> at all (design §12 S2) — previously verifiable only by reading
-        /// <c>GuardedExecution.cs:56</c>, now asserted directly against the internal fields it sets
-        /// </summary>
         [Test]
+        [Description("T31b (design §12 S2): a default execution with no MaxDepth configured must not allocate a DepthBudget at all.")]
         public void T31b_DefaultExecutionAllocatesNoDepthBudget() {
             using GuardedExecution execution = GuardedExecution.Prepare(new VariableProvider(), null, CancellationToken.None, ScriptLimits.None);
 
@@ -774,15 +646,8 @@ namespace Scripting.Tests {
             Assert.That(execution.Context.StepBudget, Is.Null);
         }
 
-        /// <summary>
-        /// direct unit test for <see cref="DepthBudget.CheckBreached"/> (DiVoid #7744, QA round 3): a claimed
-        /// guarantee must be verifiable, not merely inferred from the shape of other tests that happen to
-        /// exercise it indirectly — "untested code gets deleted by the next person who greps for callers."
-        /// Breaches a budget directly via <see cref="DepthBudget.Enter"/> (<c>Limit = 0</c>, so the first entry
-        /// already exceeds it), then asserts <see cref="DepthBudget.CheckBreached"/> also throws afterwards —
-        /// the latch behaviour itself, independent of any script-level swallow scenario
-        /// </summary>
         [Test]
+        [Description("Direct unit test for DepthBudget.CheckBreached (DiVoid #7744 QA round 3): a claimed guarantee must be independently verifiable, not merely inferred from other tests that happen to exercise it indirectly.")]
         public void DepthBudget_CheckBreachedThrowsAfterBreach() {
             DepthBudget budget = new(0);
 
