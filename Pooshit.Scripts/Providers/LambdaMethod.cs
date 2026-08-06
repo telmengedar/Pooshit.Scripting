@@ -28,6 +28,15 @@ namespace Pooshit.Scripting.Providers {
         /// invokes the method using this lambda's own captured context for its depth budget; prefer
         /// <see cref="InvokeFrom"/> when an invoking context is available
         /// </summary>
+        /// <remarks>
+        /// Resolves the depth budget from the context this lambda was defined in, not the one invoking it. A
+        /// host extension that accepts a <see cref="LambdaMethod"/> should declare a trailing
+        /// <see cref="ScriptContext"/> parameter and call <see cref="InvokeFrom"/> instead - the engine injects
+        /// that parameter, so the script-level call site is unchanged. Calling this overload from such an
+        /// extension charges every concurrent callback to the same counter, which can breach <c>MaxDepth</c>
+        /// with no recursion at all. It remains correct where there is genuinely no invoking context: host C#
+        /// code, or a test driving a lambda returned from <see cref="IScript.Execute"/>.
+        /// </remarks>
         /// <param name="arguments">arguments for lamda</param>
         /// <returns>execution result</returns>
         public object Invoke(params object[] arguments) {
