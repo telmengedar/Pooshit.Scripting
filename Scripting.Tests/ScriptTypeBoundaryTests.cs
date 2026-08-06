@@ -72,8 +72,7 @@ namespace Scripting.Tests {
                 Assert.That(typeof(MemberInfo).IsAssignableFrom(property.PropertyType), Is.False, property.Name);
             }
 
-            // Object.GetType() is inherited by every type and cannot be overridden; script never reaches its
-            // real return value since ScriptMethod/ExpressionBuilder intercept "gettype" before dispatch
+            // Object.GetType() can't be overridden and is intercepted before dispatch, so skipping it here is not a leak
             foreach (MethodInfo method in typeof(ScriptType).GetMethods(BindingFlags.Public | BindingFlags.Instance)) {
                 if (method.DeclaringType == typeof(object))
                     continue;

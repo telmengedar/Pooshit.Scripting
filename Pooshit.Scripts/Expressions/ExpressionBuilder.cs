@@ -537,8 +537,7 @@ public class ExpressionBuilder {
 	Expression BuildMethod(ScriptMethod method, List<ParameterExpression> variables, Labels labels) {
 		Expression host = Build(method.Host, variables, labels);
 
-		// getType() always yields an opaque handle here, never the raw reflective Type, regardless of receiver;
-		// wrapped as a delegate constant since ScriptType.Of is internal by design
+		// gettype must yield an opaque handle, never a live Type; ScriptType.Of is internal, so wrap via a delegate constant
 		if (method.MethodName == "gettype" && method.Parameters.Length == 0) {
 			Func<Type, ScriptType> wrapType = ScriptType.Of;
 			MethodInfo objectGetType = typeof(object).GetMethod("GetType");

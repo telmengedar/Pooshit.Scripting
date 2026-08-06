@@ -84,7 +84,7 @@ public class ScriptMethod : ScriptToken, IParameterContainer {
         if(host == null)
             throw new ScriptRuntimeException($"'{Host}' results in null", this);
 
-        // getType() always yields an opaque handle here, never the raw reflective Type, regardless of receiver
+        // gettype must yield an opaque handle, never a live Type
         if(MethodName == "gettype" && Parameters.Length == 0)
             return ScriptType.Of(host.GetType());
 

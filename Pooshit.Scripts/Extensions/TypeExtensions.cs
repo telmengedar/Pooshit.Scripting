@@ -21,9 +21,7 @@ namespace Pooshit.Scripting.Extensions {
             if (isarray)
                 typename = typename.Substring(0, typename.Length - 2);
 
-            // resolved against the registered Types set only (primitives are registered too); no
-            // Type.GetType/AppDomain scan/Assembly.Load - a script type name must never reach an
-            // arbitrary assembly
+            // registered types only - a script-supplied name must never reach an arbitrary assembly
             ITypeInstanceProvider instanceprovider = provider.GetType(typename);
             if (instanceprovider == null)
                 throw new ScriptParserException(-1, -1, -1, $"Unknown type '{typename}'");

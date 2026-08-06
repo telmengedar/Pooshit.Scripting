@@ -180,7 +180,6 @@ namespace Pooshit.Scripting.Operations {
                     continue;
                 }
 
-                // K7: a ScriptType argument matches a System.Type parameter; Converter unwraps it on the call
                 if (parameter is ScriptType && typeof(Type).IsAssignableFrom(methodparameter)) {
                     result += 30 * multiplicator;
                     continue;

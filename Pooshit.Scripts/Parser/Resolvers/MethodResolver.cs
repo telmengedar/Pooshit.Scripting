@@ -44,7 +44,7 @@ namespace Pooshit.Scripting.Parser.Resolvers {
         public IResolvedMethod Resolve(object host, string methodname, object[] parameters, ReferenceParameter[] referenceparameters, Type[] genericparameters=null) {
             Type hosttype = host.GetType();
 
-            // refused before cache and binding: a denied receiver must never be cached as resolvable
+            // deny before the cache: a denied receiver must never be served from cache as resolvable
             if (TypeGuard.IsForbiddenReflectiveReceiver(hosttype))
                 throw new ScriptRuntimeException($"Reflective access to '{hosttype.Name}' is not permitted from script", null);
             if (TypeGuard.IsForbiddenReflectiveMethodName(methodname))
