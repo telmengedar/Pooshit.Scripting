@@ -53,12 +53,6 @@ namespace Scripting.Tests {
             return path;
         }
 
-        // ---------------------------------------------------------------------
-        // CONTAINMENT BATTERY - hostile capability must be unreachable.
-        // Every test here is EXPECTED TO FAIL on current master (the escape works)
-        // and to pass only once raw System.Type genuinely never reaches script.
-        // ---------------------------------------------------------------------
-
         [Parallelizable]
         [TestCase("(1).getType()")]
         [TestCase("typeof(1)")]
@@ -220,12 +214,6 @@ namespace Scripting.Tests {
             AssertContained(
                 "typeof(typeof(1)).invokeMember(\"GetType\", 344, null, null, [\"System.Reflection.Assembly\"]).invokeMember(\"Load\", 344, null, null, [\"System.Xml\"])");
         }
-
-        // ---------------------------------------------------------------------
-        // LEGITIMATE-BEHAVIOUR BATTERY - the type system a real host relies on.
-        // Every test here is EXPECTED TO PASS on master and must STILL PASS after
-        // the fix; a red here means the fix (or Sarah's design) over-corrected.
-        // ---------------------------------------------------------------------
 
         [Test, Parallelizable]
         [Description("#7787 legitimate: new on a host-registered type must still work")]
