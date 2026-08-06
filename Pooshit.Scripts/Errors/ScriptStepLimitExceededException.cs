@@ -5,7 +5,7 @@ namespace Pooshit.Scripting.Errors {
     /// "step" is an engine checkpoint (one statement, one loop iteration, one lambda invocation, one
     /// enumerated element), not an instruction count
     /// </summary>
-    public class ScriptStepLimitExceededException : ScriptException {
+    public class ScriptStepLimitExceededException : ScriptAbortException {
 
         /// <summary>
         /// creates a new <see cref="ScriptStepLimitExceededException"/>

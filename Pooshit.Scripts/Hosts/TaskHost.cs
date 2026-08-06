@@ -11,12 +11,13 @@ namespace Pooshit.Scripting.Hosts {
     public class TaskHost {
 
         /// <summary>
-        /// starts a new task from a lambda method
+        /// starts a new task from a lambda method, running it on a fresh, task-local depth budget since it
+        /// executes on its own physical call stack
         /// </summary>
         /// <param name="method">method to run as task</param>
         /// <returns>task object containing running method</returns>
         public Task<object> Run(LambdaMethod method) {
-            return Task.Run(() => method.Invoke());
+            return Task.Run(() => method.InvokeOnNewStack());
         }
 
         /// <summary>

@@ -44,18 +44,20 @@ sealed class GuardedExecution : IDisposable {
     /// <param name="typeprovider">access to available types</param>
     /// <param name="callertoken">token supplied by the caller</param>
     /// <param name="limits">execution guards configured on the parser that produced this script</param>
+    /// <param name="inheritedDepthBudget">depth budget inherited from the caller of an imported script, used as-is instead of allocating a fresh one, or <c>null</c> for a top-level execution</param>
     /// <returns>a guarded execution ready to run; must be disposed once the run completes</returns>
-    public static GuardedExecution Prepare(IVariableProvider variables, ITypeProvider typeprovider, CancellationToken callertoken, ScriptLimits limits) {
+    public static GuardedExecution Prepare(IVariableProvider variables, ITypeProvider typeprovider, CancellationToken callertoken, ScriptLimits limits, DepthBudget inheritedDepthBudget = null) {
         StepBudget stepbudget = limits.MaxSteps.HasValue ? new StepBudget(limits.MaxSteps.Value) : null;
+        DepthBudget depthbudget = inheritedDepthBudget ?? (limits.MaxDepth.HasValue ? new DepthBudget(limits.MaxDepth.Value) : null);
 
         if (!limits.Timeout.HasValue) {
-            ScriptContext context = new(variables, typeprovider, callertoken, limits, stepbudget);
+            ScriptContext context = new(variables, typeprovider, callertoken, limits, stepbudget, depthbudget);
             return new GuardedExecution(context, callertoken, callertoken, null, null);
         }
 
         CancellationTokenSource linkedsource = CancellationTokenSource.CreateLinkedTokenSource(callertoken);
         linkedsource.CancelAfter(limits.Timeout.Value);
-        ScriptContext timeoutcontext = new(variables, typeprovider, linkedsource.Token, limits, stepbudget);
+        ScriptContext timeoutcontext = new(variables, typeprovider, linkedsource.Token, limits, stepbudget, depthbudget);
         return new GuardedExecution(timeoutcontext, linkedsource.Token, callertoken, limits.Timeout, linkedsource);
     }
 

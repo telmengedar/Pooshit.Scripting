@@ -41,4 +41,11 @@ public class ScriptLimits {
     /// unbounded matching (today's behavior, byte-identical)
     /// </summary>
     public TimeSpan? RegexTimeout { get; init; }
+
+    /// <summary>
+    /// maximum call depth a script may reach through lambda invocation and imported-script invocation before
+    /// it is aborted, or <c>null</c> for no depth ceiling (today's behavior); guards against an uncatchable
+    /// <see cref="StackOverflowException"/>
+    /// </summary>
+    public int? MaxDepth { get; init; }
 }

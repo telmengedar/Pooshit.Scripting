@@ -76,7 +76,9 @@ public class ScriptMethod : ScriptToken, IParameterContainer {
     /// raised by the imported script (eg. a failing statement) is deliberately still wrapped, unchanged, so
     /// the outer call site remains part of the diagnostic. The same applies to a cancellation, step-limit or
     /// timeout abort raised by any other <see cref="ScriptContext"/>-guarded method call (eg. a
-    /// <c>task.waitall</c> or an <c>EnumerableExtensions</c> iterator).
+    /// <c>task.waitall</c> or an <c>EnumerableExtensions</c> iterator). An <see cref="IExternalMethod"/>
+    /// implementation's own <see cref="ScriptRuntimeException"/> is likewise rethrown with this call site
+    /// attached, rather than replaced by a generic wrapper.
     /// </remarks>
     protected override object ExecuteToken(ScriptContext context) {
         object host = Host.Execute(context);
@@ -90,11 +92,11 @@ public class ScriptMethod : ScriptToken, IParameterContainer {
             catch(OperationCanceledException) {
                 throw;
             }
-            catch(ScriptStepLimitExceededException) {
+            catch(ScriptAbortException) {
                 throw;
             }
-            catch(ScriptTimeoutException) {
-                throw;
+            catch(ScriptRuntimeException e) {
+                throw new ScriptRuntimeException(e.Message, this, e.InnerException);
             }
             catch(Exception e) {
                 throw new ScriptRuntimeException($"Error calling external method '{externmethod}'", this, e);
@@ -120,10 +122,7 @@ public class ScriptMethod : ScriptToken, IParameterContainer {
         catch(OperationCanceledException) {
             throw;
         }
-        catch(ScriptStepLimitExceededException) {
-            throw;
-        }
-        catch(ScriptTimeoutException) {
+        catch(ScriptAbortException) {
             throw;
         }
         catch(ScriptRuntimeException e) {

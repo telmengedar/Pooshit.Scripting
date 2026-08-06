@@ -28,9 +28,10 @@ namespace Pooshit.Scripting.Extensions.Script {
         /// </summary>
         /// <param name="enumeration">enumeration to filter</param>
         /// <param name="predicate">predicate to use as filter criterias</param>
+        /// <param name="context">execution context; injected by the engine, not by the script call</param>
         /// <returns>filtered enumeration</returns>
-        public static IEnumerable Where(IEnumerable enumeration, LambdaMethod predicate) {
-            return enumeration.Cast<object>().Where(i => (bool) predicate.Invoke(i));
+        public static IEnumerable Where(IEnumerable enumeration, LambdaMethod predicate, ScriptContext context) {
+            return enumeration.Cast<object>().Where(i => (bool) predicate.InvokeFrom(context, i));
         }
 
         /// <summary>
@@ -202,11 +203,12 @@ namespace Pooshit.Scripting.Extensions.Script {
         /// </summary>
         /// <param name="enumeration">enumeration to iterate</param>
         /// <param name="predicate">predicate for item to match</param>
+        /// <param name="context">execution context; injected by the engine, not by the script call</param>
         /// <returns>index of first item which matches predicate</returns>
-        public static int IndexOf(IEnumerable enumeration, LambdaMethod predicate) {
+        public static int IndexOf(IEnumerable enumeration, LambdaMethod predicate, ScriptContext context) {
             int index = 0;
             foreach (object item in enumeration) {
-                if (predicate.Invoke(item) is bool result && result)
+                if (predicate.InvokeFrom(context, item) is bool result && result)
                     return index;
                 ++index;
             }
@@ -248,13 +250,14 @@ namespace Pooshit.Scripting.Extensions.Script {
         /// </summary>
         /// <param name="enumeration">enumeration to iterate</param>
         /// <param name="predicate">predicate for item to match</param>
+        /// <param name="context">execution context; injected by the engine, not by the script call</param>
         /// <returns>index of last item which matches predicate</returns>
-        public static int LastIndexOf(IEnumerable enumeration, LambdaMethod predicate) {
+        public static int LastIndexOf(IEnumerable enumeration, LambdaMethod predicate, ScriptContext context) {
             int lastIndexOf = -1;
             int index = 0;
 
             foreach (object item in enumeration) {
-                if (predicate.Invoke(item) is bool result && result)
+                if (predicate.InvokeFrom(context, item) is bool result && result)
                     lastIndexOf = index;
                 ++index;
             }
