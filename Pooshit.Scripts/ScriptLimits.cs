@@ -26,6 +26,23 @@ public class ScriptLimits {
     public static readonly ScriptLimits None = new();
 
     /// <summary>
+    /// <see cref="MaxDepth"/> value used by <see cref="Default"/>
+    /// </summary>
+    public const int DefaultMaxDepth = 10;
+
+    /// <summary>
+    /// <see cref="MaxVariableBytes"/> value used by <see cref="Default"/>
+    /// </summary>
+    public const long DefaultMaxVariableBytes = 128L * 1024 * 1024;
+
+    /// <summary>
+    /// shared instance bounding call depth and variable footprint, leaving every other knob unset; the
+    /// default assigned to <see cref="Parser.ScriptParser.Limits"/>. Assign <see cref="None"/> instead to
+    /// opt out of every bound
+    /// </summary>
+    public static readonly ScriptLimits Default = new() {MaxDepth = DefaultMaxDepth, MaxVariableBytes = DefaultMaxVariableBytes};
+
+    /// <summary>
     /// wall-clock deadline for a single script execution, or <c>null</c> to allow unbounded execution time
     /// </summary>
     public TimeSpan? Timeout { get; init; }

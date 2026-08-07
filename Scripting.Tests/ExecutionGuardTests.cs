@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -104,6 +105,14 @@ namespace Scripting.Tests {
         /// (see docs/architecture/execution-guards-depth-memory.md §11.1/§11.2); raising it needs re-measuring
         /// </summary>
         const int SafeMaxDepth = 8;
+
+        /// <summary>
+        /// generous ceiling for the M4 allocation-delta proof tests (T41/T43/T44/T45, design §8.8.6) - the
+        /// requested capacities in those tests would allocate hundreds of MB if the pre-allocation charge
+        /// fired after the underlying allocation instead of before it, so this only needs enough headroom to
+        /// absorb ordinary test-process allocation noise, not to approach that spike
+        /// </summary>
+        const long MaxPreAllocationGuardDeltaBytes = 50_000_000;
 
         [Test, Parallelizable, MaxTime(2000)]
         public void Depth_RecursiveLambdaExceedsMaxDepthThrows() {
@@ -235,14 +244,33 @@ namespace Scripting.Tests {
         }
 
         /// <summary>
-        /// synchronisation gate that releases only once every participant has arrived, used to make N
-        /// concurrent invocations provably simultaneously "in flight" rather than depending on scheduling luck
+        /// synchronisation gate that releases every participant only once all of them have arrived, used to
+        /// make N concurrent invocations provably simultaneously "in flight" rather than depending on
+        /// scheduling luck. <paramref name="onEveryoneArrived"/>, when given, runs exactly once per phase - on
+        /// whichever participant thread happens to arrive last, strictly after every participant has signalled
+        /// and strictly before any of them is released to continue (guaranteed by <see cref="Barrier"/>'s own
+        /// post-phase-action contract). That is the one synchronisation point this type can offer
+        /// deterministically without depending on real-time scheduling, and
+        /// <see cref="Depth_HostExtensionInvokeArgsSpuriouslyBreaches"/> relies on it rather than on a
+        /// second, independently-timed gate. The wait itself is bounded only as a deadlock backstop: it must
+        /// fail loudly rather than let the barrier release early with partial participants
         /// </summary>
         class SyncGate {
+            static readonly TimeSpan ArrivalTimeout = TimeSpan.FromSeconds(30);
+
             readonly Barrier barrier;
-            public SyncGate(int participants) => barrier = new Barrier(participants);
+            readonly int participants;
+
+            public SyncGate(int participants, Action onEveryoneArrived = null) {
+                this.participants = participants;
+                barrier = onEveryoneArrived == null
+                    ? new Barrier(participants)
+                    : new Barrier(participants, _ => onEveryoneArrived());
+            }
+
             public object Arrive() {
-                barrier.SignalAndWait(TimeSpan.FromSeconds(4));
+                if (!barrier.SignalAndWait(ArrivalTimeout))
+                    throw new TimeoutException($"SyncGate timed out after {ArrivalTimeout} waiting for all {participants} participants to arrive - either a genuine deadlock or the timeout is too short for current scheduler load");
                 return null;
             }
         }
@@ -375,9 +403,8 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable, MaxTime(5000)]
-        [Description("DiVoid #7782 T9b - characterisation test: the same test-local extension's second method, calling Invoke(args) instead of InvokeFrom, charges every concurrent callback to the defining script's single counter. Pins §7.7's decision that Invoke's captured-context semantics are deliberate; a failure here means the contract changed and that must be a re-argued decision, not a silent one.")]
+        [Description("DiVoid #7782 T9b - characterisation test: the same test-local extension's second method, calling Invoke(args) instead of InvokeFrom, charges every concurrent callback to the defining script's single counter. Pins §7.7's decision that Invoke's captured-context semantics are deliberate; a failure here means the contract changed and that must be a re-argued decision, not a silent one. Sequenced by a Barrier post-phase action, not raced against a second, independently-timed gate: this test starts exactly SafeMaxDepth threads racing for the shared budget - none can breach yet, since only SafeMaxDepth attempts exist - and lets SyncGate's post-phase action, which Barrier guarantees runs only once every one of them is confirmed blocked at the gate, start a 9th, non-participant thread on the spot. That 9th Enter() is thus guaranteed to observe depth SafeMaxDepth+1 and breach directly. DepthBudget.CheckBreached's sticky latch (DepthBudget.cs) then re-raises that same breach for every one of the SafeMaxDepth holders too, deterministically, the moment each is released and reaches its own next Guard() checkpoint (ScriptContext.Guard(), called by StatementBlock before every statement - here, the 'return(true)' following $gate.Arrive()): the Interlocked.Exchange that trips the latch happens-before the Barrier release that lets them proceed, so by the time any of them re-checks, the latch is already visible. So all SafeMaxDepth+1 invocations end up observing ScriptDepthLimitExceededException, which is itself the sticky-latch half of this same characterisation and worth pinning alongside the direct breach.")]
         public void Depth_HostExtensionInvokeArgsSpuriouslyBreaches() {
-            const int taskCount = SafeMaxDepth + 1;
             ScriptParser parser = new() {
                 Limits = new ScriptLimits {MaxDepth = SafeMaxDepth}
             };
@@ -391,15 +418,45 @@ namespace Scripting.Tests {
                 "$wrapper"
             ));
 
-            // pred's own captured (shared, root) budget allows exactly SafeMaxDepth concurrent Enter()s to
-            // succeed - one per unit of MaxDepth - so exactly that many threads ever reach the gate; the
-            // (SafeMaxDepth + 1)th thread breaches on Enter() before it can arrive, which is the assertion
-            // below. Sizing the gate to SafeMaxDepth keeps it satisfiable instead of waiting out its timeout.
-            SyncGate gate = new(SafeMaxDepth);
-            VariableProvider variables = new(new Variable("gate", gate));
-            LambdaMethod wrapper = (LambdaMethod) definitions.Execute(variables);
+            LambdaMethod wrapper = null;
+            Exception breachException = null;
+            SyncGate gate = new(SafeMaxDepth, onEveryoneArrived: () => {
+                Thread breachingThread = new(() => {
+                    try {
+                        wrapper.InvokeOnNewStack();
+                    }
+                    catch (Exception e) {
+                        breachException = e;
+                    }
+                });
+                breachingThread.Start();
+                breachingThread.Join();
+            });
 
-            Assert.Throws<ScriptDepthLimitExceededException>(() => RunConcurrentInvokeOnNewStack(wrapper, taskCount));
+            VariableProvider variables = new(new Variable("gate", gate));
+            wrapper = (LambdaMethod) definitions.Execute(variables);
+
+            Exception[] holdingExceptions = new Exception[SafeMaxDepth];
+            Thread[] holdingThreads = new Thread[SafeMaxDepth];
+            for (int i = 0; i < SafeMaxDepth; i++) {
+                int index = i;
+                holdingThreads[i] = new Thread(() => {
+                    try {
+                        wrapper.InvokeOnNewStack();
+                    }
+                    catch (Exception e) {
+                        holdingExceptions[index] = e;
+                    }
+                });
+            }
+
+            foreach (Thread thread in holdingThreads)
+                thread.Start();
+            foreach (Thread thread in holdingThreads)
+                thread.Join();
+
+            Assert.IsInstanceOf<ScriptDepthLimitExceededException>(breachException);
+            Assert.That(holdingExceptions, Is.All.InstanceOf<ScriptDepthLimitExceededException>());
         }
 
         [Test, Parallelizable, MaxTime(2000)]
@@ -695,15 +752,15 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable, MaxTime(2000)]
-        [Description("Extends CancellationSupportTests.CF2_DefaultLimitsAreNotSharedMutableState to MaxDepth: a configured parser's depth ceiling must not leak onto a separately constructed default parser.")]
-        public void CF2Extended_MaxDepthDefaultsNullAndDoesNotLeakAcrossParsers() {
+        [Description("Extends CancellationSupportTests.CF2_DefaultLimitsAreNotSharedMutableState to MaxDepth: a configured parser's depth ceiling must not leak onto a separately constructed default parser. Updated for secure-by-default (design §18): the default parser now carries ScriptLimits.Default, not ScriptLimits.None.")]
+        public void CF2Extended_MaxDepthDefaultsToDefaultAndDoesNotLeakAcrossParsers() {
             ScriptParser configuredParser = new() {
                 Limits = new ScriptLimits {MaxDepth = SafeMaxDepth - 3}
             };
             ScriptParser defaultParser = new();
 
-            Assert.That(defaultParser.Limits, Is.SameAs(ScriptLimits.None));
-            Assert.That(defaultParser.Limits.MaxDepth, Is.Null);
+            Assert.That(defaultParser.Limits, Is.SameAs(ScriptLimits.Default));
+            Assert.That(defaultParser.Limits.MaxDepth, Is.EqualTo(ScriptLimits.DefaultMaxDepth));
             Assert.That(configuredParser.Limits.MaxDepth, Is.EqualTo(SafeMaxDepth - 3));
 
             IScript script = ParseRecursiveFactorial(defaultParser, "$fac.invoke(" + SafeMaxDepth + ")");
@@ -892,6 +949,55 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7836/#7837: new list(capacity) assigned and held allocates its backing array immediately, so VariableSizer must charge Capacity rather than the Count=0 the list reports right after construction - closes the memory-guard blind spot the round-4 red-team found.")]
+        public void Variable_PreSizedEmptyListChargedByCapacityAbortsAtAssignment() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxVariableBytes = 1000}
+            };
+            IScript script = parser.Parse("$a = new list(1000)");
+
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(() => script.Execute());
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7836 4A2: three retained pre-sized lists, none individually over budget, must still abort once their accumulated capacity crosses MaxVariableBytes - pins that the capacity charge is retained and summed, not a one-shot check that forgets the earlier variables.")]
+        public void Variable_RetainedPreSizedListsAccumulateAndAbort() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxVariableBytes = 1500}
+            };
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$a = new list(100)",
+                "$b = new list(100)",
+                "$c = new list(100)"
+            ));
+
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(() => script.Execute());
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7837 acceptance: a legitimately small pre-sized list under the configured budget must still complete - the capacity charge must not false-positive on ordinary pre-sizing.")]
+        public void Variable_SmallPreSizedListUnderBudgetCompletes() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxVariableBytes = 10_000}
+            };
+            IScript script = parser.Parse("$a = new list(100)");
+
+            Assert.DoesNotThrow(() => script.Execute());
+        }
+
+        [Test]
+        [Description("Direct unit test for VariableSizer's capacity charge (DiVoid #7836/#7837): a pre-sized, still-empty List<object> must be sized by its allocated Capacity, not its live Count of zero.")]
+        public void VariableSizer_PreSizedEmptyListChargedByCapacityNotCount() {
+            List<object> preSized = new(1_000_000);
+
+            long size = VariableSizer.Size(preSized);
+
+            Assert.That(size, Is.GreaterThanOrEqualTo(1_000_000L * 8));
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
         [Description("A script-level try/catch around a variable-limit breach must not swallow it, the same contract already pinned for depth breaches.")]
         public void Try_DoesNotSwallowVariableLimitAbort() {
             ScriptParser parser = new() {
@@ -945,6 +1051,147 @@ namespace Scripting.Tests {
         [Description("Direct unit test for VariableSizer never enumerating a non-ICollection IEnumerable (design §8.5): an infinite host sequence held in a variable must be sized as an opaque constant, not enumerated.")]
         public void VariableSizer_InfiniteEnumerableNeverEnumerated() {
             Assert.DoesNotThrow(() => VariableSizer.Size(new InfiniteEnumerable()));
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T41 (design §8.8.6, Instance I): new list(100000000) assigned on a bare new ScriptParser() throws ScriptVariableLimitExceededException with a total-process allocation delta of a few MB, not the ~800MB the requested capacity would spike to if the throw fired after constructor.Invoke rather than before it - the load-bearing proof that M4's pre-allocation charge precedes the allocation.")]
+        public void T41_PreSizedListAssignedThrowsBeforeAllocation() {
+            ScriptParser parser = new();
+            IScript script = parser.Parse("$a = new list(100000000)");
+
+            long before = GC.GetTotalAllocatedBytes(true);
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(() => script.Execute());
+            long delta = GC.GetTotalAllocatedBytes(true) - before;
+
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+            Assert.That(delta, Is.LessThan(MaxPreAllocationGuardDeltaBytes));
+        }
+
+        [Test]
+        [Description("T42 (design §8.8.6): direct unit test for VariableBudget.ChargePreAllocation - refuses the projected bytes of a List<> capacity ctor before any List<object> is actually constructed, pinning that Site A's charge precedes constructor.Invoke with zero allocation observed. Closes residual #7840 for the reachable ctor.")]
+        public void T42_ChargePreAllocationRefusesListCtorProjectionWithoutConstructing() {
+            VariableBudget budget = new(new VariableProvider(), null, 128L * 1024 * 1024);
+            ConstructorInfo ctor = typeof(List<object>).GetConstructor(new[] {typeof(int)});
+            Assert.That(VariableSizer.TryGetCapacityOperation(typeof(List<object>), ctor, out long bytesperunit), Is.True);
+
+            bool allocated = false;
+
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(() => {
+                budget.ChargePreAllocation(2_000_000_000L * bytesperunit);
+                allocated = true;
+            });
+
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+            Assert.That(allocated, Is.False);
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T43 (design §8.8.6, Instance II): $a.ensurecapacity(100000000) on a bare parser must throw before the backing array is allocated - the mutating-method vector no M1/M2 produced-value charge and no M3 sampled walk can catch inside a short script.")]
+        public void T43_EnsureCapacityOnEmptyListThrowsBeforeAllocation() {
+            ScriptParser parser = new();
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$a = new list()",
+                "$a.ensurecapacity(100000000)"
+            ));
+
+            long before = GC.GetTotalAllocatedBytes(true);
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(() => script.Execute());
+            long delta = GC.GetTotalAllocatedBytes(true) - before;
+
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+            Assert.That(delta, Is.LessThan(MaxPreAllocationGuardDeltaBytes));
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T44 (design §8.8.6, Instance II): $a.capacity = 100000000 on a bare parser must throw before the backing array is allocated - the Capacity-setter vector.")]
+        public void T44_CapacitySetterOnEmptyListThrowsBeforeAllocation() {
+            ScriptParser parser = new();
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$a = new list()",
+                "$a.capacity = 100000000"
+            ));
+
+            long before = GC.GetTotalAllocatedBytes(true);
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(() => script.Execute());
+            long delta = GC.GetTotalAllocatedBytes(true) - before;
+
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+            Assert.That(delta, Is.LessThan(MaxPreAllocationGuardDeltaBytes));
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T45 (design §8.8.6, Instance III): $d.ensurecapacity(30000000) on a bare parser must throw before the backing arrays are allocated - the dictionary vector the #7839 sizer fix alone cannot close, since Dictionary<,> exposes no public Capacity getter for the sampled walk to see.")]
+        public void T45_DictionaryEnsureCapacityThrowsBeforeAllocation() {
+            ScriptParser parser = new();
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$d = {\"x\":1}",
+                "$d.ensurecapacity(30000000)"
+            ));
+
+            long before = GC.GetTotalAllocatedBytes(true);
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(() => script.Execute());
+            long delta = GC.GetTotalAllocatedBytes(true) - before;
+
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+            Assert.That(delta, Is.LessThan(MaxPreAllocationGuardDeltaBytes));
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T46 (design §8.8.6): legitimate small pre-sizes under budget - a capacity ctor, EnsureCapacity on a list and a dict, and a Capacity-setter - must all complete without a false abort, pinning that M4 gates on projected bytes, not on the mere presence of a capacity operation.")]
+        public void T46_LegitSmallCapacityOperationsCompleteWithoutFalseAbort() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxVariableBytes = 10_000_000}
+            };
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$a = new list(1000)",
+                "$a.ensurecapacity(1000)",
+                "$a.capacity = 1000",
+                "$d = {\"x\":1}",
+                "$d.ensurecapacity(100)"
+            ));
+
+            Assert.DoesNotThrow(() => script.Execute());
+        }
+
+        [Test]
+        [Description("T47 (design §8.8.4/§8.8.6): direct VariableSizer pin for both the #7839 List<> capacity path and the new Dictionary<,> footprint path - a pre-sized-but-empty List<object> is charged by its allocated Capacity, and a Dictionary<object,object> after EnsureCapacity(n) is charged by its bucket/entry footprint, not its live Count of near-zero. Fails loudly if either private/public capacity accessor breaks across a runtime. Runs on net8.0 here (the only TFM this test project executes against); the netstandard2.0 build of VariableSizer is compile-verified by the Release build - the candidate field names it tries at runtime (_entries/entries) are resolved against whichever CLR actually loads the assembly, not the TFM it was compiled for.")]
+        public void T47_VariableSizerChargesListAndDictionaryCapacityNotCount() {
+            List<object> preSizedList = new(100_000_000);
+            long listSize = VariableSizer.Size(preSizedList);
+            Assert.That(listSize, Is.GreaterThanOrEqualTo(100_000_000L * VariableSizer.CollectionElementOverhead));
+
+            Dictionary<object, object> preSizedDictionary = new();
+            preSizedDictionary.EnsureCapacity(30_000_000);
+            long dictionarySize = VariableSizer.Size(preSizedDictionary);
+            long countChargedSize = preSizedDictionary.Count * VariableSizer.DictionaryEntryOverhead;
+
+            Assert.That(dictionarySize, Is.GreaterThanOrEqualTo(30_000_000L * VariableSizer.DictionaryEntryOverhead));
+            Assert.That(dictionarySize, Is.GreaterThan(countChargedSize + 1000));
+        }
+
+        [Test, MaxTime(5000)]
+        [Description("T48 (design §8.8.5): charge-once regression - new list(10000000) (~80MB, under the default 128MiB budget) completes, then 300 trivial iterations force an M3 Measure pass, then a further ~40MB variable also completes - all without a spurious abort. If M4's producedSinceLastPass charge were not reset by that Measure pass, the forced walk would see the list's own 80MB twice (~160MB, over budget) and throw falsely.")]
+        public void T48_ChargeOnceRegressionPreSizedValueNotDoubleCounted() {
+            ScriptParser parser = new();
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$a = new list(10000000)",
+                "for($i=0,$i<300,++$i) {",
+                "  $y = 1",
+                "}",
+                "$b = \"" + new string('x', 20_000_000) + "\""
+            ));
+
+            Assert.DoesNotThrow(() => script.Execute());
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T49 (design §8.8.6): characterisation test - new dictionary(100000000) is still a ScriptRuntimeException naming 'matching constructor', unchanged by M4. dictionary is registered as the IDictionary interface (ScriptParser.cs), which has no constructors, so the Dictionary<,> ctor row in the capacity-operation table stays future-proofing (design §8.8.4), not a reachable path today.")]
+        public void T49_DictionaryCtorRemainsUnreachableCharacterisation() {
+            ScriptParser parser = new();
+            IScript script = parser.Parse("$d = new dictionary(100000000)");
+
+            ScriptRuntimeException exception = Assert.Throws<ScriptRuntimeException>(() => script.Execute());
+            Assert.That(exception.Message, Does.Contain("matching constructor"));
         }
     }
 }

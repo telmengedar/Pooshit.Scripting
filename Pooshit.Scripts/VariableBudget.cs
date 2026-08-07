@@ -52,6 +52,25 @@ class VariableBudget {
     }
 
     /// <summary>
+    /// charges the byte cost of a capacity a script-reachable operation is about to allocate, before the
+    /// allocation runs, throwing on a breach instead of letting the allocation happen (design §8.8.5)
+    /// </summary>
+    /// <param name="projectedBytes">bytes the pending capacity ctor/method/setter is about to allocate</param>
+    public void ChargePreAllocation(long projectedBytes) {
+        if (!maxBytes.HasValue || projectedBytes <= 0)
+            return;
+
+        if (projectedBytes > maxBytes.Value)
+            throw new ScriptVariableLimitExceededException(VariableLimitKind.Bytes, maxBytes.Value, projectedBytes);
+
+        long projectedTotal = Interlocked.Read(ref producedSinceLastPass) + projectedBytes;
+        if (projectedTotal > maxBytes.Value)
+            throw new ScriptVariableLimitExceededException(VariableLimitKind.Bytes, maxBytes.Value, projectedTotal);
+
+        Interlocked.Add(ref producedSinceLastPass, projectedBytes);
+    }
+
+    /// <summary>
     /// samples variable usage at the configured cadence, throwing on a breach
     /// </summary>
     /// <param name="scope">current scope to measure from</param>

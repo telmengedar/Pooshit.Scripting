@@ -424,8 +424,9 @@ namespace Scripting.Tests {
 
         /// <summary>
         /// CF-2: <see cref="ScriptLimits"/> knobs are <c>init</c>-only, so a host configuring one parser's
-        /// limits cannot leak that configuration onto another, unconfigured parser sharing <see cref="ScriptLimits.None"/>
-        /// as its default
+        /// limits cannot leak that configuration onto another, unconfigured parser sharing
+        /// <see cref="ScriptLimits.Default"/> as its default (design §18: was <see cref="ScriptLimits.None"/>
+        /// before the secure-by-default flip)
         /// </summary>
         [Test, Parallelizable]
         public void CF2_DefaultLimitsAreNotSharedMutableState() {
@@ -434,7 +435,7 @@ namespace Scripting.Tests {
             };
             ScriptParser defaultParser = new();
 
-            Assert.That(defaultParser.Limits, Is.SameAs(ScriptLimits.None));
+            Assert.That(defaultParser.Limits, Is.SameAs(ScriptLimits.Default));
             Assert.That(defaultParser.Limits.Timeout, Is.Null);
             Assert.That(configuredParser.Limits.Timeout, Is.EqualTo(TimeSpan.FromMilliseconds(50)));
 

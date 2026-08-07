@@ -11,6 +11,8 @@
 
 **Amended 2026-08-06 (DiVoid #7782)** — verified against `master` @ `834adbf`, the merged depth guard, not against this document's own earlier drafts. One contract decision added and its consequences threaded through: **§7.7** (new — the three `LambdaMethod` entry points, and why `Invoke(params object[])` keeps the captured budget), **§7.2** (row corrected), **§7.6** (defect closed; residual redirected to §7.7), **§11** item 6, **§11.5** (new bullet), **§11.6** (new — the host rule and the `pooscript-language-reference.md` §12 replacement wording), **§12/B19** (the "unchanged" claim qualified as a decision), **§13** (T9a/T9b/T9c), **§16** (R11 closed, R12 added), **§17.2** (OQ-9).
 
+**Amended 2026-08-07 (DiVoid #7841 · red-team #7835 / #7843 · bug #7836 / fix #7839 / residual #7840)** — verified against `master` @ `1626e7a`, the shipped memory guard + default flip. Adds a **fourth variable-guard mechanism, M4 (§8.8, new)** — a pre-allocation charge that closes the capacity-pre-sizing OOM *class* the red-team found on a bare parser (`new list(capacity)` ctor spike; `list.ensurecapacity`/`.capacity=` mutation; `dict.ensurecapacity` sizer-blindness). M4 charges the requested capacity **before** the backing store is allocated, so every reachable vector yields a clean `ScriptVariableLimitExceededException` instead of a process OOM. Threaded through: **§8.2.1** (M4 added to the mechanism table), **§8.2.4** (the pre-size row is now bounded, not "not bounded"), **§11** item 4 (M4 narrows the residual; the general host-allocation residual stands), **§13** (T41–T49, in §8.8.6), **§16** (R13/R14), **§17.2** (OQ-13). Also adds a `Dictionary<K,V>` footprint path to `VariableSizer` (§8.8.4) so the M4 charge survives an M3 reset. Composes with M1/M2/M3 and the #7839 sizer fix; changes none of them.
+
 ---
 
 ## 1. Problem Statement
@@ -81,7 +83,7 @@ and on sizing the work:
 | **Defect #2896** (`Foreach` re-enumeration) | Untouched, as in #7409. |
 | **Bounding memory reachable through host-injected surfaces** | The user drew this line explicitly: *"aside from actual injected surfaces where you can exhaust memory, but that is under control of consumer"*. §8.4 states exactly where the measurement stops and why that is the same line. |
 | **Any fourth/fifth guard beyond the two asked for** | #1184. Two knobs were asked for; §13 records the one seam that falls out at zero present cost and nothing else. |
-| **Retro-fitting a `MaxDepth` default value** | No magic numbers (#1136 §3). The engine ships no opinion; §11 gives the host sizing guidance instead. |
+| **Retro-fitting a `MaxDepth` default value** | No magic numbers (#1136 §3). The engine ships no opinion; §11 gives the host sizing guidance instead. **Reversed by §18 (2026-08-06) — see there for the argued default.** |
 
 ---
 
@@ -411,6 +413,7 @@ This section answers the question "where does the check happen?" directly, becau
 | **M1** | **Value ceiling** — no single value may exceed `MaxVariableBytes` | `Operations/Values/ValueOperation.cs` `ExecuteToken` (the result of **any** arithmetic/bitwise operator — one shared base class covers all twelve) and `Operations/AssignableToken.cs` `Assign` (any value entering **any** assignable slot — one shared base covers variables, members, indexers, and every compound-assign form) | `$s = $s + $s`; long operator chains; a host method returning a huge value into a variable | `O(1)` — two type tests, both failing for the common numeric case |
 | **M2** | **Growth trigger** — a monotonic *bytes-produced-since-last-pass* counter; crossing the budget **forces** a measurement pass | the same two sites as M1, in the same helper call | Aggregate accumulation of many separately-produced values, before the sampled interval would have noticed | `O(1)` — one add, alongside M1 |
 | **M3** | **Sampled walk** — the ground truth, at `Guard()`, at a size-proportional interval | `ScriptContext.Guard()` (one line, one site) | **In-place mutation that never passes M1 or M2** — `$l.add(…)` in a loop; entry counts; and it is what resets M2 | amortised ≤ 1 unit/checkpoint |
+| **M4** | **Pre-allocation charge** — a capacity-taking operation on a growable type is charged its projected backing-store bytes **before** the allocation runs (§8.8) | capacity ctor (`TypeInstanceProvider.cs:35`), `EnsureCapacity` (`MethodOperations.cs:293`), `Capacity` setter (`ScriptMember.cs:106`) | **Pre-sized backing stores that would OOM before any post-hoc check** — `new list(2e9)` (16 GB inside the ctor); `list.ensurecapacity`/`.capacity=`; `dict.ensurecapacity` (permanently sizer-blind) | `O(1)` — a table lookup + one add, only on capacity operations |
 
 **Two sites, not twelve.** Both M1 and M2 hook shared base classes — `ValueOperation.ExecuteToken` is the single `ExecuteToken` for all of `Addition`, `Multiplication`, `Subtraction`, `Division`, `Modulo`, the four bitwise ops and the four shift/rotate ops; `AssignableToken.Assign` is the single entry for every assignment form. One helper (`VariableBudget.ChargeProducedValue`) does the ceiling check and the trigger increment together, called at exactly two places.
 
@@ -458,8 +461,9 @@ The budget-with-headroom principle (§1) is only defensible with a number. With 
 | Aggregate growth by separately produced values | **≤ ~2× C** — M2 forces a pass once ~C bytes have been produced | ≤ ~2× C |
 | Aggregate growth by re-appending *existing* values | trips **early** — the sizer charges aliases per name (§8.6), so the measured figure exceeds the real footprint | safe direction |
 | A host method returning a large value **into a variable** | ≤ ~2× C — M1/M2 at the assignment site | ≤ ~3× C |
+| **Capacity pre-size of a growable type** (`new list(n)`, `list.ensurecapacity(n)`, `list.capacity=n`, `dict.ensurecapacity(n)`) | **≤ 1× C — M4 refuses the capacity before it is allocated (§8.8)** | **≤ 1× C — no transient spike; the throw precedes the allocation** |
 | A host method's large object appended to a collection with no assignment | **not bounded** — charged an opaque constant | — |
-| A single host call allocating internally (`"".padright(2000000000)`) | **not bounded at all** | — |
+| A single host call allocating internally (`"".padright(2000000000)`) | **not bounded at all** — M4 covers *collection capacity* pre-sizing, not allocation inside an arbitrary host method (§8.8.7) | — |
 
 **The long-operator-chain verdict — the case that most plausibly broke the 2× assumption, and does not.** Left-associative evaluation of `$s + $s + … + $s` builds intermediates of `2\|s\|, 3\|s\|, … , n\|s\|`; without M1 the observed overshoot would be **n×** and total allocation `≈ n²\|s\|/2`, with `n` bounded only by the length of the script source — so an adversary with a 100 KB script could reach a ~10,000× overshoot. **M1 collapses this to ≤3× transient regardless of `n`,** because the check runs on the result of *every* `ValueOperation`, so the chain trips at the first intermediate that exceeds the budget — the second term, not the n-th. **Chain length stops being a variable in the bound.** This is the single strongest argument for M1 existing.
 
@@ -548,6 +552,140 @@ The remaining case is **aliasing** — two distinct names bound to the same obje
 **Decision: the measurement pass is best-effort. If the walk faults on a concurrent modification, the pass is abandoned and the interval re-armed; it is not retried inline and it does not surface as a script error.** No locking is introduced — locking the variable dictionaries would put a lock on the hottest path in the interpreter to protect a heuristic. The next pass will observe the growth. A script cannot exploit this to evade the guard indefinitely: the racing writer is itself ticking the same checkpoint counter, so passes keep coming.
 
 **Per-chain measurement, stated.** Each thread measures the chain it is guarding, so concurrent branches each charge the shared ancestor scopes. Against a *shared* threshold this over-counts the ancestors and under-counts the sum of the branches. It is a heuristic guard on an approximate number; the alternative — a global registry of live scopes — is a whole subsystem for a marginal accuracy gain and is rejected on KISS grounds.
+
+### 8.8 M4 — the pre-allocation charge (closes the capacity-pre-sizing OOM class)
+
+> **Added 2026-08-07 (DiVoid #7841 / red-team #7835 round 4, #7843 round 5).** This subsection is a continuation of the memory guard §8, not a separate doc: it adds a **fourth mechanism (M4)** alongside M1/M2/M3, closing the one shape those three cannot — a script that pre-allocates a large backing store *before* any charge site or sampled walk can observe it. M4 composes with M1/M2/M3 and the #7839 sizer fix; it changes none of them. Verified against `master` @ `1626e7a` — the shipped memory guard (`VariableBudget`, `VariableSizer` with the #7839 `Math.Max(Count,Capacity)` fix) and the default flip (`ScriptLimits.Default`, `MaxVariableBytes = 128 MiB`).
+
+**The user's ask, verbatim (2026-08-07):**
+
+> "we talk about a memory guard in place but the process can oom (not a 'clean' guard exception) - if so, then yes harden it - if we really want to tag it 1.0 we shouldn't leave something so obvious."
+
+#### 8.8.1 The defect class — three instances, one root, and why post-checking is too late
+
+On a **bare `new ScriptParser()`** (default `ScriptLimits.Default`, `MaxVariableBytes = 128 MiB`) the red-team drove the process toward OOM with the byte guard silent, by pre-sizing a growable collection. Three reachable instances, all the *same* root cause:
+
+| # | Vector | Why M1/M2/M3 + #7839 miss it | Source |
+|---|---|---|---|
+| I | `new list(100000000)` — capacity ctor | The sizer now charges `Max(Count,Capacity)` (#7839), so the *retained-and-measured* list aborts — **but the `object[capacity]` backing array is allocated *inside* the ctor at `TypeInstanceProvider.cs:35 constructor.Invoke`, before `AssignableToken.Assign`'s post-construction `ChargeProducedValue` can inspect it.** For `new list(2000000000)` that is ~16 GB allocated before any charge fires → process OOM, not a clean abort. | #7836, #7843 |
+| II | `$a=new list(); $a.ensurecapacity(100000000)` and `$a.capacity=100000000` | No charge site observes a **mutating method** (`MethodOperations.cs:293 method.Invoke`) or a **property set** (`ScriptMember.cs:106 property.SetValue`) — both produce a small/void value; only the tick-gated periodic `Measure` (first at `MinMeasureInterval=256`) can catch it, and a short script exits first. A single `$a.ensurecapacity(2000000000)` allocates ~16 GB with nothing between allocation and the fait accompli. | #7841 (A) |
+| III | `$d={}; $d.ensurecapacity(30000000)` | Same mutation blindness **plus** the sizer is structurally blind: `Dictionary<K,V>` has **no public `Capacity` getter**, so #7839's `ChargedCount` accessor returns `null` and even the `Measure` walk charges the dict as `Count` (~48 bytes) — invisible **permanently**, regardless of script length. | #7841 (B) |
+
+`list → List<object>` (`ScriptParser.cs:45`) and the `{}` literal → `Dictionary<object,object>` (`DictionaryToken.cs:30`) are the only default-registered growable types with a reachable capacity operation. (`new dictionary(n)` is *not* reachable — `dictionary` is registered as the `IDictionary` **interface**, `ScriptParser.cs:61`, which has no constructors; the red-team confirmed it fails at ctor resolution.) So the reachable class is exactly **{List, Dictionary} × {capacity-ctor, `EnsureCapacity`, `Capacity`-set}**, minus the unreachable dict ctor.
+
+**The design constraint the user's quote forces: charge the requested capacity *before* the allocation.** Every mechanism in §8.2 checks *after* the value exists — M1/M2 at the site a value is produced, M3 on the sampled walk. A pre-sized backing store is allocated in one CLR call; by the time any of them looks, the 16 GB is already on the heap and the OOM has already fired. A bigger sizer (#7839), a faster cadence, a forced end-of-script `Measure` — all are post-allocation and therefore cannot prevent the *transient* spike that kills the process. **The only mechanism that yields a clean exception instead of a process OOM is one that intercepts the capacity-taking operation, computes the byte cost of the capacity it is about to request, and refuses it *before* invoking the underlying allocation.** That is M4.
+
+#### 8.8.2 M4 in one paragraph
+
+At the three sites where a script-reachable growable type is about to allocate a backing store sized by a caller-supplied capacity — a capacity ctor, `EnsureCapacity`, or the `Capacity` setter — M4 looks the operation up in a small **capacity-operation table**, computes `projectedBytes = max(0, requestedCapacity − currentCapacity) × bytesPerUnit` (the delta actually about to be allocated), and calls a new `VariableBudget.ChargePreAllocation(projectedBytes)` **before** the ctor/method/setter is invoked. `ChargePreAllocation` throws `ScriptVariableLimitExceededException(Kind=Bytes)` if the projected charge alone exceeds the byte budget or if it pushes the growth-trigger accumulator over the budget; otherwise it adds `projectedBytes` to the *same* `producedSinceLastPass` counter M2 already maintains, and returns. The allocation then proceeds only for a capacity the budget can afford. M4 is a **gate**; it never writes a persistent footprint — M3's `Measure` walk (with the #7839 sizer, plus the dictionary path added below) remains the single accountant, which is what makes the reconciliation charge-once (§8.8.5).
+
+#### 8.8.3 The three hook sites — exact `file:symbol`
+
+All three call sites **already receive `ScriptContext`**, so `context.VariableBudget` is reachable with **no new plumbing** and no public-surface change (this was the open plumbing question in residual #7840 — it is answered: the context is already there).
+
+| Site | File : symbol : line | Invocation to precede | What M4 inserts |
+|---|---|---|---|
+| **A — capacity ctor** | `Pooshit.Scripts/Providers/TypeInstanceProvider.cs` → `TypeInstanceProvider.Create` : **line 35** (`constructor.Invoke(...)`) | the CLR `constructor.Invoke` that allocates the backing array | after `resolver.ResolveConstructor(...)` resolves `constructor`, consult the table on `(type, constructor)`; if it is a capacity ctor, `context.VariableBudget?.ChargePreAllocation(projected, context.Arguments)` **before** line 35. `context` is already the second parameter of `Create`. |
+| **B — mutating method** | `Pooshit.Scripts/Operations/MethodOperations.cs` → `MethodOperations.CallMethod` : **line 293** (`method.Invoke(...)`) | the CLR `method.Invoke` that runs `EnsureCapacity` | before line 293, consult the table on `(host.GetType(), method)`; if it is a capacity method, pre-charge `parameters[argIndex]`. `context` is already a parameter of `CallMethod`; guard `host != null && !extension`. |
+| **C — `Capacity` setter** | `Pooshit.Scripts/Tokens/ScriptMember.cs` → `ScriptMember.SetProperty` : **line 106** (`property.SetValue(...)`) | the CLR `property.SetValue` that runs the `Capacity` setter | before line 106, consult the table on `(host.GetType(), property)`; if it is a capacity property-set, pre-charge `targetvalue`. Thread `context` in from `AssignToken(token, context)` (the caller already has it). |
+
+Notes for the implementer:
+- **Site A is the reachable ctor path.** `new list(n)` flows `NewInstance.ExecuteToken` (`NewInstance.cs:54`) → `provider.Create` → `TypeInstanceProvider.cs:35`. A parallel host-constructor invoke exists at `MethodOperations.cs:245` (`CallConstructor`); route it through the **same** table lookup for completeness (one extra call, no new logic) so a host type with a capacity ctor reached that way is covered too.
+- **Indexer assignment needs no separate hook.** `ScriptIndexer.AssignToken` (`ScriptIndexer.cs:108`) dispatches through `MethodOperations.CallMethod` (Site B); an indexer setter is not a capacity operation, so it is simply never in the table.
+- **Only the engine's `TypeInstanceProvider` is instrumented at Site A.** A host that registers a custom `ITypeInstanceProvider` whose `Create` allocates without consulting the budget is the same residual class as an uninstrumented host method (§8.8.7).
+
+#### 8.8.4 The capacity-operation table and the footprint constants
+
+**Decision: a tight, explicit, internal table keyed on the generic type definition — not a structural "any int parameter named capacity" rule.** The reachable set is two types and three operations. A general reflection heuristic (scan every ctor/method for a capacity-shaped `int`/`long` parameter) is rejected on KISS/YAGNI (#1136 §1): it is fragile (parameter names are not load-bearing; a `new byte[](length)` ctor or an unrelated `int` arg would false-match), it rots as the runtime evolves, and it earns nothing over five explicit rows. The table lives in `VariableSizer` (which already owns the per-type `Capacity`-accessor cache from #7839 and the byte constants), keyed on `type.IsGenericType ? type.GetGenericTypeDefinition() : type` so it matches `List<T>`/`Dictionary<K,V>` for any element type.
+
+| Receiver (generic def) | Operation | Member matched | Capacity source | `bytesPerUnit` (from `VariableSizer` consts) |
+|---|---|---|---|---|
+| `List<>` | ctor | `.ctor(int32)` | arg 0 | `CollectionElementOverhead` = **8** |
+| `List<>` | method | `EnsureCapacity(int32)` | arg 0 | `CollectionElementOverhead` = **8** |
+| `List<>` | property-set | `Capacity` (settable `int`) | assigned value | `CollectionElementOverhead` = **8** |
+| `Dictionary<,>` | method | `EnsureCapacity(int32)` | arg 0 | `DictionaryEntryOverhead` = **24** |
+| `Dictionary<,>` | ctor | `.ctor(int32)` | arg 0 | `DictionaryEntryOverhead` = **24** |
+
+- **The constants are the existing sizer constants** (`VariableSizer.cs:18-19`: `CollectionElementOverhead = 8`, `DictionaryEntryOverhead = 24`), reused verbatim — not new numbers. This is deliberate and load-bearing for charge-once (§8.8.5): M4 charges a pre-size at exactly the per-unit rate the sizer will later charge the same object, so the two figures reconcile. Make the two constants `internal` (they are `private const` today) so M4 references one source of truth (#1136 §3 — no second copy of a magic number).
+- **The `Dictionary<,>` ctor row is currently unreachable** (the dict ctor path is closed by the `IDictionary`-interface registration). It is included anyway at one row's cost, because it converts the red-team's noted host-hygiene residual — *"if a host ever registers `Dictionary<object,object>` concretely under a name, the ctor OOM reopens"* (#7843) — into a covered case for free.
+- **`bytesPerUnit` for a value-element list** (`List<int>`) over-charges (an `int[]` is 4 bytes/slot, charged at 8). Over-charge is the safe direction for a guard, and it keeps M4 identical to the sizer, which also charges every `List<T>` element at 8. No special-casing (#1136 §4).
+- **Adding a growable type is a one-line addition to this table.** That satisfies the "a host registering its own growable type is the next case" concern *within engine code*. A **public** host-facing registration API is deliberately **not** added (YAGNI — no named consumer; the whole design holds a no-new-public-surface posture, §10). If a real host reports a custom growable type, a public registration hook is a filed follow-up — **OQ-13**.
+
+`currentCapacity` (for the delta) is read through the sizer's existing cached capacity accessor for List; for the ctor there is no instance yet, so `currentCapacity = 0` and the delta is the full requested capacity. For `Dictionary<,>` the accessor needs the new path below.
+
+**Closing the dictionary sizer blindness — required, not optional.** M4 intercepts the reachable dict vector (`EnsureCapacity`) at Site B and refuses the single huge pre-size before allocation. But M4 alone does **not** fully close instance III, because charge-once (§8.8.5) hands the retained footprint off to M3's `Measure` on the next pass — and for a `Dictionary<K,V>` the #7839 sizer charges it as `Count`, losing the charge across the reset. That reopens a *slow accumulation* OOM: pre-size dicts to just under budget, run ≥256 trivial statements to force a `Measure` that forgets them (resets `producedSinceLastPass`, sizes each dict as ~48 bytes), repeat — unbounded retained growth with `MaxSteps` null by default. **Decision: add a `Dictionary<K,V>` capacity path to `VariableSizer` so the `Measure` walk prices a pre-sized dict at its true bucket/entry footprint**, making the M4→M3 handoff durable. `Dictionary<K,V>` exposes no public `Capacity` getter but its allocated capacity is observable; the recommended source is the private backing-bucket array length via a cached per-type accessor of the **same shape** #7839 already built (`capacityAccessors`), charged at `DictionaryEntryOverhead` per unit. Because it reaches a private field it is runtime-implementation-coupled — **pin it with a direct `VariableSizer` unit test on both TFMs** (T47) so a field-name change across a runtime upgrade fails loudly rather than silently reopening instance III.
+
+**So the decision the brief asked for, stated plainly:** M4 alone closes the *reachable single-shot* dict vector (the OOM the red-team demonstrated), because the pre-charge fires before the allocation and the projected bytes alone exceed the budget. The **sizer also gets a Dictionary footprint path**, because without it the M4 charge cannot survive an M3 reset and a multi-batch accumulation reopens the class. Both ship together; neither alone closes instance III.
+
+#### 8.8.5 Charge-once reconciliation with M1/M2/M3 — no double-count
+
+M4 reuses the *exact* field M2 owns — `VariableBudget.producedSinceLastPass` (`VariableBudget.cs:20`) — and the invariant that keeps it honest is M3's reset.
+
+`ChargePreAllocation(long projectedBytes)` (new, on `VariableBudget`, gated on `maxBytes.HasValue`):
+
+1. **Single-op ceiling (M1-shaped):** if `projectedBytes > maxBytes` → throw. Catches the single huge pre-size (`new list(2e9)` → 16 GB ≫ 128 MiB) before any allocation.
+2. **Accumulation gate (M2-shaped):** if `producedSinceLastPass + projectedBytes > maxBytes` → throw. Catches many just-under-budget pre-sizes in a short script that would otherwise slip below the 256-tick cadence.
+3. Otherwise `Interlocked.Add(ref producedSinceLastPass, projectedBytes)` and return — the caller then performs the allocation.
+
+**Why this is charge-once, not double-counting.** A pre-sized value's bytes are reflected in **exactly one** budget term at any instant:
+
+- **Before the next M3 `Measure`:** in `producedSinceLastPass` (M4 added them there in step 3, precisely as M1/M2 add a produced value's size). The object may already be allocated, but no `Measure` has walked it yet.
+- **At and after the next M3 `Measure`:** in the walk's freshly-summed `bytes` (the #7839 sizer, plus the new dict path, charges the object at `Max(Count,Capacity) × bytesPerUnit` — the *same* per-unit rate M4 used), and that same pass resets `producedSinceLastPass = 0` (`VariableBudget.cs:88`).
+
+The `Measure` reset is the handoff. The instant the sizer begins counting the object for real, the trigger counter that stood in for it is zeroed. M4 **never** writes a persistent footprint (only M3 computes the authoritative figure, transiently, during the walk), and M3 **always** resets `producedSinceLastPass`, so the two terms never simultaneously hold the same value's bytes. No `Measure` ever counts a pre-size twice.
+
+**Why M4's delta is *not* the drift-prone delta accounting §8.2.4 rejected.** §8.2.4 rejected full delta accounting because *un-charging* an old value needs its *current* size, which is stale for a collection mutated in place. M4 has **no un-charge step and remembers nothing between operations**: `currentCapacity` is read live from the object's capacity accessor at the moment of the operation, so `max(0, requested − current)` is the exact number of slots about to be allocated. There is no remembered prior size to drift. `producedSinceLastPass` remains monotonic-until-reset and is never read as a live footprint — only as a gate and a trigger. Over-charging it (e.g. re-`EnsureCapacity` to a value already satisfied yields delta 0; charging full requested on a value-element list) can only trip *earlier*, never miss (§8.2.4: "Over-triggering can never cause a false abort").
+
+**Interaction with `MaxVariables`.** M4 is a *bytes* mechanism and is gated on `MaxVariableBytes.HasValue`. Capacity pre-sizing leaves `Count == 0`, so it does not affect entry count; when only `MaxVariables` is configured, M4 is inert. Correct — the default (`MaxVariables` null, `MaxVariableBytes` = 128 MiB) is exactly the config M4 protects.
+
+#### 8.8.6 Acceptance — every red-team vector yields a clean exception on a bare parser, verified before the allocation
+
+New tests in `Scripting.Tests/ExecutionGuardTests.cs` (and `SecureByDefaultTests.cs` for the bare-default repros). Every test runs on a **bare `new ScriptParser()`** unless noted, carries `MaxTime(2000)`, and **bounds the capacity to a value large enough to breach 128 MiB but small enough that a regression measures, not OOMs, the runner** (≤ ~1e8 → ≤ ~800 MB, the red-team's no-wedge bound — never `2e9`).
+
+| # | Test | Asserts |
+|---|---|---|
+| T41 | `$a = new list(100000000)` (assigned) | `ScriptVariableLimitExceededException`, `Kind == Bytes`, and — the load-bearing assertion — `GetTotalAllocatedBytes` delta is **< a few MB** (proves the throw fired **before** `constructor.Invoke`, not after an 800 MB spike). Instance I. |
+| T42 | Direct unit test: M4 refuses a `List<>` capacity ctor projection above budget **without constructing** | pins that Site A pre-charges pre-invoke (no allocation observed). Closes residual #7840 for the reachable ctor. |
+| T43 | `$a = new list(); $a.ensurecapacity(100000000)` | throws `Kind == Bytes`; allocation delta < a few MB. Instance II (method). |
+| T44 | `$a = new list(); $a.capacity = 100000000` | throws `Kind == Bytes`; allocation delta < a few MB. Instance II (setter). |
+| T45 | `$d = {"x":1}; $d.ensurecapacity(30000000)` | throws `Kind == Bytes`; allocation delta < a few MB. Instance III. |
+| T46 | Legit small pre-sizes: `new list(1000)`, `$a.ensurecapacity(1000)`, `$d.ensurecapacity(100)`, `$a.capacity = 1000` | **all complete, no false abort** — pins that M4 gates on bytes, not on the mere presence of a capacity op. |
+| T47 | Direct `VariableSizer` unit pin on **both TFMs**: `Size(new List<object>(100000000)) ≈ 800 MB` **and** `Size(dict after EnsureCapacity(30000000)) ≈ its bucket footprint`, not `Count` | pins the #7839 List path **and** the new Dictionary path; fails loudly if the private-field accessor breaks across a runtime. |
+| T48 | Charge-once regression: `new list(10000000)` (~80 MB, under the 128 MiB budget) completes, then a further legitimate ~40 MB of variables completes without a spurious abort | pins that M4's `producedSinceLastPass` charge is **not** double-counted by the subsequent `Measure` (which would falsely read ~160 MB). |
+| T49 | Characterisation: `new dictionary(100000000)` | still `ScriptRuntimeException` "no matching constructor" — unchanged; the dict ctor stays unreachable via the interface registration (documents that M4's dict-ctor table row is future-proofing, not a reachable path today). |
+
+**Bounce this subsection if** T41/T43/T44/T45 cannot be made to abort with an allocation delta in the low-MB range — a large delta means the throw fired *after* the allocation, which is the exact failure the user's quote names and M4 exists to prevent.
+
+#### 8.8.7 The residual M4 does **not** close — stated precisely, not over-claimed
+
+M4 guarantees a clean `ScriptVariableLimitExceededException` (never a process OOM) for **capacity pre-sizing on the engine's default growable types** — `list`/`List<T>` and the `{}` literal/`Dictionary<K,V>` — **and any host type registered in the capacity-operation table**, because the requested capacity is charged and refused *before* the backing store is allocated. It does **not** bound, and must not be documented as bounding:
+
+- **Allocation inside an arbitrary host method body.** `"a".padright(2000000000)` builds a ~4 GB string *inside* `String.PadRight` before returning; `string` is not a growable collection with a capacity operation, so M4 does not intercept it. The *retained* result, if assigned, is caught post-hoc by M1 at ≤ budget, but the transient peak inside the call is unbounded — this is the §8.2.4 last-row / §11 item 4 residual, unchanged.
+- **A host-supplied `ITypeInstanceProvider`** whose `Create` allocates without consulting `context.VariableBudget` (only the engine's `TypeInstanceProvider` is instrumented at Site A).
+- **A host-registered growable type absent from the table** (§8.8.4 makes adding one a one-line engine change; there is no public registration API — OQ-13).
+- **A host object holding a large graph** the script merely references — the §8.4 boundary, deliberate ("script should handle script, not the whole engine").
+
+**The precise, non-over-claiming line for the language reference:** *M4 closes the specific, default-reachable, attacker-trivial pre-allocation vectors (collection capacity pre-sizing on `list` and `dictionary`) by charging the requested capacity before the backing store is allocated. It does not intercept allocation performed inside an arbitrary host method, a custom host type provider, or an unregistered host collection type; those remain the "unbounded allocation inside one uninstrumented host call" residual (§8.2.4, §11 item 4). M4 hardens the byte guard against the trivial reachable OOM; it does not make the in-process guard a hard memory wall — process or container isolation remains the only complete answer for arbitrary host-surface allocation (§11).*
+
+#### 8.8.8 Pre-Design Checklist (#1136 §5) — this subsection, in order
+
+**KISS / DRY / YAGNI**
+- **No new type mirroring an existing one.** M4 adds one method (`ChargePreAllocation`) to the existing `VariableBudget` and one table + lookup to the existing `VariableSizer`. No new budget object, no new exception (reuses `ScriptVariableLimitExceededException`, `Kind == Bytes`).
+- **No general framework.** The structural "any capacity-shaped parameter" heuristic was considered and **rejected** with its concrete failure modes (§8.8.4); the tight five-row table wins. `block_size × site_count`: one helper call at **3 sites** (Site A/B/C), `~3 × 3 = 9`, below the ~15–20 threshold — so `ChargePreAllocation` + the `VariableSizer` lookup are the objects' own API, extracted once for DRY across the three sites (the named-helper test passes: `ChargePreAllocation` is one phrase).
+- **No new magic numbers.** `bytesPerUnit` reuses `VariableSizer`'s existing `CollectionElementOverhead`/`DictionaryEntryOverhead` consts (promoted `private → internal`); no second copy, no new knob (#1136 §3).
+- **No "we might need it later" surface.** The one forward-looking row (the unreachable `Dictionary<,>` ctor) is grounded in a **named red-team residual** (#7843 host-hygiene note), not a hypothetical, and costs one row.
+
+**Existing systems first**
+- Every element lands on a surface the memory guard already built: `VariableBudget` (+1 method), `VariableSizer` (+1 table, +1 dict accessor reusing the #7839 cache), and the three existing dispatch sites (each already holds `ScriptContext`). **No new host-facing surface, no new entry point, no public-interface change** — the plumbing question from #7840 is answered by the context already being in scope at all three sites.
+
+**Configurability**
+- No new knob. M4 is on whenever `MaxVariableBytes` is set (which the default sets). `bytesPerUnit` and the table are `const`/static engine opinion, not configuration (#1136 §3).
+
+**Less is better**
+- Deleted from this design: a general capacity-detection reflection framework (§8.8.4), full delta accounting with un-charge (§8.8.5, already rejected in §8.2.4), a construction-time clamp on capacity args (rejected in #7839/#7840 as an invasive `new`-path special-case — M4's table-driven pre-charge is the non-invasive form), and a public host registration API (OQ-13, YAGNI). Trade-offs named: M4-alone vs. M4-plus-dict-sizer-path (§8.8.4, resolved to *both*, with the accumulation-across-reset exploit as the concrete reason).
+
+**Document discipline**
+- User quote reproduced verbatim (§8.8). Reversal of the §8.2.4 "not bounded — pre-size" line is annotated there. In/out-of-scope explicit (§8.8.7). No predecessor superseded — this extends §8. Every decision states its basis; the un-closable residual is drawn precisely, not hidden.
 
 ---
 
@@ -661,7 +799,7 @@ The engine now bounds recursion it drives, and sustained growth of the variable 
 1. **Everything #7712 §10 items 1–3 and 6 already listed** — a blocking host method, a blocking host sequence, catastrophic regex, a detached `task.run`. Unchanged.
 2. **Stack consumed by host code**, including a host method that re-enters `IScript.Execute` recursively (§7.4) and a host-supplied `IScript` implementation nested through `import` (§7.3). Depth does not cross either boundary. The stack does.
 3. **Memory reachable through host-injected surfaces.** A variable holding one host object that owns 500 MB is charged an opaque constant. **This is the boundary the user drew and it is deliberate.**
-4. **A single allocation between two checkpoints.** `$s = $s + $s` doubles within one statement; the guard observes it at the next checkpoint, after the allocation has happened. The guard bounds *sustained* growth, not peak.
+4. **A single allocation between two checkpoints.** `$s = $s + $s` doubles within one statement; the guard observes it at the next checkpoint, after the allocation has happened. The guard bounds *sustained* growth, not peak. **Exception (M4, §8.8):** capacity pre-sizing of a growable collection (`new list(n)`, `list.ensurecapacity(n)`, `list.capacity=n`, `dict.ensurecapacity(n)`) *is* bounded before the allocation — M4 charges the requested capacity and throws pre-allocation. This closes the red-team's default-reachable OOM vectors (#7835/#7843), but does **not** extend to allocation performed inside an arbitrary host method body, a custom host `ITypeInstanceProvider`, or an unregistered host collection type — those remain unbounded (§8.8.7).
 5. **Process RSS.** The measurement approximates retained payload of script-owned variables. It is not a heap measurement and must never be documented as one.
 6. **Depth accounting for a lambda a host invokes through `LambdaMethod.Invoke(params object[])`.** That overload resolves the budget from the context the lambda was *defined* in, so concurrent invocations of one shared lambda are charged to one shared counter. A host extension avoids this by declaring a `ScriptContext` parameter and calling `InvokeFrom`; a host driving a returned lambda on its own threads cannot, and must size `MaxDepth` above its own concurrency. §7.7 decides the contract; §11.6 states the host-facing rule.
 
@@ -706,6 +844,8 @@ The safe ceiling depends on the host's thread stack size, the TFM, the JIT and t
 This belongs in the language reference alongside the knob, as a procedure with the halving rule stated, not as a number.
 
 ### 11.4 Why the knob stays a free-form `int?` and the engine does not clamp it
+
+> **Qualified by §18 (2026-08-06).** "The engine ships no opinion" below is superseded for the *default value* — §18.4.1 argues a specific `DefaultMaxDepth = 10`. This section's argument against an engine-enforced **clamp** (a ceiling a host cannot exceed) is untouched: `Default` is a starting point a host can still override with any `int?`, including one above 10.
 
 Considered: an engine-enforced hard maximum, so a host cannot configure its own process kill.
 
@@ -819,6 +959,7 @@ Convention: a new `Scripting.Tests/ExecutionGuardTests.cs`, mirroring `Cancellat
 | **T18c** | `$i = $i + 1` in a tight loop with `MaxVariableBytes` set generously | Completes; no measurable regression vs. the unguarded run — pins that M1's type tests are free on the numeric path |
 | **T18d** | Loop appending separately-produced values, `MaxVariableBytes` set | Aborts at ≤ ~2× budget — pins M2 forcing a pass ahead of the sampled interval |
 | **T18e** | Compound assign `$s += $s` in a loop, `MaxVariableBytes` set | Aborts — pins that the hook is on `AssignableToken.Assign` (the base), since `+=` does not route through `ValueOperation` |
+| **T41–T49** | **M4 pre-allocation charge — the capacity-pre-sizing OOM class** | **See §8.8.6 for the full table.** Every red-team vector (`new list(n)` ctor, `list.ensurecapacity`, `list.capacity=`, `dict.ensurecapacity`) aborts with `Kind == Bytes` **and an allocation delta in the low-MB range** (proving the throw preceded the allocation); legit small pre-sizes complete; the `VariableSizer` List+Dictionary capacity paths are unit-pinned on both TFMs; charge-once is regression-pinned. |
 
 ### Contract (rule #7718)
 
@@ -858,6 +999,7 @@ Each phase is independently reviewable and leaves the tree green. See the PR-spl
 | **4** | `VariableSizer` + its `const`s, **unit-tested standalone** before it is wired to anything. Tests T15, T16 at this level. | PR 1 merged |
 | **5** | Two internal members on `VariableProvider`; `VariableBudget` (walk, cadence, best-effort concurrency, **plus the M1 ceiling and M2 trigger helper**); `ScriptVariableLimitExceededException` + `VariableLimitKind`; the two knobs. | 4 |
 | **6** | Wire the three mechanisms: the one new line in `Guard()` (M3); the shared helper call at `ValueOperation.ExecuteToken` and `AssignableToken.Assign` (M1/M2); allocation in `Prepare`. Tests T10–T18e, T24–T27. | 5 |
+| **8** | **M4 — pre-allocation charge (§8.8).** `VariableBudget.ChargePreAllocation`; the capacity-operation table + lookup and the `Dictionary<K,V>` footprint accessor in `VariableSizer` (promote `CollectionElementOverhead`/`DictionaryEntryOverhead` to `internal`); the three hook calls at `TypeInstanceProvider.cs:35` (Site A, + the parallel `MethodOperations.cs:245`), `MethodOperations.cs:293` (Site B), `ScriptMember.cs:106` (Site C, thread `context` in). Tests T41–T49. **This phase is what makes the byte guard OOM-safe on a bare parser; it depends on phases 4–6 (the guard it hardens) being merged.** | 4–6 (memory guard) |
 | **7** | Documentation: `docs/pooscript-language-reference.md` §1, §12, §14 — the three new knobs, the six-row exception table, **verbatim** the §11 host-contract residuals (the overshoot bound, the opaque-host-object under-count), and the **`MaxDepth` calibration procedure with its halving rule (§11.3) and the self-defeat warning (§11.2)**. Update #7718 with the two-clause shape and the `Try.cs` row. | 3, 6 |
 
 **PR split (resolved).** Phases **1–3 are PR 1** (the depth guard) and **phases 4–7 are PR 2** (the variable guard). They are independently meaningful and independently valuable, and PR 1 closes the only residual that kills the host process. **PR 2 is implemented against merged code**, so it depends on PR 1 for concrete shapes it does not re-derive: `ScriptAbortException` (its exception derives from it), the `Guard()` line placement, the `GuardedExecution.Prepare` conditional-allocation pattern, and the `ScriptContext` by-reference budget-propagation convention. Nothing in PR 2 modifies PR 1's mechanism.
@@ -942,6 +1084,8 @@ Each phase is independently reviewable and leaves the tree green. See the PR-spl
 | **R11** | **Concurrent `task.run` bodies share one depth counter and abort spuriously** | ~~OPEN DEFECT~~ **RESOLVED 2026-08-06** (#7749): `TaskHost.Run` → `InvokeOnNewStack`, `LambdaMethod : IExternalMethod`, `EnumerableExtensions` on `InvokeFrom`. Pinned by T8. The public-surface residual is R12. |
 | **R12** | **A host extension calling `LambdaMethod.Invoke(args)` gets pre-#7749 accounting — concurrency counted as nesting on a lambda captured outside the concurrent bodies** | **Accepted as a documented property, not fixed (§7.7).** Every mechanical alternative trades this catchable false positive for an uncatchable false negative, and there is no backstop beneath `MaxDepth` (§11.2). Mitigated by: XML remarks naming the failure and the remedy, the §11.6 rule, the §12 correction, and T9a/T9b/T9c. **Residual is real:** a host that never reads the documentation and configures `MaxDepth` can still see a spurious abort. Severity is bounded — the abort is catchable and carries its `Limit`, where the alternative is process death. |
 | **R10** | **M1/M2's checks regress the arithmetic hot path** | Both sites early-out on a failed type test for the numeric case (`$i = $i + 1`), and `VariableBudget` is null when unconfigured. Pinned by T18c. If T18c shows a measurable regression, narrow the M1 site to `Addition` only — losing coverage of any future size-increasing operator but preserving the hot path. |
+| **R13** | **M4's `Dictionary<K,V>` footprint path reaches a private backing field and breaks on a runtime upgrade** — silently reopening instance III (§8.8.4) | The accessor is cached per-type like #7839 and **pinned by a direct `VariableSizer` unit test on both TFMs (T47)**, so a field-name change fails loudly rather than silently under-charging. The single-shot dict OOM is still caught by M4's pre-charge (Site B) regardless — only the accumulation-across-`Measure` case depends on this path. Low severity, high visibility. |
+| **R14** | **M4 over-charges a value-element list or a re-`EnsureCapacity` and false-aborts a legitimate script** | M4 charges the **delta** (`max(0, requested − currentCapacity)`) read live from the capacity accessor, so a no-op/shrinking `EnsureCapacity` charges 0. The only over-charge is a value-element `List<int>` charged at 8 bytes/slot instead of 4 — identical to what the sizer already does, and safe-direction. Pinned by T46 (legit small pre-sizes complete). Cannot cause a false *negative*. |
 
 ---
 
@@ -967,4 +1111,205 @@ Each phase is independently reviewable and leaves the tree green. See the PR-spl
 
 **OQ-9 — Does a host need a public "invoke on a new stack" entry point?** §7.7 / §11.6. A host driving a returned `LambdaMethod` on *M* of its own threads charges all *M* to one counter, has no invoking context to pass to `InvokeFrom`, and cannot reach `InvokeOnNewStack` (internal, `TaskHost.Run`-only). Making it public is additive and one method, but it is **new public surface with no named consumer today** (#1136 §2), and the library has just absorbed B19/B20. **Not designed here.** Turn it into a task only if a real host reports the shape; until then the mitigation is "size `MaxDepth` above your own concurrency", recorded in §11.6.
 
+**OQ-13 — Does a host need a *public* API to register its own growable type into the M4 capacity-operation table?** §8.8.4. Today the table is internal and adding a type is a one-line engine change; the reachable set (`list`, `dictionary`) is covered. A host that registers its own capacity-driven collection type (e.g. a custom ring buffer, or a concrete `Dictionary<object,object>` under a name) would need an engine change or a public registration hook to get M4 coverage — otherwise its pre-sizing falls into the §8.8.7 residual. **Not designed here** (YAGNI — no named consumer; the design holds a no-new-public-surface posture). Turn it into a task only if a real host reports the shape; until then the mitigation is "the engine covers its own growable types; a host that adds one and needs it bounded files the request".
+
 **OQ-8 — Does any host run the interpreter on a non-default thread stack?** §11.3 step 5 offers "raise the thread's stack size and re-calibrate" as the escape hatch for a host that needs more depth. If Uberkarl already runs scripts on a pooled thread with a known stack size, the calibration should be run there rather than on the default, or the resulting number will not transfer.
+
+---
+
+## 18. Secure by Default — flipping the default from boundless to bounded
+
+> **Added 2026-08-06 (DiVoid #7810).** This section is a continuation of the guard design, not a separate doc: it flips the *default* of the very knobs §§7–10 designed, and its central number (the default `MaxDepth`) is bounded by the §11 ceiling analysis and directly reverses the §2 non-scope row *"Retro-fitting a `MaxDepth` default value"* and the §11.4 *"the engine ships no opinion"* stance. Co-locating the reversal with the reasoning it overturns is the DRY/KISS choice; a separate doc would have to re-import §11 wholesale. The §2 row and §11.4 are annotated in the working-tree file to point here. Verified against `master` @ `1626e7a`, the merged depth guard (`ScriptLimits.MaxDepth` shipped) and the still-unbuilt memory guard (`MaxVariables`/`MaxVariableBytes` absent from `ScriptLimits.cs`).
+
+### 18.1 The ask, and what changes
+
+**The user's ask, verbatim (2026-08-05):**
+
+> "yes, i would like a 'secure in default state' for next version, so introduce a default maxdepth and also some default memory guard - not too tight, it should be possible to write non trivial medium complexity code with it without immediately having to turn the knobs (in mamgo we have transformer scripts which transform jobfeeds which could need a bit of data shuffling). anything more complex or running in more tight environments should adjust the knobs accordingly - boundless is possible but you have to intentionally disable the guard."
+
+**Calibration input, verbatim (2026-08-06) — resolves both tensions in-flight:**
+
+> "current scripts i know don't actually use recursion - so we could be a bit more strict here by default. memory bounds is more something someone could actually run against nowadays - but its mostly feed transformation and campaign filtering where its currently used. in uberkarl i expect more tiny behavior scripts by default. so there is room - i just want a default where there are no requirements to adjust immediately."
+
+This second quote is the governing calibration constraint and is used throughout §18.4: **no current, legitimate workload may require the host to adjust a knob on upgrade.** It settles the two dimensions asymmetrically. **Depth:** current scripts do not recurse, so a *strict* depth default is free — nothing legitimate reaches it, and strict is safely inside the ceiling for every dispatch shape (§18.4.1). **Memory:** this is the dimension a current workload can actually hit; the binding case is mamgo **feed transformation + campaign filtering** (iterative data-shuffling), not the *tiny* Uberkarl behaviour scripts, so the memory default is set generous enough to clear a realistic feed-transform working set untouched (§18.4.2).
+
+Today `ScriptParser.Limits` initialises to `ScriptLimits.None` (`ScriptParser.cs:143`) — the shared all-`null` sentinel, every guard off, boundless. A host that does nothing gets an environment where an untrusted script can `StackOverflow` the process (uncatchable) or OOM it. **Secure-by-default inverts the polarity:** the default is *bounded*; boundless becomes an explicit, intentional opt-out.
+
+This is a **single, deliberate behavioural break** (§18.5). It is not new mechanism — every guard it turns on is already designed and (for depth) already built. It changes exactly one thing: which `ScriptLimits` instance `ScriptParser.Limits` starts at.
+
+### 18.2 The default instance and the opt-out API — two named instances, one obvious call each
+
+**Decision: add `ScriptLimits.Default` (bounded) alongside the unchanged `ScriptLimits.None` (boundless). `ScriptParser.Limits` initialises to `ScriptLimits.Default`. The default values live as public `const`s so both `Default` and any partial host config reference one source of truth.**
+
+| Instance | Meaning | The call |
+|---|---|---|
+| `ScriptLimits.Default` (**new**) | The secure baseline — `MaxDepth` and `MaxVariableBytes` set (§18.4), everything else `null`. The value `ScriptParser.Limits` now starts at. | *(nothing — it is the default)* |
+| `ScriptLimits.None` (**unchanged**) | The boundless sentinel, all knobs `null`, byte-identical to today. | `parser.Limits = ScriptLimits.None;` |
+
+- **Total boundless opt-out — one obvious call:** `parser.Limits = ScriptLimits.None;`. This is the "boundless, I know what I'm doing" declaration the user named. `None` already exists as the unbounded sentinel and keeps its exact current meaning; nothing about it changes, so a host that wants the old behaviour writes one line. **Boundless now requires intent** — you name `None` on purpose — which is the whole point.
+- **Per-dimension opt-out — "boundless for one dimension, keep the others":** because the knobs are independent nullables, dropping one dimension is *omitting that knob* while setting the ones you keep. Construct one instance, referencing the `Default*` consts for what you retain:
+  - "default, but no depth ceiling" → `new ScriptLimits { MaxVariableBytes = ScriptLimits.DefaultMaxVariableBytes }` (`MaxDepth` omitted → `null` → boundless depth).
+  - "default, but no memory ceiling" → `new ScriptLimits { MaxDepth = ScriptLimits.DefaultMaxDepth }`.
+  - This is one construction call. Exposing the defaults as public consts is what keeps it DRY — the host does not re-type `10` or `134217728`, it names the const the engine ships.
+- **Tighter than default** (the "tight environment" the user named): construct with your own numbers, e.g. `new ScriptLimits { MaxDepth = 6, MaxVariableBytes = 8*1024*1024, MaxSteps = 1_000_000 }`. Unchanged from how limits are set today.
+
+**Rejected — making `ScriptLimits` a `record` for `ScriptLimits.Default with { MaxDepth = null }`.** It is the tidiest per-dimension syntax and the `IsExternalInit` polyfill (A1) already supports it on `netstandard2.0`. Rejected for this change on one concrete risk: `record` synthesises value equality, and `ScriptLimits.None` is used as a reference sentinel in null-coalescing fallbacks (`ScriptContext.cs:43,68`, `ScriptParser.cs:143`). Value equality *could* alter `==`/`ReferenceEquals` behaviour for any code that identity-compares a limits instance. That is a wider blast radius than secure-by-default needs to take on, and the const-referencing construction above already gives a one-call per-dimension opt-out. If a host later reports the `with`-syntax as genuinely needed, converting to `record` is a separate, verifiable change (grep every `ScriptLimits` identity comparison first). YAGNI until then (#1136 §1).
+
+**No new host-facing type, no new entry point, no options object, no public-interface break.** The surface is two static readonly fields and two consts on an existing class, plus a one-token change to `ScriptParser.Limits`'s initialiser. This is the §10 "no new surface" posture held.
+
+### 18.3 Which guards get defaults — and the `MaxSteps`/`Timeout`/`RegexTimeout` decision
+
+**Decision: only the two guards against *uncatchable, host-tearing* failures get defaults — `MaxDepth` (stack) and `MaxVariableBytes` (heap). The three guards against *recoverable* failures — `MaxSteps`, `Timeout`, `RegexTimeout` — stay opt-in (`null`).**
+
+The load-bearing distinction is **can the host recover without a default?**
+
+| Guard | Runaway failure mode | Recoverable by the host? | Default? |
+|---|---|---|---|
+| `MaxDepth` | `StackOverflowException` from unbounded recursion | **No.** Uncatchable in .NET; **terminates the whole process** (red-team #7805 confirmed: `catch` never fires, exit 127). No token, no watchdog can intervene. | **Yes** |
+| `MaxVariableBytes` | `OutOfMemoryException` / heap exhaustion from unbounded variable growth | **Effectively no.** OOM is catchable in principle but corrupts the process state and in a multi-tenant in-process host takes down every co-resident script. Only a counted check *before* the allocation helps. | **Yes** |
+| `MaxSteps` | `while(true)` hang — infinite work, no allocation | **Yes.** The script runs on a thread the host controls; the host cancels via the `CancellationToken` (`ExecuteAsync(ct)`). A hang does not tear down the process. | **No** — opt-in |
+| `Timeout` | Slow script / blocking host call | **Yes.** Same — wall-clock bounded by the host's own cancellation orchestration. | **No** — opt-in |
+| `RegexTimeout` | Catastrophic regex backtracking | **Yes.** A slow match is a hang bounded by the host's `Timeout`/token; it does not kill the process. | **No** — opt-in |
+
+Two reinforcing reasons the recoverable guards stay off by default:
+
+1. **Necessity (the uncatchable argument).** A default earns its place only where the host *cannot save itself otherwise*. Depth and memory are the two shapes red-team #7805 identified as taking down more than the one execution — "the only ways to break the environment are (a) crashes … when the host declines to configure the guards." A step/time hang is category-(a)-adjacent but recoverable: the host already holds the token. Defaulting it adds no safety the host doesn't already have.
+2. **Do no harm (the false-positive argument).** The user's named workload — job-feed transformers — is **iterative over many items**. A step or time budget is exactly the knob that false-aborts a legitimate large-but-finite feed transform ("process 200 000 items" is a lot of steps, not a runaway). A depth budget does **not** false-abort iteration, because iteration is not recursion (§18.4.1). So defaulting steps/time would be both unnecessary *and* the most likely default to break the workload the user wants protected. YAGNI + do-no-harm → opt-in.
+
+`MaxVariables` (the light entry-count rail) also stays `null` by default: §8.3 already establishes it is *not* the memory guard, entry count is already bounded by `MaxDepth` (now defaulted), and a naive default risks the scope-death false positive (§8.3, T12). The memory default rides on `MaxVariableBytes` alone (§18.4.2).
+
+This is the minimal line that closes the catastrophic hole without over-reaching (#1136 §1) and without leaving a process-kill open (#1136 §4 — do not leave a catastrophic hole either).
+
+### 18.4 The default values — calibrated, not guessed
+
+#### 18.4.1 `DefaultMaxDepth = 10` — and the resolution of the #7748 coupling (Tension B)
+
+**Decision: `public const int DefaultMaxDepth = 10;`.**
+
+**Calibration.** From the measured ceilings (§11.1, #7748, QA #7744 round 3), on the .NET-default 1 MB thread stack:
+
+| Dispatch shape | Abort fires cleanly up to | Process dies at |
+|---|---|---|
+| direct `$f.invoke()` (post-#7749, engine-dispatched) | ≤21 | 22+ |
+| lambda via a reflected host callback | ≤16 | 17+ |
+| `MaxDepth = 10` | — | **empirically safe** (§11.1) |
+| `MaxDepth = 20` | — | **uncatchable `StackOverflowException`** |
+
+`10` is safe for **every** measured shape, not just the best one: `10 ≤ 16`, so even a host that registers a naive reflective lambda-taking extension (the most stack-hungry shape, §11.1) aborts cleanly at the default rather than overflowing. It is the doc's own "empirically safe" number (§11.1), sits above the shipped-test floor of `8` (so it is not punitively tight), and clears both crash ceilings (22 / 17) with real margin.
+
+**Why `10` is "not too tight" for the named workload despite looking small — the depth-≠-iteration point, now operator-confirmed.** `MaxDepth` counts **call nesting** (§7.2), not iterations. A job-feed transformer that does `$items.where(...).select(...).where(...)` over 200 000 items invokes each callback at **depth 1, sequentially** — `.where`/`.indexof` callbacks are sequential, not nested (T9). Iteration consumes **zero** depth. Depth is consumed only by genuine nesting: a lambda that calls a lambda that calls a lambda (a composed pipeline nests ~2–4 deep) or a recursive lambda. Ten levels of nesting is generous for medium-complexity iterative/functional transforms and only bites **recursion** — and the operator has now confirmed *"current scripts i know don't actually use recursion - so we could be a bit more strict here by default"* (§18.1). So `10` clears every current legitimate script with margin to spare; the strict default costs nothing today and only bounds the shape secure-by-default exists to bound. It could defensibly be **stricter still** (the operator invited it), but `10` is chosen over `8` only to leave one level of slack for the occasional legitimately-nested pipeline, at no safety cost.
+
+**The #7748 coupling — resolved: secure-by-default does NOT require #7748 first.**
+
+The danger the brief names is real: a *generous* default (say 100) would exceed the reflected-callback safe-abort ceiling (16), so the guard's own abort would `StackOverflow` **before it fires** — the guard-worse-than-no-guard case (§11.2, R9). That danger is why the default is **10, not 100**. And the operator's confirmation that current scripts do not recurse means a strict default has **no cost** to pay for that safety — there is no legitimate deep-recursion workload being sacrificed. A conservative default that lives inside the safe-for-all-shapes ceiling sidesteps the #7748 problem entirely:
+
+- **`DefaultMaxDepth = 10` is safe on the default stack today, with no dependency on #7748.** The self-defeat property (§11.2) only bites *above* the safe ceiling; `10` is below it for every measured shape. Ship it now. **#7748 is NOT a prerequisite for secure-by-default.**
+- **#7748 is the prerequisite for *raising* the default (or any host's `MaxDepth`) toward "generous" later, not for shipping this one.** #7748 reduces the catch-and-rethrow layers per recursion level and would raise the usable ceiling by a large multiple (§11.5, OQ-7) — plausibly toward the 664-level descent capacity #7744 measured. Only *after* #7748 lands could `DefaultMaxDepth` be reconsidered upward (e.g. if a future community workload — tree/graph traversal, OQ-6 — needs it), without walking into R9. Until then, deeper recursion is an intentional knob-turn, which is precisely the opt-out polarity secure-by-default establishes.
+
+So the sequencing is: **ship secure-by-default with `DefaultMaxDepth = 10` now, independent of #7748; #7748 only unlocks a *higher* default should a recursive workload ever appear.** This is the honest hybrid — a safe strict default immediately (free, because nothing recurses today), with #7748 as the documented path to relaxing it if and when the need arises, not a blocker.
+
+**Implementer must verify before committing the number.** `10` is measured on `net8.0` on a 1 MB stack. Re-run the §11.3 calibration on **both** TFMs (`netstandard2.0` consumers may run on a different runtime) and confirm `10` still aborts cleanly on the worst reachable shape. If either TFM's safe ceiling is below ~12, keep `10`; if a TFM crashes at or below `10`, drop the default to `8` (the shipped `SafeMaxDepth`) rather than shipping a default that can self-defeat. **A default `MaxDepth` that is itself unsafe is worse than no default (R9); the number bends down to stay safe, never up to look generous.**
+
+#### 18.4.2 `DefaultMaxVariableBytes = 128 MiB` — the bytes tier carries the default, calibrated generous
+
+**Decision: `public const long DefaultMaxVariableBytes = 128L * 1024 * 1024;` (128 MiB). `MaxVariables` stays `null`.**
+
+**Which tier carries the default, and why bytes.** The catastrophic failure is heap exhaustion (OOM), which is a *bytes* quantity, not an *entry-count* quantity. `MaxVariableBytes` is the tier that bounds it (§8.2, §8.5). `MaxVariables` (entry count) is a rail against scope/closure accumulation, explicitly *not* the memory guard (§8.3), and its live count is already bounded once `MaxDepth` is set (§8.3: `live entries ≈ distinct_names × live_scopes`, `live_scopes ≤ MaxDepth × blocks/frame`). Defaulting both would be two knobs guarding one catastrophe — the bytes tier alone is the KISS answer.
+
+**This is the dimension that carries the real calibration weight.** The operator confirmed memory *"is more something someone could actually run against nowadays"* (§18.1) — unlike depth, a current legitimate workload can approach the memory budget. So the governing constraint (*no requirement to adjust immediately for current use*) binds hardest here, and the default is set **generous**, not strict.
+
+**The binding workload is mamgo feed transformation + campaign filtering, not Uberkarl.** The operator named the two current memory-touching uses (*"mostly feed transformation and campaign filtering"*) and separately said Uberkarl expects *"more tiny behavior scripts by default."* So the default must clear a realistic **feed-transform / campaign-filter** working set — the Uberkarl tiny-script case is far less demanding and cannot be the binding constraint. Crucially, a generous per-script memory default is *cheap on the Uberkarl host* precisely because those scripts are tiny (they never approach it), so setting the default high enough for mamgo does not weaken multi-tenant safety in any way that matters — the tiny scripts stay orders of magnitude below it, and a runaway is still caught at 128 MiB, far below host OOM.
+
+**The stated working-set assumption behind 128 MiB — this is the thing to confirm, not the number itself.** The guard charges only **script-introduced** variable payload, never the host feed object the script reads from (§8.4). The assumption: **a mamgo feed transform / campaign filter holds under ~40 MiB of its *own* variable data at peak** — an intermediate/accumulated transformed collection of tens of thousands of small items, or a few tens of MB of strings — while streaming over a host feed that may itself be larger but is not charged. Under that assumption, 128 MiB is comfortably generous:
+
+- **Headroom:** the design guarantees peak transient ≤3× the budget (§8.2.4). A script whose sustained script-owned working set is ~40 MiB never approaches the 128 MiB trip point; even one deliberately sitting near the budget peaks at ≤384 MiB transient — survivable on any realistic server host. The "double the limits are not critical" principle (§1) holds with room.
+- **No immediate adjustment for current use:** a feed transform would have to hold **>128 MiB of its own variables** (not counting the host feed) to trip — i.e. materialise a very large output entirely into script variables. The assumption is that current transforms do not; OQ-10 asks the operator to confirm this in one line.
+- **Still stops the catastrophe:** the runaway shapes (`$s = $s + $s` doubling, `while(true){ $l.add(...) }`) cross 128 MiB long before they approach host OOM, and M1 caps any single value at the budget so an adversarial 100 KB script cannot overshoot (§8.2.4). Generosity trades a little runaway-detection latency for zero false aborts on legitimate data-shuffling — the correct trade for secure-by-default, whose job is to prevent *host death*, not to police working-set size.
+
+**Why 128 MiB and not 64.** 64 MiB catches the catastrophe equally well — safety is insensitive to the choice, both sit far below host OOM — so the choice is purely about legitimate-workload headroom. The operator explicitly signalled *"there is room - i just want a default where there are no requirements to adjust immediately"*, and the multi-tenant cost of the higher number is negligible (Uberkarl scripts are tiny). 128 MiB doubles the feed-transform headroom for no meaningful safety cost, which is the right call under the "no immediate adjustment" constraint. Erring generous is the safe direction for a first shipped default that must not break current use; if OQ-10 returns "a few MB", the number can be *tightened* later with a measured basis.
+
+**Prerequisite:** `MaxVariableBytes` does not exist yet — it is built by **#7715 PR 2** (§14 phases 4–7). Secure-by-default's memory half **cannot ship before that guard is built**. See §18.5 sequencing.
+
+Both constants stay `const` (#1136 §3): they ship one engine-wide opinion, not a per-environment or per-operator tunable. A host that needs a different value sets its own `ScriptLimits` — that is the opt-out, not a config knob on the default.
+
+### 18.5 Backward compatibility, versioning, and migration (Tension A)
+
+**This is a breaking behavioural change and is framed as one — no softening.** Every existing host runs at `ScriptLimits.None` today (A7): mamgo `scriptservice`, the `ScriptExecutor` CLI, and the user's own transformer scripts all run boundless. Flipping the default means, on upgrade, a script that legitimately recurses past depth 10 or grows past 128 MiB of variables **starts aborting where it previously ran**.
+
+**Version call: this is a MAJOR version bump.** The default behaviour of the public `ScriptParser` surface changes for every consumer who does not opt out. That is the definition of a major (breaking) release under semver, and calling it anything less would be dishonest. It should be the *headline* of that major version, not a footnote.
+
+**The one-line migration to restore old behaviour:**
+
+```
+parser.Limits = ScriptLimits.None;   // restore pre-vN boundless behaviour
+```
+
+That is the entire migration for a host that wants exactly what it had. It is the same call as the boundless opt-out (§18.2) because they are the same thing: "boundless" and "what you had before the flip" are identical.
+
+**Rollout guidance for the release notes (must be impossible to miss):**
+
+1. **Lead with the flip.** State plainly: *"`ScriptParser.Limits` now defaults to `ScriptLimits.Default` (bounded), not `ScriptLimits.None` (boundless). Untrusted scripts are now guarded out of the box. If you were relying on unbounded execution, set `parser.Limits = ScriptLimits.None;` explicitly."*
+2. **Name the two active bounds and their values** (`MaxDepth = 10`, `MaxVariableBytes = 128 MiB`) and link the §11.3 depth-calibration and §8 memory-guard sections so a host that keeps the defaults understands them.
+3. **Give trusted hosts the safe upgrade path:** *set `ScriptLimits.None` on upgrade to preserve exact behaviour, then opt **into** bounds deliberately, per workload* — rather than discovering an abort in production. This is the recommended path for mamgo `scriptservice` and the CLI, which run trusted content.
+4. **Warn on the depth ceiling** (§11.2): a host that finds `MaxDepth = 10` too low must **not** simply raise it — it must calibrate (§11.3) and, until #7748, cannot raise it far without risking R9. For genuinely recursion-heavy trusted workloads, `ScriptLimits.None` (or a calibrated per-host value) is the answer today.
+
+**Why the migration is safe to offer even though I cannot verify the transformer profile.** The defaults are deliberately generous for the *named* iterative workload (§18.4), so most transformers should not break. For the ones that do, the fix is one line, and the recommended upgrade path (trusted hosts set `None` explicitly, then opt in) means a careful host never gets surprised in the first place. The design does not, and cannot, guarantee zero breakage on unknown scripts — it guarantees a trivial, documented restore path and a default calibrated to the workload the user described. OQ-10 exists to tighten the calibration before the flip ships.
+
+**No deprecation window, no compatibility shim, no dual-default transition (#1136 §4, §6).** This is a private, atomically-deployed library surface; the break is a single instance-swap with a one-line opt-out. A transition period would be exactly the "deprecation period for safe rollout" anti-pattern the contract names. One major version, one flip, one documented opt-out.
+
+### 18.6 Sequencing, scope, and implementation notes
+
+**In scope:** the two named instances + two consts, the `ScriptParser.Limits` initialiser change, the guard-selection decision (§18.3), the two default values (§18.4), the versioning/migration (§18.5), and the language-reference/#2946 updates that document the new default.
+
+**Out of scope:** the memory-guard *mechanism* (already designed §8, built by #7715 PR 2 — a **hard prerequisite**, see below); raising the depth default (blocked on #7748, a follow-up); the reflection fast path (#7748/OQ-7); any new config surface.
+
+**Prerequisite ordering — the flip ships both defaults in ONE major version:**
+
+| Step | Work | Status |
+|---|---|---|
+| P0 | **#7715 PR 2** — build the variable-usage guard (`MaxVariables`, `MaxVariableBytes`, `VariableBudget`, `VariableSizer`) per §8, §14 phases 4–7. | **Hard prerequisite — John does this first.** `MaxVariableBytes` must exist before it can carry a default. |
+| P1 | This flip: add `ScriptLimits.Default`, `DefaultMaxDepth`, `DefaultMaxVariableBytes`; repoint `ScriptParser.Limits` initialiser to `ScriptLimits.Default`; update XML docs; release notes; language-reference §1/§12 + #2946. | Ships **with/after P0**, as the headline of the major version. |
+
+Shipping the depth default alone in one version and the memory default in the next would inflict **two** behavioural breaks on every host. Holding the flip until the memory guard is built lets a host absorb the polarity inversion exactly once. That makes #7715 PR 2 a hard prerequisite for *this* task, exactly as the brief states — not a nice-to-have.
+
+**Concrete changes (no follow-up needed by John):**
+
+1. `ScriptLimits.cs`:
+   - `public const int DefaultMaxDepth = 10;`
+   - `public const long DefaultMaxVariableBytes = 128L * 1024 * 1024;`
+   - `public static readonly ScriptLimits Default = new() { MaxDepth = DefaultMaxDepth, MaxVariableBytes = DefaultMaxVariableBytes };`
+   - XML docs on `Default`: what it bounds, that it is the new baseline, that `None` restores boundless, cross-referencing the §11.3 depth-calibration caveat.
+2. `ScriptParser.cs:143`: `public ScriptLimits Limits { get; set; } = ScriptLimits.Default;` (was `ScriptLimits.None`). **This one token is the entire behavioural flip.**
+3. The `?? ScriptLimits.None` fallbacks in `ScriptContext.cs` (`:43`, `:68`) are **unchanged** — they are "caller passed null limits" fallbacks, a different concern from the parser's *default*. A null limits argument still means "no configured limits"; only the parser's starting instance changes. (Confirm no test asserts the parser default *is* `None` by reference; if one does, it updates to `Default` — a new-file/expected-change, not a pre-existing-test-mutation violation, because the assertion's *subject* changed by design.)
+4. Verify the §18.4.1 calibration on both TFMs before committing `10`.
+
+**Tests (new file or an addition to `ExecutionGuardTests.cs`, no pre-existing test modified except a parser-default assertion that is now intentionally wrong):**
+
+| # | Test | Asserts |
+|---|---|---|
+| T34 | A default-constructed `ScriptParser` (no `Limits` set) runs a recursive lambda past depth 10 | Aborts with `ScriptDepthLimitExceededException`, `Limit == 10`, process survives — the default is live |
+| T35 | Same parser runs a bounded, shallow iterative transform (`.where`/`.select` over a large collection, no deep nesting) | **Completes** — pins that iteration does not consume the default depth (§18.4.1) |
+| T36 | A default-constructed parser runs `while(true){ $l.add("xxxx") }` (once #7715 PR 2 is in) | Aborts with `ScriptVariableLimitExceededException`, `Kind == Bytes` — the memory default is live |
+| T37 | `parser.Limits = ScriptLimits.None;` then the T34 recursion (bounded, not an actual overflow) | **Does not abort on depth** — the boundless opt-out works |
+| T38 | `ScriptLimits.Default` values | `MaxDepth == 10`, `MaxVariableBytes == 128*1024*1024`, `MaxSteps`/`Timeout`/`RegexTimeout`/`MaxVariables` all `null` — pins §18.3/§18.4 |
+| T39 | Two independently-constructed default parsers, one repointed to `None` | The other still bounded — pins that `Default`, like `None`, is a safe shared instance under `init`-only (S1) |
+
+> ⚠ T34/T37 must bound the recursion to a **finite** literal above 10 and well below the measured crash depth, never an actual unbounded overflow (§13 warning). A regression must fail an assertion, not kill the test runner.
+
+### 18.7 Pre-Design Checklist (#1136 §5) — this section
+
+- **KISS/DRY/YAGNI.** No new type, no new host surface, no options object — two static fields + two consts on an existing class and a one-token initialiser change. The `record`-for-`with` convenience is rejected as YAGNI + reference-equality risk (§18.2). No per-environment config knob — the defaults are `const`, the opt-out is instance-swap (§18.4). `block_size × site_count`: the flip is **1 token at 1 site** (`ScriptParser.cs:143`) — nothing to extract.
+- **Existing systems first.** Everything lands on §10's surface: `ScriptLimits` (gains `Default` beside `None`) and `ScriptParser.Limits` (initialiser retargeted). No new layer. The consts are the DRY source both `Default` and partial host configs read.
+- **Configurability.** The defaults are **not** knobs — they are one shipped engine opinion with an instance-level opt-out, which is precisely how a magic number *should* be surfaced (#1136 §3): named `const`, not config. No telemetry-then-tune compound. The reversal of §2/§11.4's "no default" is deliberate and argued (§18.4.1), not a drift.
+- **Less is better.** Deleted from this section: a dual-default transition window (§18.5, an anti-pattern), a `MaxSteps`/`Timeout` default (§18.3, unnecessary + harmful), a `MaxVariables` default (§18.4.2, not the guard), a `record` conversion (§18.2, risk > benefit), and a per-dimension fluent API (§18.2, construction already suffices). Trade-offs named: the conservative depth default vs. a generous one (§18.4.1, resolved by the R9/#7748 coupling); the single behavioural break vs. two (§18.6).
+- **Document discipline.** The reversal of §2 and §11.4 is annotated at both source rows in the working-tree file, not silently contradicted. In/out scope explicit (§18.6). No predecessor superseded — this extends §§7–11. Every default value states its calibration math (§18.4), no paraphrase-grounded override.
+
+### 18.8 Open questions — batched for the operator/user
+
+**OQ-10 — confirm the memory default covers your feed transforms (one-line answer).** The design assumes a typical mamgo **feed transform / campaign filter** holds **under ~40 MiB of its own variable data at peak** (the intermediate/output collection the script builds — *not* the host feed object it streams over, which is not charged, §8.4), so the `128 MiB` default clears it with headroom (§18.4.2). **Confirm that assumption, or name the real figure:** does any current transform routinely materialise **more than ~128 MiB of its own variables** (e.g. building an entire large output feed in a script variable rather than streaming it)? If yes, raise the const before the flip ships; if "a few tens of MB at most", 128 MiB is already generous and could even tighten. *(The depth and no-recursion questions are already resolved by your 2026-08-06 input — this is the only calibration number still worth a confirm.)*
+
+**OQ-11 — revisit `DefaultMaxDepth` after #7748?** You confirmed current scripts do not recurse, so `10` requires no adjustment today. This is only relevant *if a future workload needs deep recursion*: once #7748 raises the usable ceiling (§11.5), the default could rise (OQ-6). A follow-up gated on #7748, not part of this flip — filed now so `10` is understood as *safely strict given today's non-recursive workloads*, with a known path to raising it should that change.
+
+**OQ-12 — should mamgo `scriptservice` and the `ScriptExecutor` CLI opt out to `None` on upgrade, or adopt the defaults?** They run *trusted* content, so the security case is weaker and the false-abort risk (recursion/large transforms breaking) is the live concern. Recommended path (§18.5): set `None` explicitly on upgrade, then opt into bounds per workload. Confirm this is acceptable for the CLI, which may run arbitrary user scripts locally where a default bound is arguably desirable.
+
+**Implementation note (John, 2026-08-07):** shipped per §18.6 P1, with one deviation from "no follow-up needed" — `ScriptExecutor.csproj` needed `<LangVersion>default</LangVersion>` added (it had none, so its `netcoreapp3.1` target resolved to C# 8, which cannot consume `init`-only properties from the referenced library). The CLI additionally got override flags per the brief (§18 does not cover CLI flags; they are this task's addition, not §18's). Full report: task return to the operator, same date.

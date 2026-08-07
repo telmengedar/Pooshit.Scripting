@@ -135,12 +135,12 @@ public class ScriptParser : IScriptParser {
     public bool AllowSingleQuotesForStrings { get; set; }
 
     /// <summary>
-    /// execution guards (timeout, step limit, regex match timeout) applied to scripts parsed by this
-    /// parser. Every knob is opt-in and defaults to <see cref="ScriptLimits.None"/>, reproducing today's
-    /// unrestricted behavior; a host wanting two limit profiles (eg. a tight budget for per-frame scripts,
-    /// a loose one for init scripts) keeps two parser instances
+    /// execution guards applied to scripts parsed by this parser. Defaults to <see cref="ScriptLimits.Default"/>
+    /// (bounded call depth and variable footprint); assign <see cref="ScriptLimits.None"/> to opt out of every
+    /// bound, or a custom instance for a different profile. A host wanting two limit profiles (eg. a tight
+    /// budget for per-frame scripts, a loose one for init scripts) keeps two parser instances
     /// </summary>
-    public ScriptLimits Limits { get; set; } = ScriptLimits.None;
+    public ScriptLimits Limits { get; set; } = ScriptLimits.Default;
 
     void InitializeOperators() {
         operatortree.Add("~", Operator.Complement);
