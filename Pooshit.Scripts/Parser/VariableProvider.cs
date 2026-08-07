@@ -69,6 +69,16 @@ namespace Pooshit.Scripting.Parser {
         /// </summary>
         protected Dictionary<string, object> Values { get; } = new Dictionary<string, object>();
 
+        /// <summary>
+        /// parent scope in the provider chain, or <c>null</c> at the root
+        /// </summary>
+        internal IVariableProvider Parent => parentprovider;
+
+        /// <summary>
+        /// variable entries held directly by this provider, excluding its parent chain
+        /// </summary>
+        internal Dictionary<string, object> LocalValues => Values;
+
         /// <inheritdoc />
         public object GetVariable(string name) {
             if(!ContainsVariable(name))

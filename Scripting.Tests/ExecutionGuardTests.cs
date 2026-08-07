@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -725,6 +726,225 @@ namespace Scripting.Tests {
 
             Assert.Throws<ScriptDepthLimitExceededException>(() => budget.Enter());
             Assert.Throws<ScriptDepthLimitExceededException>(() => budget.CheckBreached());
+        }
+
+        /// <summary>
+        /// host object that owns a sizeable internal payload but does not itself present as a string, array,
+        /// <see cref="System.Collections.IDictionary"/> or <see cref="System.Collections.ICollection"/>, so
+        /// <see cref="VariableSizer"/> charges it a flat opaque constant instead of walking into it
+        /// </summary>
+        class OpaqueHostObject {
+            public byte[] Payload { get; } = new byte[10_000_000];
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("Design §8.2.4/T18a - the load-bearing peak-vs-sustained proof: $s = $s + $s doubles within one statement, so M1 (the per-produced-value ceiling at ValueOperation.ExecuteToken/AssignableToken.Assign) must abort on the first value that crosses the budget, not after the sampled walk eventually notices. The measured value at the throw must stay within a small multiple of the limit regardless of how many doublings a sampling-only design would have allowed.")]
+        public void Variable_AssignmentDoublingAbortsBeforeMultipleOfLimit() {
+            const long limit = 200;
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxVariableBytes = limit}
+            };
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$s = \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+                "while(true) {",
+                "  $s = $s + $s",
+                "}"
+            ));
+
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(() => script.Execute());
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+            Assert.That(exception.Measured, Is.LessThanOrEqualTo(2 * limit));
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [TestCase(4)]
+        [TestCase(6400)]
+        [Description("Design §8.2.4 chain verdict/T18b: a long operator chain in one statement ($s+$s+...+$s) trips M1 at the first intermediate that crosses the budget, not at the n-th term - the measured value at the throw must be independent of chain length n, never scaling with the number of terms.")]
+        public void Variable_LongConcatenationChainAbortsIndependentOfChainLength(int termCount) {
+            const long limit = 200;
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxVariableBytes = limit}
+            };
+            string chain = string.Join("+", Enumerable.Repeat("$s", termCount));
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$result = " + chain
+            ));
+
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(
+                () => script.Execute(new VariableProvider(new Variable("s", new string('x', 50)))));
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+            Assert.That(exception.Measured, Is.LessThanOrEqualTo(2 * limit));
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("Design §8.2.2/T10 - the shape M1/M2 cannot see: $l.add(...) mutates the list in place without producing a new value at an operator or assignment site, so only the sampled walk (M3, at Guard()) can catch the growth.")]
+        public void Variable_ListMutationInPlaceThrowsViaSampledWalk() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxVariableBytes = 2000}
+            };
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$l = new list()",
+                "while(true) {",
+                "  $l.add(\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\")",
+                "}"
+            ));
+
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(() => script.Execute());
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("Design §8.4 - the host-usage boundary: a variable holding a host object graph is charged VariableSizer's flat opaque constant, not walked into it, so a low MaxVariableBytes does not abort a script that merely references a large host-owned object it did not itself allocate.")]
+        public void Variable_HostObjectGraphChargedOpaqueConstantNotWalked() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxVariableBytes = 1000}
+            };
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$x = $obj",
+                "$y = 1"
+            ));
+
+            Assert.DoesNotThrow(() => script.Execute(new VariableProvider(new Variable("obj", new OpaqueHostObject()))));
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7809 W1/T18d: repeated small, separately-produced values (each under the byte ceiling on its own, so M1 never fires) accumulated via in-place mutation must trip M2's forced measurement pass well ahead of the 256-tick sampled floor. MaxSteps is set below that floor, so without M2 forcing an early pass the step budget - not the variable budget - would be what throws.")]
+        public void Variable_SeparatelyProducedValuesForcesMeasurementViaM2() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxVariableBytes = 1000, MaxSteps = 200}
+            };
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$l = new list()",
+                "while(true) {",
+                "  $x = \"xxxxxxxxxxxxxxxxxxxx\"",
+                "  $l.add($x)",
+                "}"
+            ));
+
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(() => script.Execute());
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7809 W2: a real §8.4 root-exclusion pin, distinct from the §8.5 opaque-charging pin above - a plain large string in the host-supplied root variable set is sized precisely by VariableSizer (it is not an opaque host type), so this only passes if the root scope itself is excluded from the walk, not merely because the value type is unrecognised.")]
+        public void Variable_HostRootLargeStringExcludedFromBudget() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxVariableBytes = 1000}
+            };
+            IScript script = parser.Parse(ScriptCode.Create(
+                "for($i=0,$i<300,++$i) {",
+                "  $y = 1",
+                "}"
+            ));
+
+            Assert.DoesNotThrow(() => script.Execute(new VariableProvider(new Variable("bigdata", new string('x', 1_000_000)))));
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("Design §8.3 - the scope-death trap: while(true) { $x = 1 } re-declares $x in a fresh block scope every iteration, so live entry count never grows even after many iterations. An incremental declaration counter would false-positive here; a walk over live scopes must not.")]
+        public void Variable_ScopeDeathDoesNotFalsePositiveOnEntryCount() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxVariables = 3, MaxSteps = 5000}
+            };
+            IScript script = parser.Parse(ScriptCode.Create(
+                "while(true) {",
+                "  $x = 1",
+                "}"
+            ));
+
+            Assert.Throws<ScriptStepLimitExceededException>(() => script.Execute());
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("Design §8.3/T13: MaxVariables catches live entries accumulated in a scope that stays alive across many checkpoints, distinct from MaxVariableBytes - the light tier's own reachable shape.")]
+        public void Variable_EntriesLimitThrowsWithEntriesKind() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxVariables = 5}
+            };
+            List<string> lines = new();
+            for (int i = 0; i < 10; i++)
+                lines.Add($"$v{i} = {i}");
+            lines.Add("for($i=0,$i<1000,++$i) {");
+            lines.Add("  $tmp = 1");
+            lines.Add("}");
+            IScript script = parser.Parse(ScriptCode.Create(lines.ToArray()));
+
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(() => script.Execute());
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Entries));
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("Design §8.2.2 - the hook belongs on AssignableToken.Assign, the base class, since += does not route through ValueOperation.ExecuteToken at all.")]
+        public void Variable_CompoundAssignHooksAssignableTokenBase() {
+            const long limit = 200;
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxVariableBytes = limit}
+            };
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$s = \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+                "while(true) {",
+                "  $s += $s",
+                "}"
+            ));
+
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(() => script.Execute());
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("A script-level try/catch around a variable-limit breach must not swallow it, the same contract already pinned for depth breaches.")]
+        public void Try_DoesNotSwallowVariableLimitAbort() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxVariableBytes = 200}
+            };
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$s = \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+                "try {",
+                "  while(true) {",
+                "    $s = $s + $s",
+                "  }",
+                "} catch {",
+                "  $flag.Caught = true",
+                "}"
+            ));
+
+            MutableFlag flag = new();
+            Assert.Throws<ScriptVariableLimitExceededException>(() => script.Execute(new VariableProvider(new Variable("flag", flag))));
+            Assert.That(flag.Caught, Is.False);
+        }
+
+        [Test]
+        [Description("T31b's variable-guard counterpart (design §12 S2): a default execution with neither MaxVariables nor MaxVariableBytes configured must not allocate a VariableBudget at all, keeping Guard()'s added line a single null-conditional no-op.")]
+        public void Variable_DefaultExecutionAllocatesNoVariableBudget() {
+            using GuardedExecution execution = GuardedExecution.Prepare(new VariableProvider(), null, CancellationToken.None, ScriptLimits.None);
+
+            Assert.That(execution.Context.VariableBudget, Is.Null);
+        }
+
+        [Test]
+        [Description("Direct unit test for VariableSizer's depth cap doubling as a cycle guard (design §8.5): a list containing itself must terminate sizing rather than recurse indefinitely.")]
+        public void VariableSizer_SelfReferencingListTerminates() {
+            List<object> self = new();
+            self.Add(self);
+
+            Assert.DoesNotThrow(() => VariableSizer.Size(self));
+        }
+
+        /// <summary>
+        /// non-<see cref="System.Collections.ICollection"/> <see cref="IEnumerable"/> that would enumerate
+        /// forever if <see cref="VariableSizer"/> ever iterated it
+        /// </summary>
+        class InfiniteEnumerable : IEnumerable {
+            public IEnumerator GetEnumerator() {
+                while (true)
+                    yield return 1;
+            }
+        }
+
+        [Test]
+        [Description("Direct unit test for VariableSizer never enumerating a non-ICollection IEnumerable (design §8.5): an infinite host sequence held in a variable must be sized as an opaque constant, not enumerated.")]
+        public void VariableSizer_InfiniteEnumerableNeverEnumerated() {
+            Assert.DoesNotThrow(() => VariableSizer.Size(new InfiniteEnumerable()));
         }
     }
 }

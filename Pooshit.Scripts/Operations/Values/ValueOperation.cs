@@ -23,7 +23,9 @@ namespace Pooshit.Scripting.Operations.Values {
                 object lhs = Lhs.Execute(context);
                 object rhs = Rhs.Execute(context);
                 TypeInformation.ConvertOperands(ref lhs, ref rhs);
-                return Operate(lhs, rhs, context);
+                object result = Operate(lhs, rhs, context);
+                context.VariableBudget?.ChargeProducedValue(result, context.Arguments);
+                return result;
             }
             catch (RuntimeBinderException e) {
                 throw new ScriptRuntimeException(e.Message, null, e);
