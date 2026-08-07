@@ -17,6 +17,7 @@ public class ScriptContext {
         Limits = context.Limits;
         StepBudget = context.StepBudget;
         DepthBudget = context.DepthBudget;
+        VariableBudget = context.VariableBudget;
     }
 
     /// <summary>
@@ -30,6 +31,7 @@ public class ScriptContext {
         Limits = context.Limits;
         StepBudget = context.StepBudget;
         DepthBudget = depthBudget;
+        VariableBudget = context.VariableBudget;
     }
 
     /// <summary>
@@ -63,11 +65,13 @@ public class ScriptContext {
     /// <param name="limits">execution guards configured for this execution; <c>null</c> is treated as <see cref="ScriptLimits.None"/></param>
     /// <param name="stepBudget">step budget backing <see cref="Limits"/>.<see cref="ScriptLimits.MaxSteps"/>, or <c>null</c> when unconfigured</param>
     /// <param name="depthBudget">depth budget backing <see cref="Limits"/>.<see cref="ScriptLimits.MaxDepth"/>, or <c>null</c> when unconfigured</param>
-    internal ScriptContext(IVariableProvider arguments, ITypeProvider typeprovider, CancellationToken cancellationToken, ScriptLimits limits, StepBudget stepBudget, DepthBudget depthBudget)
+    /// <param name="variableBudget">variable budget backing <see cref="Limits"/>.<see cref="ScriptLimits.MaxVariables"/>/<see cref="ScriptLimits.MaxVariableBytes"/>, or <c>null</c> when unconfigured</param>
+    internal ScriptContext(IVariableProvider arguments, ITypeProvider typeprovider, CancellationToken cancellationToken, ScriptLimits limits, StepBudget stepBudget, DepthBudget depthBudget, VariableBudget variableBudget)
         : this(arguments, typeprovider, cancellationToken) {
         Limits = limits ?? ScriptLimits.None;
         StepBudget = stepBudget;
         DepthBudget = depthBudget;
+        VariableBudget = variableBudget;
     }
 
     /// <summary>
@@ -102,13 +106,18 @@ public class ScriptContext {
     internal DepthBudget DepthBudget { get; private set; }
 
     /// <summary>
-    /// checkpoint called at every engine-controlled loop iteration, statement and callback invocation;
-    /// throws when the cancellation token has been cancelled, the configured step budget is exhausted, or a
-    /// configured depth budget was breached earlier and the breach did not already reach the host
+    /// variable budget tracking a script's own variable usage, or <c>null</c> when neither
+    /// <see cref="ScriptLimits.MaxVariables"/> nor <see cref="ScriptLimits.MaxVariableBytes"/> is configured
+    /// </summary>
+    internal VariableBudget VariableBudget { get; private set; }
+
+    /// <summary>
+    /// checkpoint called at every engine-controlled loop iteration, statement and callback invocation, enforcing the configured step, depth and variable budgets
     /// </summary>
     public void Guard() {
         CancellationToken.ThrowIfCancellationRequested();
         StepBudget?.Consume();
         DepthBudget?.CheckBreached();
+        VariableBudget?.Observe(Arguments);
     }
 }

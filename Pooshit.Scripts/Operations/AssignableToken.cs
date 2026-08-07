@@ -17,7 +17,9 @@ namespace Pooshit.Scripting.Operations {
         /// </remarks>
         public object Assign(IScriptToken token, ScriptContext context) {
             try {
-                return AssignToken(token, context);
+                object value = AssignToken(token, context);
+                context.VariableBudget?.ChargeProducedValue(value, context.Arguments);
+                return value;
             }
             catch (OperationCanceledException) {
                 throw;

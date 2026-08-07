@@ -49,15 +49,18 @@ sealed class GuardedExecution : IDisposable {
     public static GuardedExecution Prepare(IVariableProvider variables, ITypeProvider typeprovider, CancellationToken callertoken, ScriptLimits limits, DepthBudget inheritedDepthBudget = null) {
         StepBudget stepbudget = limits.MaxSteps.HasValue ? new StepBudget(limits.MaxSteps.Value) : null;
         DepthBudget depthbudget = inheritedDepthBudget ?? (limits.MaxDepth.HasValue ? new DepthBudget(limits.MaxDepth.Value) : null);
+        VariableBudget variablebudget = limits.MaxVariables.HasValue || limits.MaxVariableBytes.HasValue
+            ? new VariableBudget(variables, limits.MaxVariables, limits.MaxVariableBytes)
+            : null;
 
         if (!limits.Timeout.HasValue) {
-            ScriptContext context = new(variables, typeprovider, callertoken, limits, stepbudget, depthbudget);
+            ScriptContext context = new(variables, typeprovider, callertoken, limits, stepbudget, depthbudget, variablebudget);
             return new GuardedExecution(context, callertoken, callertoken, null, null);
         }
 
         CancellationTokenSource linkedsource = CancellationTokenSource.CreateLinkedTokenSource(callertoken);
         linkedsource.CancelAfter(limits.Timeout.Value);
-        ScriptContext timeoutcontext = new(variables, typeprovider, linkedsource.Token, limits, stepbudget, depthbudget);
+        ScriptContext timeoutcontext = new(variables, typeprovider, linkedsource.Token, limits, stepbudget, depthbudget, variablebudget);
         return new GuardedExecution(timeoutcontext, linkedsource.Token, callertoken, limits.Timeout, linkedsource);
     }
 

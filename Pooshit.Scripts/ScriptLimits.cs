@@ -48,4 +48,14 @@ public class ScriptLimits {
     /// <see cref="StackOverflowException"/>
     /// </summary>
     public int? MaxDepth { get; init; }
+
+    /// <summary>
+    /// maximum number of live variable entries a script may hold before it is aborted, or <c>null</c> for no entry-count ceiling
+    /// </summary>
+    public long? MaxVariables { get; init; }
+
+    /// <summary>
+    /// maximum approximated footprint in bytes of a script's own variables before it is aborted, or <c>null</c> for no footprint ceiling
+    /// </summary>
+    public long? MaxVariableBytes { get; init; }
 }
