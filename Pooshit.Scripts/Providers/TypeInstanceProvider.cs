@@ -32,7 +32,12 @@ namespace Pooshit.Scripting.Providers {
         public object Create(IScriptToken[] parameters, ScriptContext context) {
             object[] parametervalues = parameters.Select(p => p.Execute(context)).ToArray();
             ConstructorInfo constructor=resolver.ResolveConstructor(type, parametervalues);
-            return constructor.Invoke(MethodOperations.CreateParameters(constructor.GetParameters(), parametervalues).ToArray());
+            object[] callparameters = MethodOperations.CreateParameters(constructor.GetParameters(), parametervalues).ToArray();
+
+            if (VariableSizer.TryGetCapacityOperation(type, constructor, out long bytesperunit))
+                context.VariableBudget?.ChargePreAllocation(Math.Max(0, Convert.ToInt64(callparameters[0])) * bytesperunit);
+
+            return constructor.Invoke(callparameters);
         }
 
         /// <inheritdoc />
