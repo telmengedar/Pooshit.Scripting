@@ -25,29 +25,22 @@ namespace Pooshit.Scripting.Providers {
         }
 
         /// <summary>
-        /// invokes the method using this lambda's own captured context for its depth budget; prefer
-        /// <see cref="InvokeFrom"/> when an invoking context is available
+        /// invokes the method under this lambda's own captured context - depth, steps, variables, limits and
+        /// cancellation all resolve from where the lambda was defined; a host extension reached from a running
+        /// script should declare a trailing <see cref="ScriptContext"/> parameter and call <see cref="InvokeFrom"/>
+        /// instead, since calling this overload there charges every concurrent callback to the same counters
         /// </summary>
-        /// <remarks>
-        /// Resolves the depth budget from the context this lambda was defined in, not the one invoking it. A
-        /// host extension that accepts a <see cref="LambdaMethod"/> should declare a trailing
-        /// <see cref="ScriptContext"/> parameter and call <see cref="InvokeFrom"/> instead - the engine injects
-        /// that parameter, so the script-level call site is unchanged. Calling this overload from such an
-        /// extension charges every concurrent callback to the same counter, which can breach <c>MaxDepth</c>
-        /// with no recursion at all. It remains correct where there is genuinely no invoking context: host C#
-        /// code, or a test driving a lambda returned from <see cref="IScript.Execute"/>.
-        /// </remarks>
         /// <param name="arguments">arguments for lamda</param>
         /// <returns>execution result</returns>
         public object Invoke(params object[] arguments) {
             CheckArguments(arguments);
             context.Guard();
-            return InvokeCore(context.DepthBudget, arguments);
+            return InvokeCore(context, context.DepthBudget, arguments);
         }
 
         /// <summary>
-        /// invokes the method given an explicit invoking context, resolving the depth budget from
-        /// <paramref name="invokingContext"/> instead of this lambda's own captured context
+        /// invokes the method resolving depth, steps, variables, limits and cancellation from <paramref name="invokingContext"/>
+        /// instead of this lambda's own captured context, which still supplies the closure chain
         /// </summary>
         /// <param name="invokingContext">context of the call site invoking this lambda</param>
         /// <param name="arguments">arguments for lambda</param>
@@ -55,7 +48,7 @@ namespace Pooshit.Scripting.Providers {
         public object InvokeFrom(ScriptContext invokingContext, params object[] arguments) {
             CheckArguments(arguments);
             invokingContext.Guard();
-            return InvokeCore(invokingContext.DepthBudget, arguments);
+            return InvokeCore(invokingContext, invokingContext.DepthBudget, arguments);
         }
 
         /// <inheritdoc />
@@ -71,7 +64,7 @@ namespace Pooshit.Scripting.Providers {
             CheckArguments(arguments);
             context.Guard();
             DepthBudget freshBudget = context.DepthBudget == null ? null : new DepthBudget(context.DepthBudget.Limit);
-            return InvokeCore(freshBudget, arguments);
+            return InvokeCore(context, freshBudget, arguments);
         }
 
         /// <summary>
@@ -89,14 +82,15 @@ namespace Pooshit.Scripting.Providers {
         /// shared invocation body for <see cref="Invoke"/>, <see cref="InvokeFrom"/> and
         /// <see cref="InvokeOnNewStack"/>; enters and exits <paramref name="depthBudget"/> around the call
         /// </summary>
+        /// <param name="governing">context supplying steps, variables, limits and cancellation for this invocation</param>
         /// <param name="depthBudget">depth budget to enter for this invocation, or <c>null</c> when unconfigured</param>
         /// <param name="arguments">arguments for lamda</param>
         /// <returns>execution result</returns>
-        object InvokeCore(DepthBudget depthBudget, object[] arguments) {
+        object InvokeCore(ScriptContext governing, DepthBudget depthBudget, object[] arguments) {
             try {
                 depthBudget?.Enter();
 
-                ScriptContext lambdacontext = new ScriptContext(context, depthBudget);
+                ScriptContext lambdacontext = new ScriptContext(context, governing, depthBudget);
                 for(int i = 0; i < parameters.Length; ++i)
                     lambdacontext.Arguments[parameters[i]] = arguments[i];
 
