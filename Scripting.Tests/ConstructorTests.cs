@@ -14,17 +14,17 @@ namespace Scripting.Tests {
 
     [TestFixture, Parallelizable]
     public class ConstructorTests {
-        readonly IScriptParser parser = new ScriptParser();
 
-        [SetUp]
-        public void Setup() {
+        static IScriptParser CreateParser() {
+            IScriptParser parser = new ScriptParser();
             parser.Types.AddType<Variable>("variable");
             parser.Types.AddType<FormData>();
+            return parser;
         }
 
         [Test, Parallelizable]
         public void CreateSingleParameterLeavingOutDefault() {
-            IScript script = parser.Parse(
+            IScript script = CreateParser().Parse(
                 "$var=new variable(\"test\")\n" +
                 "$var.name"
             );
@@ -33,7 +33,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void CreateVariableWithAllParameters() {
-            IScript script = parser.Parse(
+            IScript script = CreateParser().Parse(
                 "$var=new variable(\"test\", [1,2,7])\n" +
                 "$var.value"
             );
@@ -42,7 +42,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void UseCorrectConstructor() {
-            IScript script = parser.Parse(
+            IScript script = CreateParser().Parse(
                 "return(new formdata($input, \"files[]\", \"test\"))"
             );
             FormData data = script.Execute<FormData>(new Dictionary<string, object>() {

@@ -12,15 +12,11 @@ namespace Scripting.Tests {
 
     [TestFixture, Parallelizable]
     public class TypeHostTests {
-        readonly ScriptParser parser = new ScriptParser();
-
-        [OneTimeSetUp]
-        public void Setup() {
-            parser.Types.AddType<ComplexType>("ComplexType");
-        }
 
         [Test, Parallelizable]
         public void CreateType() {
+            ScriptParser parser = new ScriptParser();
+            parser.Types.AddType<ComplexType>("ComplexType");
             IScript script = parser.Parse(ScriptCode.Create(
                 "$instance=$type.create(\"ComplexType\", {",
                 "  \"Parameter\": {",
