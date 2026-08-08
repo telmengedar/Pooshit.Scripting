@@ -335,7 +335,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable, MaxTime(3000)]
-        [Description("DiVoid #7892/#7898: Task.Run(action, ct) skips its delegate entirely when ct is already cancelled while the work item still sits queued, so a blind CancelAfter(200) can cancel before a starved thread pool ever hands the worker a thread — nothing acquired, nothing to unwind, and the old assertion failed on a run that never started. Waits for the engine to actually resolve $d (proof the worker entered the using) before cancelling, so the test asserts unwind ordering rather than pool scheduling latency.")]
+        [Description("DiVoid #7892: cancels only after the worker signals it has entered the using, so this pins genuine unwind-on-cancel ordering rather than racing thread-pool scheduling.")]
         public async Task T14_WorkerUnwindsAndDisposesResourcesOnCancel() {
             ScriptParser parser = new();
             RecordingDisposable disposable = new();
@@ -386,7 +386,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable, MaxTime(2000)]
-        [Description("DiVoid #7897/#7898: with Timeout also configured, the executing thread's new self-check (ScriptContext.Guard's DeadlineGuard) must not misclassify a genuine caller cancellation as a timeout — GuardedExecution.Convert still keys off the caller's own token, unaffected by the added thread-owned deadline check. Timeout is set far beyond the caller's own cancellation so a regression that always reports ScriptTimeoutException once a deadline is configured cannot pass by accident.")]
+        [Description("DiVoid #7897: a genuine caller cancellation must still surface as OperationCanceledException, not ScriptTimeoutException, even with Timeout configured and far from firing.")]
         public async Task Timeout_CallerCancelBeforeDeadlineStillThrowsOperationCanceled() {
             ScriptParser parser = new() {
                 Limits = new ScriptLimits {Timeout = TimeSpan.FromSeconds(30)}
