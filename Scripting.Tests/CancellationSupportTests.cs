@@ -385,6 +385,25 @@ namespace Scripting.Tests {
             Assert.That(timeoutTask.Exception?.InnerException, Is.InstanceOf<ScriptTimeoutException>());
         }
 
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7897/#7898: with Timeout also configured, the executing thread's new self-check (ScriptContext.Guard's DeadlineGuard) must not misclassify a genuine caller cancellation as a timeout — GuardedExecution.Convert still keys off the caller's own token, unaffected by the added thread-owned deadline check. Timeout is set far beyond the caller's own cancellation so a regression that always reports ScriptTimeoutException once a deadline is configured cannot pass by accident.")]
+        public async Task Timeout_CallerCancelBeforeDeadlineStillThrowsOperationCanceled() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {Timeout = TimeSpan.FromSeconds(30)}
+            };
+            IScript script = parser.Parse(ScriptCode.Create(
+                "while(true)",
+                "  $x = 1"
+            ));
+
+            CancellationTokenSource cts = new();
+            Task task = script.ExecuteAsync((IVariableProvider)null, cts.Token);
+            cts.CancelAfter(200);
+
+            await task.ContinueWith(t => { });
+            Assert.That(task.IsCanceled, Is.True);
+        }
+
         /// <summary>
         /// 30 days exceeds the ~24.8 day maximum a single <see cref="WaitHandle.WaitOne(TimeSpan)"/> accepts,
         /// forcing the interruptible wait to chunk internally; it must still cancel promptly rather than

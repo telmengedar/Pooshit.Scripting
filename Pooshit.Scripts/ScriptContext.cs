@@ -18,6 +18,23 @@ public class ScriptContext {
         StepBudget = context.StepBudget;
         DepthBudget = context.DepthBudget;
         VariableBudget = context.VariableBudget;
+        DeadlineGuard = context.DeadlineGuard;
+    }
+
+    /// <summary>
+    /// captures <paramref name="context"/> for a <see cref="Providers.LambdaMethod"/> that may be invoked long
+    /// after this execution completes; otherwise identical to the copy constructor, but deliberately drops
+    /// <see cref="DeadlineGuard"/> rather than carrying forward a deadline armed for a different execution's
+    /// lifetime — a captured lambda's later <see cref="Providers.LambdaMethod.Invoke"/>/<see cref="Providers.LambdaMethod.InvokeFrom"/>
+    /// call has no deadline of its own; only <see cref="Providers.LambdaMethod.InvokeAsExecution(System.Threading.CancellationToken,object[])"/>
+    /// arms a fresh one
+    /// </summary>
+    /// <param name="context">context to capture</param>
+    /// <returns>a new context suitable for a captured lambda</returns>
+    internal static ScriptContext Capture(ScriptContext context) {
+        ScriptContext captured = new(context);
+        captured.DeadlineGuard = null;
+        return captured;
     }
 
     /// <summary>
@@ -33,6 +50,7 @@ public class ScriptContext {
         StepBudget = governing.StepBudget;
         DepthBudget = depthBudget;
         VariableBudget = governing.VariableBudget;
+        DeadlineGuard = governing.DeadlineGuard;
     }
 
     /// <summary>
@@ -67,12 +85,14 @@ public class ScriptContext {
     /// <param name="stepBudget">step budget backing <see cref="Limits"/>.<see cref="ScriptLimits.MaxSteps"/>, or <c>null</c> when unconfigured</param>
     /// <param name="depthBudget">depth budget backing <see cref="Limits"/>.<see cref="ScriptLimits.MaxDepth"/>, or <c>null</c> when unconfigured</param>
     /// <param name="variableBudget">variable budget backing <see cref="Limits"/>.<see cref="ScriptLimits.MaxVariables"/>/<see cref="ScriptLimits.MaxVariableBytes"/>, or <c>null</c> when unconfigured</param>
-    internal ScriptContext(IVariableProvider arguments, ITypeProvider typeprovider, CancellationToken cancellationToken, ScriptLimits limits, StepBudget stepBudget, DepthBudget depthBudget, VariableBudget variableBudget)
+    /// <param name="deadlineGuard">deadline guard backing <see cref="Limits"/>.<see cref="ScriptLimits.Timeout"/>, or <c>null</c> when unconfigured</param>
+    internal ScriptContext(IVariableProvider arguments, ITypeProvider typeprovider, CancellationToken cancellationToken, ScriptLimits limits, StepBudget stepBudget, DepthBudget depthBudget, VariableBudget variableBudget, DeadlineGuard deadlineGuard = null)
         : this(arguments, typeprovider, cancellationToken) {
         Limits = limits ?? ScriptLimits.None;
         StepBudget = stepBudget;
         DepthBudget = depthBudget;
         VariableBudget = variableBudget;
+        DeadlineGuard = deadlineGuard;
     }
 
     /// <summary>
@@ -113,9 +133,16 @@ public class ScriptContext {
     internal VariableBudget VariableBudget { get; private set; }
 
     /// <summary>
-    /// checkpoint called at every engine-controlled loop iteration, statement and callback invocation, enforcing the configured step, depth and variable budgets
+    /// deadline guard tracking the configured <see cref="ScriptLimits.Timeout"/> from the executing thread, or
+    /// <c>null</c> when no timeout is configured
+    /// </summary>
+    internal DeadlineGuard DeadlineGuard { get; private set; }
+
+    /// <summary>
+    /// checkpoint called at every engine-controlled loop iteration, statement and callback invocation, enforcing the configured timeout, step, depth and variable budgets
     /// </summary>
     public void Guard() {
+        DeadlineGuard?.Check();
         CancellationToken.ThrowIfCancellationRequested();
         StepBudget?.Consume();
         DepthBudget?.CheckBreached();

@@ -764,6 +764,94 @@ namespace Scripting.Tests {
                 Assert.Throws<ScriptTimeoutException>(() => lambda.InvokeAsExecution());
         }
 
+        [Test, MaxTime(5000)]
+        [Description("DiVoid #7897/#7898: ScriptLimits.Timeout was armed only via CancellationTokenSource.CancelAfter, whose callback is a thread-pool work item — under a starved pool the callback itself lands late (measured 510ms/1012ms for a requested 100ms in #7898's probe7897 harness), so a wait(300) body under Timeout=100ms could return normally instead of throwing. Reproduces that starvation the same way (SetMinThreads(1,...) plus ProcessorCount*4 hogs occupying every worker thread) and asserts the deadline still fires. ScriptContext.Guard's DeadlineGuard checks the deadline on the executing thread itself between statements (here: right after wait(300) returns, before return(0) runs), independent of CancelAfter's callback ever landing. This is deliberately NOT a claim of promptness during a single wait() call — an earlier version of this fix clamped Wait.WaitInterruptible's chunk to the remaining deadline, but that could not be verified safe under real contention and was reverted; see Wait_DoesNotReturnEarlyWhenDeadlineNotYetReached for the negative pin on that removed mechanism. Fails under a revert of ScriptContext.Guard's DeadlineGuard check. Not Parallelizable: it deliberately throttles the process-wide thread pool for the duration of the hog window.")]
+        public void Timeout_HoldsUnderStarvedThreadPool() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {Timeout = TimeSpan.FromMilliseconds(100)}
+            };
+            IScript script = parser.Parse(ScriptCode.Create(
+                "wait(300)",
+                "return(0)"
+            ));
+
+            ThreadPool.GetMinThreads(out int minWorker, out int minIo);
+            ThreadPool.SetMinThreads(1, minIo);
+            ManualResetEventSlim release = new(false);
+            int hogCount = Environment.ProcessorCount * 4;
+            CountdownEvent hogsDone = new(hogCount);
+            try {
+                for (int h = 0; h < hogCount; h++)
+                    ThreadPool.UnsafeQueueUserWorkItem(_ => {
+                        release.Wait(500);
+                        hogsDone.Signal();
+                    }, null);
+
+                ScriptTimeoutException exception = null;
+                long elapsedMs = -1;
+                Thread worker = new(() => {
+                    System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                    try {
+                        script.Execute();
+                    }
+                    catch (ScriptTimeoutException e) {
+                        exception = e;
+                    }
+                    elapsedMs = stopwatch.ElapsedMilliseconds;
+                }) {IsBackground = true};
+                worker.Start();
+                worker.Join(3000);
+
+                Assert.That(exception, Is.Not.Null);
+                Assert.That(elapsedMs, Is.LessThan(1000));
+            }
+            finally {
+                release.Set();
+                ThreadPool.SetMinThreads(minWorker, minIo);
+                hogsDone.Wait(5000);
+                hogsDone.Dispose();
+                release.Dispose();
+            }
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("Coordinator hypothesis check on #7897/#7898: a wait(n) with Timeout configured but far from being reached must run the full requested duration, not return early. Pins the negative case for a chunk-clamped Wait.WaitInterruptible (the mechanism this fix tried and reverted, see Timeout_HoldsUnderStarvedThreadPool's description) — a clamp that shrinks the wait chunk to the deadline's remaining time and misreads a timed-out-but-not-yet-expired WaitOne as 'wait complete' would make this fail by returning at roughly the Timeout value (100ms) instead of the requested 200ms. Deadline is 5s away, nowhere near firing, so any early return here is the clamp bug, not a genuine timeout.")]
+        public void Wait_DoesNotReturnEarlyWhenDeadlineNotYetReached() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {Timeout = TimeSpan.FromSeconds(5)}
+            };
+            IScript script = parser.Parse(ScriptCode.Create(
+                "wait(200)",
+                "return(0)"
+            ));
+
+            System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            object result = script.Execute();
+            stopwatch.Stop();
+
+            Assert.That(result, Is.EqualTo(0));
+            Assert.That(stopwatch.ElapsedMilliseconds, Is.GreaterThanOrEqualTo(190));
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7897/#7898 follow-up: LambdaToken.Execute captures a ScriptContext for the LambdaMethod it produces, via the dedicated ScriptContext.Capture factory, which deliberately does not carry DeadlineGuard forward — a captured lambda's later Invoke()/InvokeFrom() has no deadline of its own; only InvokeAsExecution arms a fresh one via its own GuardedExecution. An earlier version of this fix instead let the copy constructor carry the defining execution's DeadlineGuard forward and papered over the resulting dangling reference (its CancellationTokenSource is disposed when the defining Script.Execute's `using GuardedExecution` completes) with a try/catch around Cancel() in DeadlineGuard.Check() — tolerating stale per-execution state rather than not creating it, the same defect class #7880 fixed for a cached lambda's StepBudget. Fails if Capture ever starts propagating DeadlineGuard again — the ObjectDisposedException it would reintroduce is structurally unreachable now, not caught.")]
+        public void Invoke_OnCachedLambdaAfterDefinitionTimeDeadlineElapsedDoesNotThrowObjectDisposed() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {Timeout = TimeSpan.FromMilliseconds(50)}
+            };
+            IScript definitions = parser.Parse(ScriptCode.Create(
+                "$f = $x=>{ return($x) }",
+                "$f"
+            ));
+            LambdaMethod lambda = (LambdaMethod) definitions.Execute(new VariableProvider());
+
+            Thread.Sleep(200);
+
+            object result = null;
+            Assert.DoesNotThrow(() => result = lambda.Invoke(42));
+            Assert.That(result, Is.EqualTo(42));
+        }
+
         [Test, Parallelizable, MaxTime(2000)]
         [Description("DiVoid #7880 T4 — NEGATIVE, the sandbox guard: a script looping through a host extension that calls Invoke(args) on a cached lambda must NOT get an unlimited step budget merely because InvokeAsExecution exists elsewhere on the surface. Must throw ScriptStepLimitExceededException, never complete — this is the test that fails if any scope-opening behaviour is ever attached to plain Invoke.")]
         public void Step_LoopThroughInvokeArgsExtensionDoesNotEscapeStepBudget() {
