@@ -50,4 +50,9 @@ class DepthBudget {
         if (Volatile.Read(ref breached) != 0)
             throw new ScriptDepthLimitExceededException(Limit);
     }
+
+    /// <summary>
+    /// clears a previous breach latch for a new run sharing this budget; the physical <see cref="depth"/> count is untouched
+    /// </summary>
+    internal void ResetBreach() => Interlocked.Exchange(ref breached, 0);
 }

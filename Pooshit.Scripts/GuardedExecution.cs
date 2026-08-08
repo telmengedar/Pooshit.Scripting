@@ -44,14 +44,15 @@ sealed class GuardedExecution : IDisposable {
     /// <param name="typeprovider">access to available types</param>
     /// <param name="callertoken">token supplied by the caller</param>
     /// <param name="limits">execution guards configured on the parser that produced this script</param>
-    /// <param name="inheritedDepthBudget">depth budget inherited from the caller of an imported script, used as-is instead of allocating a fresh one, or <c>null</c> for a top-level execution</param>
+    /// <param name="inheritedDepthBudget">depth budget inherited from the caller of an imported script or a host dispatch, used as-is instead of allocating a fresh one, or <c>null</c> for a top-level execution</param>
+    /// <param name="inheritedVariableBudget">variable budget inherited from a caller whose variable scope this execution runs inside, used as-is instead of allocating a fresh one, or <c>null</c> for an execution with its own scope root</param>
     /// <returns>a guarded execution ready to run; must be disposed once the run completes</returns>
-    public static GuardedExecution Prepare(IVariableProvider variables, ITypeProvider typeprovider, CancellationToken callertoken, ScriptLimits limits, DepthBudget inheritedDepthBudget = null) {
+    public static GuardedExecution Prepare(IVariableProvider variables, ITypeProvider typeprovider, CancellationToken callertoken, ScriptLimits limits, DepthBudget inheritedDepthBudget = null, VariableBudget inheritedVariableBudget = null) {
         StepBudget stepbudget = limits.MaxSteps.HasValue ? new StepBudget(limits.MaxSteps.Value) : null;
         DepthBudget depthbudget = inheritedDepthBudget ?? (limits.MaxDepth.HasValue ? new DepthBudget(limits.MaxDepth.Value) : null);
-        VariableBudget variablebudget = limits.MaxVariables.HasValue || limits.MaxVariableBytes.HasValue
+        VariableBudget variablebudget = inheritedVariableBudget ?? (limits.MaxVariables.HasValue || limits.MaxVariableBytes.HasValue
             ? new VariableBudget(variables, limits.MaxVariables, limits.MaxVariableBytes)
-            : null;
+            : null);
 
         if (!limits.Timeout.HasValue) {
             ScriptContext context = new(variables, typeprovider, callertoken, limits, stepbudget, depthbudget, variablebudget);
