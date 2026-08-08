@@ -17,12 +17,14 @@ namespace NightlyCode.ScriptExecutor {
             if (!TryParseOptions(args, out ScriptLimits limits, out string[] remaining, out string optionError)) {
                 Console.WriteLine(optionError);
                 PrintUsage();
+                Environment.ExitCode = 1;
                 return;
             }
             parser.Limits = limits;
 
             if (remaining.Length < 1) {
                 PrintUsage();
+                Environment.ExitCode = 1;
                 return;
             }
 
@@ -35,6 +37,7 @@ namespace NightlyCode.ScriptExecutor {
             }
             catch (Exception e) {
                 logger.Error($"Unable to read scriptfile '{scriptfile}'", e);
+                Environment.ExitCode = 1;
                 return;
             }
 
@@ -44,10 +47,12 @@ namespace NightlyCode.ScriptExecutor {
             }
             catch (ScriptParserException parserexception) {
                 logger.Error($"Parsing error on line {parserexception.Line}", parserexception);
+                Environment.ExitCode = 1;
                 return;
             }
             catch (Exception e) {
                 logger.Error($"Error parsing script", e);
+                Environment.ExitCode = 1;
                 return;
             }
 
@@ -59,6 +64,7 @@ namespace NightlyCode.ScriptExecutor {
             }
             catch (Exception e) {
                 logger.Error($"Error executing script", e);
+                Environment.ExitCode = 1;
             }
         }
 
@@ -70,7 +76,7 @@ namespace NightlyCode.ScriptExecutor {
             Console.WriteLine("  --max-steps N            override MaxSteps (default unset)");
             Console.WriteLine($"  --max-variable-bytes N   override MaxVariableBytes (default {ScriptLimits.DefaultMaxVariableBytes})");
             Console.WriteLine("  --timeout MS             override Timeout in milliseconds (default unset)");
-            Console.WriteLine("  --regex-timeout MS       override RegexTimeout in milliseconds (default unset)");
+            Console.WriteLine($"  --regex-timeout MS       override RegexTimeout in milliseconds (default {(int) ScriptLimits.DefaultRegexTimeout.TotalMilliseconds})");
             Console.WriteLine("  --unbounded              disable all execution guards (ScriptLimits.None)");
         }
 
@@ -146,6 +152,7 @@ namespace NightlyCode.ScriptExecutor {
             limits = hasOverride
                 ? new ScriptLimits {
                     MaxDepth = maxDepth ?? baseLimits.MaxDepth,
+                    MaxParseDepth = baseLimits.MaxParseDepth,
                     MaxSteps = maxSteps ?? baseLimits.MaxSteps,
                     MaxVariableBytes = maxVariableBytes ?? baseLimits.MaxVariableBytes,
                     MaxVariables = baseLimits.MaxVariables,
