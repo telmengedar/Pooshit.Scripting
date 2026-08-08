@@ -21,17 +21,18 @@ public class ScriptContext {
     }
 
     /// <summary>
-    /// creates a new <see cref="ScriptContext"/> based on <paramref name="context"/>, exactly like the copy
-    /// constructor, but substituting <paramref name="depthBudget"/> for the inherited one
+    /// creates a new <see cref="ScriptContext"/> whose closure chain comes from <paramref name="scope"/> and
+    /// whose limits, budgets and cancellation token come from <paramref name="governing"/>, with an explicit depth budget
     /// </summary>
-    /// <param name="context">context to base this context on</param>
-    /// <param name="depthBudget">depth budget to use instead of <paramref name="context"/>'s own</param>
-    internal ScriptContext(ScriptContext context, DepthBudget depthBudget)
-        : this(new VariableProvider(context.Arguments), context.TypeProvider, context.CancellationToken) {
-        Limits = context.Limits;
-        StepBudget = context.StepBudget;
+    /// <param name="scope">context supplying <see cref="Arguments"/> and <see cref="TypeProvider"/></param>
+    /// <param name="governing">context supplying <see cref="Limits"/>, <see cref="StepBudget"/>, <see cref="VariableBudget"/> and <see cref="CancellationToken"/></param>
+    /// <param name="depthBudget">depth budget to use for this context</param>
+    internal ScriptContext(ScriptContext scope, ScriptContext governing, DepthBudget depthBudget)
+        : this(new VariableProvider(scope.Arguments), scope.TypeProvider, governing.CancellationToken) {
+        Limits = governing.Limits;
+        StepBudget = governing.StepBudget;
         DepthBudget = depthBudget;
-        VariableBudget = context.VariableBudget;
+        VariableBudget = governing.VariableBudget;
     }
 
     /// <summary>

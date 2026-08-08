@@ -667,6 +667,62 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7886 T3: a host extension declaring a trailing ScriptContext and calling InvokeFrom must resolve the WHOLE governing budget set from the invoking context, not just depth — the lambda is defined under a tight MaxSteps=100 parser but dispatched 500 times under a MaxSteps=1_000_000 invoker. Fails today (pre-fix) with ScriptStepLimitExceededException at the definer's limit, matching diagnosis #7888 E12.")]
+        public void Step_InvokeFromResolvesWholeBudgetFromInvokingContext() {
+            ScriptParser definerParser = new() {
+                Limits = new ScriptLimits {MaxSteps = 100}
+            };
+            IScript definitions = definerParser.Parse(ScriptCode.Create(
+                "$f = $x=>{ return($x) }",
+                "$f"
+            ));
+            LambdaMethod lambda = (LambdaMethod) definitions.Execute(new VariableProvider());
+
+            ScriptParser invokerParser = new() {
+                Limits = new ScriptLimits {MaxSteps = 1_000_000}
+            };
+            invokerParser.Extensions.AddExtensions<InvokeSplitExtensions>();
+            IScript invoker = invokerParser.Parse(ScriptCode.Create(
+                "for($i=0,$i<500,++$i) {",
+                "  $lambda.invokefromcaller(1)",
+                "}"
+            ));
+
+            Assert.DoesNotThrow(() => invoker.Execute(new VariableProvider(new Variable("lambda", lambda))));
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7886 T4b: generalising InvokeFrom must not open the sandbox hole either — a script looping through a host extension that calls InvokeFrom on a cached lambda defined in the SAME execution must still be bounded by that execution's own step budget, since the invoking context is the running script's own. Would time out instead of throwing if InvokeFrom were ever given a fresh budget per call.")]
+        public void Step_LoopThroughInvokeFromDoesNotEscapeStepBudget() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxSteps = 100}
+            };
+            parser.Extensions.AddExtensions<InvokeSplitExtensions>();
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$f = $x=>{ return($x) }",
+                "while(true) {",
+                "  $f.invokefromcaller(1)",
+                "}"
+            ));
+
+            Assert.Throws<ScriptStepLimitExceededException>(() => script.Execute());
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7886: EnumerableExtensions.Where already calls InvokeFrom for every in-repo predicate dispatch (definer == invoker there), so the generalised budget resolution must not regress the existing extension - unchanged filtering behaviour under a configured MaxSteps pins the blast-radius claim that in-repo call sites are unaffected.")]
+        public void Step_EnumerableWherePredicateUnaffectedByInvokeFromGeneralisation() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxSteps = 10000}
+            };
+            parser.Extensions.AddExtensions<EnumerableExtensions>();
+            IScript script = parser.Parse("$src.where($x=>$x>0).count()");
+
+            int[] source = Enumerable.Range(-50, 100).ToArray();
+            int result = script.Execute<int>(new VariableProvider(new Variable("src", source)));
+            Assert.AreEqual(source.Count(x => x > 0), result);
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
         [Description("DiVoid #7744 CF-4: the ScriptMethod IExternalMethod fast path must not discard a script-invoked lambda's own error message into a generic wrapper — mirrors the existing fix for the resolved-method chain.")]
         public void Invoke_PreservesInnerErrorMessage() {
             ScriptParser parser = new();
