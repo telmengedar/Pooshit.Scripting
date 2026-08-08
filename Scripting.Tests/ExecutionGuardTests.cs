@@ -86,6 +86,14 @@ namespace Scripting.Tests {
             /// <param name="argument">argument passed to the lambda</param>
             /// <returns>result of the callback invocation</returns>
             public static object InvokeFromCapture(LambdaMethod callback, object argument) => callback.Invoke(argument);
+
+            /// <summary>
+            /// invokes <paramref name="callback"/> as a host dispatch opening a fresh execution scope
+            /// </summary>
+            /// <param name="callback">lambda to invoke</param>
+            /// <param name="argument">argument passed to the lambda</param>
+            /// <returns>result of the callback invocation</returns>
+            public static object InvokeAsNewExecution(LambdaMethod callback, object argument) => callback.InvokeAsExecution(argument);
         }
 
         static IScript ParseRecursiveFactorial(ScriptParser parser, string invocation) {
@@ -720,6 +728,263 @@ namespace Scripting.Tests {
             int[] source = Enumerable.Range(-50, 100).ToArray();
             int result = script.Execute<int>(new VariableProvider(new Variable("src", source)));
             Assert.AreEqual(source.Count(x => x > 0), result);
+        }
+
+        [Test, Parallelizable, MaxTime(5000)]
+        [Description("DiVoid #7880 T1: parse once, cache the lambda, dispatch InvokeAsExecution 10,000 times under MaxSteps=1000 with a small fixed-cost body — no throw. Fails today (before this fix) at ~invoke #77 (diagnosis #7888 E1) because Invoke's captured StepBudget is a lifetime counter; InvokeAsExecution must open a fresh one per dispatch.")]
+        public void Step_CachedLambdaInvokeAsExecutionDoesNotAccumulateAcrossDispatches() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxSteps = 1000}
+            };
+            IScript definitions = parser.Parse(ScriptCode.Create(
+                "$f = $x=>{ return($x) }",
+                "$f"
+            ));
+            LambdaMethod lambda = (LambdaMethod) definitions.Execute(new VariableProvider());
+
+            Assert.DoesNotThrow(() => {
+                for (int i = 0; i < 10000; i++)
+                    lambda.InvokeAsExecution(1);
+            });
+        }
+
+        [Test, Parallelizable, MaxTime(5000)]
+        [Description("DiVoid #7885 T2: Timeout=100ms, body sleeps ~300ms via the interruptible wait(), three separate InvokeAsExecution dispatches — ScriptTimeoutException on EVERY dispatch including the first. 'Including the first' is load-bearing: fails today because a cached lambda's captured token belongs to a CancellationTokenSource GuardedExecution.Dispose already tore down un-fired (diagnosis #7888 E4b/E16 measured three ~900ms invokes all completing under a 300ms Timeout); it would also fail under a fix that merely resets rather than re-arms the deadline.")]
+        public void Timeout_CachedLambdaInvokeAsExecutionThrowsOnEveryDispatchIncludingFirst() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {Timeout = TimeSpan.FromMilliseconds(100)}
+            };
+            IScript definitions = parser.Parse(ScriptCode.Create(
+                "$f = []=>{ wait(300) return(0) }",
+                "$f"
+            ));
+            LambdaMethod lambda = (LambdaMethod) definitions.Execute(new VariableProvider());
+
+            for (int i = 0; i < 3; i++)
+                Assert.Throws<ScriptTimeoutException>(() => lambda.InvokeAsExecution());
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7880 T4 — NEGATIVE, the sandbox guard: a script looping through a host extension that calls Invoke(args) on a cached lambda must NOT get an unlimited step budget merely because InvokeAsExecution exists elsewhere on the surface. Must throw ScriptStepLimitExceededException, never complete — this is the test that fails if any scope-opening behaviour is ever attached to plain Invoke.")]
+        public void Step_LoopThroughInvokeArgsExtensionDoesNotEscapeStepBudget() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxSteps = 100}
+            };
+            parser.Extensions.AddExtensions<ExecutionGuardTests>();
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$f = $x=>{ return($x) }",
+                "while(true) {",
+                "  $f.invokecallback(1)",
+                "}"
+            ));
+
+            Assert.Throws<ScriptStepLimitExceededException>(() => script.Execute());
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7880 T6 — the T5 analogue for the new door: recursion routed through a test-local extension calling InvokeAsExecution at every level must still throw ScriptDepthLimitExceededException, never StackOverflowException. Fails if InvokeAsExecution is ever given a fresh DepthBudget per dispatch instead of inheriting the captured one (§6.3's carve-out) — arguably the single most important new test in this plan. The recursion literal is finite, well above MaxDepth and well below the measured crash depth, for the same reason as T5's.")]
+        public void Depth_RecursionThroughInvokeAsExecutionExtensionAtEveryLevelThrows() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxDepth = SafeMaxDepth}
+            };
+            parser.Extensions.AddExtensions<InvokeSplitExtensions>();
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$fac = $n=>{",
+                "  if($n>0) {",
+                "    return($fac.invokeasnewexecution($n-1))",
+                "  }",
+                "  return(0)",
+                "}",
+                "$fac.invokeasnewexecution(32)"
+            ));
+
+            Assert.Throws<ScriptDepthLimitExceededException>(() => script.Execute());
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7880 §6.5 T7: a cached lambda driven to a depth breach via host C# Invoke, then dispatched again via InvokeAsExecution with a shallow argument, must succeed — InvokeAsExecution clears the sticky breach latch at the start of each dispatch, while the physical depth count itself is unaffected (the shallow dispatch would still breach if it weren't). Depth_HostExtensionInvokeArgsSpuriouslyBreaches (unmodified, elsewhere in this file) pins the other half: the latch stays sticky WITHIN one run.")]
+        public void Depth_InvokeAsExecutionClearsPriorBreachLatch() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxDepth = SafeMaxDepth}
+            };
+            IScript definitions = parser.Parse(ScriptCode.Create(
+                "$fac = $n=>{",
+                "  if($n>0) {",
+                "    return($fac.invoke($n-1))",
+                "  }",
+                "  return(0)",
+                "}",
+                "$fac"
+            ));
+            LambdaMethod lambda = (LambdaMethod) definitions.Execute(new VariableProvider());
+
+            Assert.Throws<ScriptDepthLimitExceededException>(() => lambda.Invoke(1000000));
+
+            object result = null;
+            Assert.DoesNotThrow(() => result = lambda.InvokeAsExecution(1));
+            Assert.That(result, Is.EqualTo(0));
+        }
+
+        [Test, Parallelizable, MaxTime(3000)]
+        [Description("DiVoid #7880 §6.6 T8a: InvokeAsExecution observes the HOST-supplied token — cancelling it mid-dispatch surfaces the original OperationCanceledException, not ScriptTimeoutException (no Timeout is configured on this dispatch, so GuardedExecution.Convert has nothing to translate it into).")]
+        public async Task InvokeAsExecution_HostTokenCancelledMidDispatchThrowsOperationCanceled() {
+            ScriptParser parser = new();
+            IScript definitions = parser.Parse(ScriptCode.Create(
+                "$f = []=>{ while(true) { wait(10) } }",
+                "$f"
+            ));
+            LambdaMethod lambda = (LambdaMethod) definitions.Execute(new VariableProvider());
+
+            CancellationTokenSource cts = new();
+            Task task = Task.Run(() => lambda.InvokeAsExecution(cts.Token));
+            cts.CancelAfter(100);
+
+            await task.ContinueWith(t => { });
+
+            Assert.That(task.IsFaulted, Is.True);
+            Assert.That(task.Exception?.InnerException, Is.InstanceOf<OperationCanceledException>());
+            Assert.That(task.Exception?.InnerException, Is.Not.InstanceOf<ScriptTimeoutException>());
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7880 §6.6 T8b: a cached lambda's CAPTURED cancellation token being cancelled after the defining Execute() already returned must not affect a later InvokeAsExecution(CancellationToken.None, ...) dispatch — the captured token does not carry over to a detached dispatch, the host supplies its own.")]
+        public void InvokeAsExecution_CapturedTokenCancelledAfterDefineDoesNotAffectLaterDispatch() {
+            ScriptParser parser = new();
+            IScript definitions = parser.Parse(ScriptCode.Create(
+                "$f = $x=>{ return($x) }",
+                "$f"
+            ));
+
+            CancellationTokenSource definerCts = new();
+            LambdaMethod lambda = (LambdaMethod) definitions.Execute(new VariableProvider(), definerCts.Token);
+            definerCts.Cancel();
+
+            object result = null;
+            Assert.DoesNotThrow(() => result = lambda.InvokeAsExecution(CancellationToken.None, 42));
+            Assert.That(result, Is.EqualTo(42));
+        }
+
+        [Test, MaxTime(20000)]
+        [Description("DiVoid #7880 T9: N threads x M InvokeAsExecution dispatches on ONE cached lambda, MaxSteps sized so a single dispatch barely fits — reuses diagnosis #7888 E15's exact failing shape (8 threads x 5000 invokes, MaxSteps=100000; measured today: '7/8 threads failed; total successful invokes = 33330') to prove per-dispatch attribution rather than a shared counter. Not [Parallelizable] against other fixtures given its own internal thread load.")]
+        public void Step_ConcurrentInvokeAsExecutionOnOneCachedLambdaDoesNotShareStepBudget() {
+            const int threadCount = 8;
+            const int invokesPerThread = 5000;
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxSteps = 100000}
+            };
+            IScript definitions = parser.Parse(ScriptCode.Create(
+                "$f = $x=>{ return($x) }",
+                "$f"
+            ));
+            LambdaMethod lambda = (LambdaMethod) definitions.Execute(new VariableProvider());
+
+            Exception[] exceptions = new Exception[threadCount];
+            Thread[] threads = new Thread[threadCount];
+            for (int i = 0; i < threadCount; i++) {
+                int index = i;
+                threads[i] = new Thread(() => {
+                    try {
+                        for (int j = 0; j < invokesPerThread; j++)
+                            lambda.InvokeAsExecution(1);
+                    }
+                    catch (Exception e) {
+                        exceptions[index] = e;
+                    }
+                });
+            }
+
+            foreach (Thread thread in threads)
+                thread.Start();
+            foreach (Thread thread in threads)
+                thread.Join();
+
+            Assert.That(exceptions, Is.All.Null);
+        }
+
+        [Test, Parallelizable, MaxTime(5000)]
+        [Description("DiVoid #7880 T10 (§6.4): a lambda that mutates a list held in a CLOSURE variable — declared outside the lambda body, in the definer script's own top-level scope — IN PLACE (list.add, mirroring Variable_ListMutationInPlaceThrowsViaSampledWalk), dispatched repeatedly via InvokeAsExecution under a MaxVariableBytes the closure eventually exceeds. In-place mutation produces no new value at an assignment site, so only the periodic SAMPLED WALK (M3, VariableBudget.Observe/Measure) can catch it, and that walk terminates at VariableBudget's own captured 'root' - the property this test is actually pinned to. Must throw ScriptVariableLimitExceededException(Bytes); fails (times out without throwing) if InvokeAsExecution ever reallocates the VariableBudget instead of inheriting the captured one by reference, since a fresh budget rooted at the lambda's own per-dispatch arguments would both stop the walk BELOW the closure where $store lives AND lose the accumulated sample-tick count between dispatches (a fresh object every call never reaches the sampling interval). Verified by deliberately reverting the production change: fails cleanly (no throw within the loop) rather than crashing or hanging.")]
+        public void Variable_ClosureListMutationAcrossInvokeAsExecutionDispatchesIsCharged() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxVariableBytes = 2000}
+            };
+            IScript definitions = parser.Parse(ScriptCode.Create(
+                "$store = new list()",
+                "$f = []=>{ $store.add(\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\") }",
+                "$f"
+            ));
+            LambdaMethod lambda = (LambdaMethod) definitions.Execute(new VariableProvider());
+
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(() => {
+                for (int i = 0; i < 5000; i++)
+                    lambda.InvokeAsExecution();
+            });
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("DiVoid #7880 §16 R5 verification item (design §14 step 9): a lambda defined under a configured Timeout has a captured CancellationToken derived from a CancellationTokenSource that GuardedExecution.Dispose already tore down un-fired. InvokeAsExecution must never link to that captured token — dispatching afterwards must not throw ObjectDisposedException. This is the direct regression pin for A10: the hazard is real (CancellationToken.Register throws ObjectDisposedException when its source was disposed), it just isn't reachable through the design's actual shape, which this test proves by construction rather than by argument.")]
+        public void InvokeAsExecution_DoesNotThrowObjectDisposedExceptionAfterDefinerTimeoutDisposed() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {Timeout = TimeSpan.FromSeconds(30)}
+            };
+            IScript definitions = parser.Parse(ScriptCode.Create(
+                "$f = $x=>{ return($x) }",
+                "$f"
+            ));
+            LambdaMethod lambda = (LambdaMethod) definitions.Execute(new VariableProvider());
+
+            object result = null;
+            Assert.DoesNotThrow(() => result = lambda.InvokeAsExecution(CancellationToken.None, 7));
+            Assert.That(result, Is.EqualTo(7));
+        }
+
+        /// <summary>
+        /// compile-only regression guard for the two <see cref="LambdaMethod.InvokeAsExecution"/> overloads
+        /// (DiVoid #7880 §4 — the signature-level half): a null literal, a statically-typed <see cref="CancellationToken"/>,
+        /// an object-typed variable holding a boxed token, zero arguments and the intended two-argument call must
+        /// all resolve unambiguously at compile time. Never called; a CS0121 here means the overload pair became
+        /// ambiguous and needs a re-argued signature, not a silent fix
+        /// </summary>
+        // ReSharper disable once UnusedMember.Local
+        static void CompileOnly_InvokeAsExecutionOverloadsResolveUnambiguously(LambdaMethod lambda, CancellationToken token, object boxedToken, double delta) {
+            lambda.InvokeAsExecution();
+            lambda.InvokeAsExecution(null);
+            lambda.InvokeAsExecution(token);
+            lambda.InvokeAsExecution(boxedToken);
+            lambda.InvokeAsExecution(token, delta);
+        }
+
+        [Test]
+        [Description("DiVoid #7880 §4 — runtime half of CompileOnly_InvokeAsExecutionOverloadsResolveUnambiguously: a statically-typed CancellationToken argument must resolve to the (CancellationToken, params object[]) overload, not be boxed into the params array. Pre-cancelling the token makes the two resolutions observably different: the intended overload throws OperationCanceledException immediately (Guard() checks the token before anything else runs); the wrong overload would instead throw ScriptRuntimeException for an argument-count mismatch against this zero-parameter lambda.")]
+        public void InvokeAsExecution_StaticallyTypedCancellationTokenResolvesToTokenOverload() {
+            ScriptParser parser = new();
+            IScript definitions = parser.Parse(ScriptCode.Create(
+                "$f = []=>{ return(1) }",
+                "$f"
+            ));
+            LambdaMethod lambda = (LambdaMethod) definitions.Execute(new VariableProvider());
+
+            CancellationTokenSource cts = new();
+            cts.Cancel();
+            CancellationToken token = cts.Token;
+
+            Assert.Throws<OperationCanceledException>(() => lambda.InvokeAsExecution(token));
+        }
+
+        [Test]
+        [Description("DiVoid #7880 §4: an object-typed variable holding a boxed CancellationToken is NOT implicitly unboxed by overload resolution, so it resolves to the params-only overload and is passed through as an ordinary script argument rather than as the cancellation token — distinguishable here because the zero-parameter lambda then sees an unexpected argument.")]
+        public void InvokeAsExecution_ObjectTypedTokenVariableResolvesToArgumentsOverload() {
+            ScriptParser parser = new();
+            IScript definitions = parser.Parse(ScriptCode.Create(
+                "$f = []=>{ return(1) }",
+                "$f"
+            ));
+            LambdaMethod lambda = (LambdaMethod) definitions.Execute(new VariableProvider());
+
+            object boxedToken = CancellationToken.None;
+
+            ScriptRuntimeException exception = Assert.Throws<ScriptRuntimeException>(() => lambda.InvokeAsExecution(boxedToken));
+            Assert.That(exception.Message, Does.Contain("Argument count"));
         }
 
         [Test, Parallelizable, MaxTime(2000)]

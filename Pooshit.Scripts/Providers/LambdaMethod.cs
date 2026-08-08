@@ -1,3 +1,5 @@
+using System;
+using System.Threading;
 using Pooshit.Scripting.Data;
 using Pooshit.Scripting.Errors;
 using Pooshit.Scripting.Tokens;
@@ -28,7 +30,9 @@ namespace Pooshit.Scripting.Providers {
         /// invokes the method under this lambda's own captured context - depth, steps, variables, limits and
         /// cancellation all resolve from where the lambda was defined; a host extension reached from a running
         /// script should declare a trailing <see cref="ScriptContext"/> parameter and call <see cref="InvokeFrom"/>
-        /// instead, since calling this overload there charges every concurrent callback to the same counters
+        /// instead, since calling this overload there charges every concurrent callback to the same counters;
+        /// host C# dispatching a cached lambda with no execution in progress should call
+        /// <see cref="InvokeAsExecution(CancellationToken,object[])"/> instead
         /// </summary>
         /// <param name="arguments">arguments for lamda</param>
         /// <returns>execution result</returns>
@@ -55,6 +59,37 @@ namespace Pooshit.Scripting.Providers {
         object IExternalMethod.Invoke(ScriptContext invokingContext, params object[] arguments) => InvokeFrom(invokingContext, arguments);
 
         /// <summary>
+        /// invokes the method as a host dispatch with no execution in progress: opens a fresh step budget and a
+        /// freshly armed, per-dispatch deadline, inheriting the captured depth and variable budgets. Never call
+        /// this from a host extension reached by a running script - declare a trailing <see cref="ScriptContext"/>
+        /// parameter and call <see cref="InvokeFrom"/> instead
+        /// </summary>
+        /// <param name="cancellationToken">token supplied by the host for this dispatch; the lambda's own captured token does not carry over</param>
+        /// <param name="arguments">arguments for lambda</param>
+        /// <returns>execution result</returns>
+        public object InvokeAsExecution(CancellationToken cancellationToken, params object[] arguments) {
+            CheckArguments(arguments);
+            context.DepthBudget?.ResetBreach();
+
+            using GuardedExecution execution = GuardedExecution.Prepare(context.Arguments, context.TypeProvider, cancellationToken, context.Limits, context.DepthBudget, context.VariableBudget);
+            try {
+                execution.Context.Guard();
+                return InvokeCore(execution.Context, execution.Context.DepthBudget, arguments);
+            }
+            catch (OperationCanceledException e) {
+                return execution.Convert(e);
+            }
+        }
+
+        /// <summary>
+        /// invokes the method as a host dispatch with no execution in progress and no cancellation token; see
+        /// <see cref="InvokeAsExecution(CancellationToken,object[])"/>
+        /// </summary>
+        /// <param name="arguments">arguments for lambda</param>
+        /// <returns>execution result</returns>
+        public object InvokeAsExecution(params object[] arguments) => InvokeAsExecution(CancellationToken.None, arguments);
+
+        /// <summary>
         /// invokes the method as the first frame of a new physical call stack (a <c>task.run</c> body on its
         /// own thread pool thread), so depth is measured against just this stack rather than the caller's
         /// </summary>
@@ -79,8 +114,9 @@ namespace Pooshit.Scripting.Providers {
         }
 
         /// <summary>
-        /// shared invocation body for <see cref="Invoke"/>, <see cref="InvokeFrom"/> and
-        /// <see cref="InvokeOnNewStack"/>; enters and exits <paramref name="depthBudget"/> around the call
+        /// shared invocation body for <see cref="Invoke"/>, <see cref="InvokeFrom"/>, <see cref="InvokeOnNewStack"/>
+        /// and <see cref="InvokeAsExecution(CancellationToken,object[])"/>; enters and exits <paramref name="depthBudget"/>
+        /// around the call
         /// </summary>
         /// <param name="governing">context supplying steps, variables, limits and cancellation for this invocation</param>
         /// <param name="depthBudget">depth budget to enter for this invocation, or <c>null</c> when unconfigured</param>
