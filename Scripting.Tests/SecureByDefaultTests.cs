@@ -95,10 +95,11 @@ namespace Scripting.Tests {
         }
 
         [Test]
-        [Description("T38: ScriptLimits.Default pins the two secured knobs and leaves every other knob unset.")]
+        [Description("T38: ScriptLimits.Default pins the three secured knobs (DiVoid #7869 MaxParseDepth alongside the original MaxDepth/MaxVariableBytes) and leaves every other knob unset.")]
         public void T38_DefaultInstanceValues() {
             Assert.That(ScriptLimits.Default.MaxDepth, Is.EqualTo(ScriptLimits.DefaultMaxDepth));
             Assert.That(ScriptLimits.Default.MaxVariableBytes, Is.EqualTo(ScriptLimits.DefaultMaxVariableBytes));
+            Assert.That(ScriptLimits.Default.MaxParseDepth, Is.EqualTo(ScriptLimits.DefaultMaxParseDepth));
             Assert.That(ScriptLimits.Default.MaxSteps, Is.Null);
             Assert.That(ScriptLimits.Default.Timeout, Is.Null);
             Assert.That(ScriptLimits.Default.RegexTimeout, Is.Null);

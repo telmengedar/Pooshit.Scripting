@@ -34,6 +34,9 @@ public class ScriptParser : IScriptParser {
     readonly OperatorTree operatortree = new();
     readonly Dictionary<string, Type> supportedcasts = new();
 
+    [ThreadStatic]
+    static int parsedepth;
+
     /// <summary>
     /// creates a new <see cref="ScriptParser"/>
     /// </summary>
@@ -1246,6 +1249,22 @@ public class ScriptParser : IScriptParser {
     }
 
     IScriptToken Parse(IScriptToken parent, ref string data, ref int index, ref int newlines, ref int linenumber, bool startofstatement = false, bool suppressformat=false) {
+        int? parsedepthlimit = Limits.MaxParseDepth;
+        if (parsedepthlimit.HasValue && ++parsedepth > parsedepthlimit.Value) {
+            --parsedepth;
+            throw new ScriptParserException(index, index, linenumber, $"Parser exceeded the configured nesting depth limit of {parsedepthlimit.Value}");
+        }
+
+        try {
+            return ParseCore(parent, ref data, ref index, ref newlines, ref linenumber, startofstatement, suppressformat);
+        }
+        finally {
+            if (parsedepthlimit.HasValue)
+                --parsedepth;
+        }
+    }
+
+    IScriptToken ParseCore(IScriptToken parent, ref string data, ref int index, ref int newlines, ref int linenumber, bool startofstatement, bool suppressformat) {
         List<IScriptToken> tokenlist = [];
         List<OperatorIndex> indexlist = [];
 

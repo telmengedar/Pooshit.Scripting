@@ -36,11 +36,16 @@ public class ScriptLimits {
     public const long DefaultMaxVariableBytes = 128L * 1024 * 1024;
 
     /// <summary>
-    /// shared instance bounding call depth and variable footprint, leaving every other knob unset; the
-    /// default assigned to <see cref="Parser.ScriptParser.Limits"/>. Assign <see cref="None"/> instead to
-    /// opt out of every bound
+    /// <see cref="MaxParseDepth"/> value used by <see cref="Default"/>
     /// </summary>
-    public static readonly ScriptLimits Default = new() {MaxDepth = DefaultMaxDepth, MaxVariableBytes = DefaultMaxVariableBytes};
+    public const int DefaultMaxParseDepth = 100;
+
+    /// <summary>
+    /// shared instance bounding call depth, parse-recursion depth and variable footprint, leaving every other
+    /// knob unset; the default assigned to <see cref="Parser.ScriptParser.Limits"/>. Assign <see cref="None"/>
+    /// instead to opt out of every bound
+    /// </summary>
+    public static readonly ScriptLimits Default = new() {MaxDepth = DefaultMaxDepth, MaxParseDepth = DefaultMaxParseDepth, MaxVariableBytes = DefaultMaxVariableBytes};
 
     /// <summary>
     /// wall-clock deadline for a single script execution, or <c>null</c> to allow unbounded execution time
@@ -65,6 +70,14 @@ public class ScriptLimits {
     /// <see cref="StackOverflowException"/>
     /// </summary>
     public int? MaxDepth { get; init; }
+
+    /// <summary>
+    /// maximum recursion depth the parser may reach while parsing nested constructs (parenthesized
+    /// expressions, statement/dictionary blocks, nested method calls), or <c>null</c> for no ceiling; guards
+    /// against an uncatchable <see cref="StackOverflowException"/> raised at parse time. Distinct from
+    /// <see cref="MaxDepth"/>, which bounds runtime call depth
+    /// </summary>
+    public int? MaxParseDepth { get; init; }
 
     /// <summary>
     /// maximum number of live variable entries a script may hold before it is aborted, or <c>null</c> for no entry-count ceiling
