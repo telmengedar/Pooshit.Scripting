@@ -39,6 +39,37 @@ namespace Scripting.Tests {
         }
 
         /// <summary>
+        /// variable provider that signals a <see cref="ManualResetEventSlim"/> the moment the engine resolves
+        /// any variable through it, used to observe when a worker has actually started running the script body
+        /// rather than assuming it from elapsed wall-clock time
+        /// </summary>
+        class SignalingVariableProvider : IVariableProvider {
+            readonly VariableProvider inner;
+            readonly ManualResetEventSlim resolved;
+
+            public SignalingVariableProvider(ManualResetEventSlim resolved, params Variable[] variables) {
+                this.resolved = resolved;
+                inner = new VariableProvider(variables);
+            }
+
+            public object this[string name] {
+                get => inner[name];
+                set => inner[name] = value;
+            }
+
+            public object GetVariable(string name) => inner.GetVariable(name);
+            public bool ContainsVariable(string name) => inner.ContainsVariable(name);
+            public bool ContainsVariableInHierarchy(string name) => inner.ContainsVariableInHierarchy(name);
+
+            public IVariableProvider GetProvider(string variable) {
+                resolved.Set();
+                return inner.GetProvider(variable);
+            }
+
+            public IEnumerable<string> Variables => inner.Variables;
+        }
+
+        /// <summary>
         /// import provider returning a fixed, pre-built external method regardless of the requested key
         /// </summary>
         class FixedImportProvider : IImportProvider {
@@ -304,6 +335,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable, MaxTime(3000)]
+        [Description("DiVoid #7892/#7898: Task.Run(action, ct) skips its delegate entirely when ct is already cancelled while the work item still sits queued, so a blind CancelAfter(200) can cancel before a starved thread pool ever hands the worker a thread — nothing acquired, nothing to unwind, and the old assertion failed on a run that never started. Waits for the engine to actually resolve $d (proof the worker entered the using) before cancelling, so the test asserts unwind ordering rather than pool scheduling latency.")]
         public async Task T14_WorkerUnwindsAndDisposesResourcesOnCancel() {
             ScriptParser parser = new();
             RecordingDisposable disposable = new();
@@ -314,9 +346,13 @@ namespace Scripting.Tests {
                 "}"
             ));
 
+            using ManualResetEventSlim resourceResolved = new(false);
+            SignalingVariableProvider provider = new(resourceResolved, new Variable("d", disposable));
+
             CancellationTokenSource cts = new();
-            Task task = script.ExecuteAsync(new VariableProvider(new Variable("d", disposable)), cts.Token);
-            cts.CancelAfter(200);
+            Task task = script.ExecuteAsync(provider, cts.Token);
+            Assert.That(resourceResolved.Wait(TimeSpan.FromSeconds(2)), Is.True);
+            cts.Cancel();
 
             await task.ContinueWith(t => { });
             Assert.That(task.IsCanceled, Is.True);
