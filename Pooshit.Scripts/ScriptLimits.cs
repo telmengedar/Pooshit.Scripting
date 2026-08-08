@@ -41,11 +41,16 @@ public class ScriptLimits {
     public const int DefaultMaxParseDepth = 100;
 
     /// <summary>
+    /// <see cref="RegexTimeout"/> value used by <see cref="Default"/>
+    /// </summary>
+    public static readonly TimeSpan DefaultRegexTimeout = TimeSpan.FromSeconds(1);
+
+    /// <summary>
     /// shared instance bounding call depth, parse-recursion depth and variable footprint, leaving every other
     /// knob unset; the default assigned to <see cref="Parser.ScriptParser.Limits"/>. Assign <see cref="None"/>
     /// instead to opt out of every bound
     /// </summary>
-    public static readonly ScriptLimits Default = new() {MaxDepth = DefaultMaxDepth, MaxParseDepth = DefaultMaxParseDepth, MaxVariableBytes = DefaultMaxVariableBytes};
+    public static readonly ScriptLimits Default = new() {MaxDepth = DefaultMaxDepth, MaxParseDepth = DefaultMaxParseDepth, MaxVariableBytes = DefaultMaxVariableBytes, RegexTimeout = DefaultRegexTimeout};
 
     /// <summary>
     /// wall-clock deadline for a single script execution, or <c>null</c> to allow unbounded execution time
@@ -59,8 +64,9 @@ public class ScriptLimits {
     public long? MaxSteps { get; init; }
 
     /// <summary>
-    /// maximum duration a single regex match (<c>~~</c>/<c>!~</c>) may run, or <c>null</c> to allow
-    /// unbounded matching (today's behavior, byte-identical)
+    /// maximum duration a single regex match (<c>~~</c>/<c>!~</c>) may run, or <c>null</c> for unbounded
+    /// matching; a breach surfaces as the regex engine's own
+    /// <see cref="System.Text.RegularExpressions.RegexMatchTimeoutException"/>
     /// </summary>
     public TimeSpan? RegexTimeout { get; init; }
 
