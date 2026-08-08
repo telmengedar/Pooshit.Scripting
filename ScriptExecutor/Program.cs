@@ -16,13 +16,15 @@ namespace NightlyCode.ScriptExecutor {
         static void Main(string[] args) {
             if (!TryParseOptions(args, out ScriptLimits limits, out string[] remaining, out string optionError)) {
                 Console.WriteLine(optionError);
-                PrintUsage(Console.Out);
+                PrintUsage();
+                Environment.ExitCode = 1;
                 return;
             }
             parser.Limits = limits;
 
             if (remaining.Length < 1) {
-                PrintUsage(Console.Out);
+                PrintUsage();
+                Environment.ExitCode = 1;
                 return;
             }
 
@@ -35,6 +37,7 @@ namespace NightlyCode.ScriptExecutor {
             }
             catch (Exception e) {
                 logger.Error($"Unable to read scriptfile '{scriptfile}'", e);
+                Environment.ExitCode = 1;
                 return;
             }
 
@@ -44,10 +47,12 @@ namespace NightlyCode.ScriptExecutor {
             }
             catch (ScriptParserException parserexception) {
                 logger.Error($"Parsing error on line {parserexception.Line}", parserexception);
+                Environment.ExitCode = 1;
                 return;
             }
             catch (Exception e) {
                 logger.Error($"Error parsing script", e);
+                Environment.ExitCode = 1;
                 return;
             }
 
@@ -59,22 +64,23 @@ namespace NightlyCode.ScriptExecutor {
             }
             catch (Exception e) {
                 logger.Error($"Error executing script", e);
+                Environment.ExitCode = 1;
             }
         }
 
-        internal static void PrintUsage(TextWriter writer) {
-            writer.WriteLine("You need to specify the script file to execute");
-            writer.WriteLine("Syntax: nc [options] <scriptfile> [args...]");
-            writer.WriteLine("Options:");
-            writer.WriteLine($"  --max-depth N            override MaxDepth (default {ScriptLimits.DefaultMaxDepth})");
-            writer.WriteLine("  --max-steps N            override MaxSteps (default unset)");
-            writer.WriteLine($"  --max-variable-bytes N   override MaxVariableBytes (default {ScriptLimits.DefaultMaxVariableBytes})");
-            writer.WriteLine("  --timeout MS             override Timeout in milliseconds (default unset)");
-            writer.WriteLine($"  --regex-timeout MS       override RegexTimeout in milliseconds (default {(int) ScriptLimits.DefaultRegexTimeout.TotalMilliseconds})");
-            writer.WriteLine("  --unbounded              disable all execution guards (ScriptLimits.None)");
+        static void PrintUsage() {
+            Console.WriteLine("You need to specify the script file to execute");
+            Console.WriteLine("Syntax: nc [options] <scriptfile> [args...]");
+            Console.WriteLine("Options:");
+            Console.WriteLine($"  --max-depth N            override MaxDepth (default {ScriptLimits.DefaultMaxDepth})");
+            Console.WriteLine("  --max-steps N            override MaxSteps (default unset)");
+            Console.WriteLine($"  --max-variable-bytes N   override MaxVariableBytes (default {ScriptLimits.DefaultMaxVariableBytes})");
+            Console.WriteLine("  --timeout MS             override Timeout in milliseconds (default unset)");
+            Console.WriteLine($"  --regex-timeout MS       override RegexTimeout in milliseconds (default {(int) ScriptLimits.DefaultRegexTimeout.TotalMilliseconds})");
+            Console.WriteLine("  --unbounded              disable all execution guards (ScriptLimits.None)");
         }
 
-        internal static bool TryParseOptions(string[] args, out ScriptLimits limits, out string[] remaining, out string error) {
+        static bool TryParseOptions(string[] args, out ScriptLimits limits, out string[] remaining, out string error) {
             int? maxDepth = null;
             long? maxSteps = null;
             long? maxVariableBytes = null;
