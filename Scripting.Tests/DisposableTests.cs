@@ -8,18 +8,16 @@ namespace Scripting.Tests {
 
     [TestFixture, Parallelizable]
     public class DisposableTests {
-        IScriptParser parser;
 
-
-        [SetUp]
-        public void Setup() {
-            parser = new ScriptParser();
+        static IScriptParser CreateParser() {
+            IScriptParser parser = new ScriptParser();
             parser.Types.AddType<Disposable>();
+            return parser;
         }
 
         [Test, Parallelizable]
         public void DisposeSingle() {
-            IScript script = parser.Parse(
+            IScript script = CreateParser().Parse(
                 "$data=new disposable()\n" +
                 "using($data)\n" +
                 "\"weird statement\"\n" +
@@ -31,10 +29,10 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void DisposeBlock() {
-            IScript script = parser.Parse(
+            IScript script = CreateParser().Parse(
                 "$data=new disposable()\n" +
                 "using($data) {\n" +
-                "\"weird statement\"\n" + 
+                "\"weird statement\"\n" +
                 "\"another statement\"\n" +
                 "}\n" +
                 "$data.disposed"
@@ -44,7 +42,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void UseMultiple() {
-            IScript script = parser.Parse(
+            IScript script = CreateParser().Parse(
                 "$data1=new disposable()\n" +
                 "$data2=new disposable()\n" +
                 "using($data1,$data2) {\n" +

@@ -10,12 +10,6 @@ namespace Scripting.Tests {
 
     [TestFixture, Parallelizable]
     public class MethodParameterTests {
-        IScriptParser parser;
-
-        [SetUp]
-        public void StartUp() {
-            parser = new ScriptParser();
-        }
 
         public string Enumeration(IEnumerable<string> parameters) {
             return string.Join(";", parameters);
@@ -23,6 +17,7 @@ namespace Scripting.Tests {
 
         [Test, Parallelizable]
         public void EnumerationParameterCall() {
+            IScriptParser parser = new ScriptParser();
             IScript script = parser.Parse("test.enumeration([\"hello\",\"world\"])");
             Assert.AreEqual("hello;world", script.Execute(new VariableProvider(new Variable("test", this))));
         }

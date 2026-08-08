@@ -93,8 +93,9 @@ public class ScriptParserTests {
 
     [Test, Parallelizable]
     public void ExtensionMethods() {
-        globalparser.Extensions.AddExtensions<TestExtensions>();
-        Assert.AreEqual("longstring", globalparser.Parse("\"long\".append(\"string\")").Execute());
+        ScriptParser parser = new ScriptParser();
+        parser.Extensions.AddExtensions<TestExtensions>();
+        Assert.AreEqual("longstring", parser.Parse("\"long\".append(\"string\")").Execute());
     }
 
     [Test, Parallelizable]

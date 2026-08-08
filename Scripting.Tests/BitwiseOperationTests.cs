@@ -7,7 +7,7 @@ namespace Scripting.Tests {
 
     [TestFixture, Parallelizable]
     public class BitwiseOperationTests {
-        IScriptParser parser = new ScriptParser();
+        readonly IScriptParser parser = new ScriptParser();
 
         [Test]
         public void BitwiseAnd() {
