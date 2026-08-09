@@ -50,7 +50,7 @@ public class LambdaToken : IOperator, IBinaryToken {
         else
             parameters = [((ScriptVariable)Lhs).Name];
 
-        ScriptContext lambdacontext = new(context);
+        ScriptContext lambdacontext = ScriptContext.Capture(context);
         return new LambdaMethod(parameters, lambdacontext, Rhs);
     }
 

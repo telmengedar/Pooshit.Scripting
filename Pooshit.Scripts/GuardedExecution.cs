@@ -7,10 +7,11 @@ namespace Pooshit.Scripting;
 
 /// <summary>
 /// bundles the context and bookkeeping needed to run a script under its configured <see cref="ScriptLimits"/>.
-/// Realises the execution timeout as a linked, deadline-armed <see cref="CancellationTokenSource"/> rather
-/// than a new observation mechanism, so every checkpoint the engine establishes already honors it for free;
-/// converts a deadline-only cancellation into a <see cref="ScriptTimeoutException"/> while leaving a genuine
-/// caller cancellation untouched
+/// Realises the execution timeout as a linked <see cref="CancellationTokenSource"/> cancelled both by a
+/// <see cref="CancellationTokenSource.CancelAfter(TimeSpan)"/> fallback and by the executing thread's own
+/// <see cref="DeadlineGuard"/>, so every checkpoint the engine establishes already honors it without
+/// depending solely on thread-pool timer scheduling; converts a deadline-only cancellation into a
+/// <see cref="ScriptTimeoutException"/> while leaving a genuine caller cancellation untouched
 /// </summary>
 sealed class GuardedExecution : IDisposable {
     readonly CancellationTokenSource linkedSource;
@@ -60,8 +61,9 @@ sealed class GuardedExecution : IDisposable {
         }
 
         CancellationTokenSource linkedsource = CancellationTokenSource.CreateLinkedTokenSource(callertoken);
+        DeadlineGuard deadlineguard = new(limits.Timeout.Value, linkedsource);
         linkedsource.CancelAfter(limits.Timeout.Value);
-        ScriptContext timeoutcontext = new(variables, typeprovider, linkedsource.Token, limits, stepbudget, depthbudget, variablebudget);
+        ScriptContext timeoutcontext = new(variables, typeprovider, linkedsource.Token, limits, stepbudget, depthbudget, variablebudget, deadlineguard);
         return new GuardedExecution(timeoutcontext, linkedsource.Token, callertoken, limits.Timeout, linkedsource);
     }
 

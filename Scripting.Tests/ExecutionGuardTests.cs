@@ -764,6 +764,94 @@ namespace Scripting.Tests {
                 Assert.Throws<ScriptTimeoutException>(() => lambda.InvokeAsExecution());
         }
 
+        [Test, MaxTime(5000)]
+        [Description("DiVoid #7897: ScriptLimits.Timeout must still fire under a starved thread pool instead of depending on CancelAfter's pool-scheduled callback landing.")]
+        public void Timeout_HoldsUnderStarvedThreadPool() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {Timeout = TimeSpan.FromMilliseconds(100)}
+            };
+            IScript script = parser.Parse(ScriptCode.Create(
+                "wait(300)",
+                "return(0)"
+            ));
+
+            ThreadPool.GetMinThreads(out int minWorker, out int minIo);
+            ThreadPool.SetMinThreads(1, minIo);
+            ManualResetEventSlim release = new(false);
+            int hogCount = Environment.ProcessorCount * 4;
+            CountdownEvent hogsDone = new(hogCount);
+            try {
+                for (int h = 0; h < hogCount; h++)
+                    ThreadPool.UnsafeQueueUserWorkItem(_ => {
+                        release.Wait(500);
+                        hogsDone.Signal();
+                    }, null);
+
+                ScriptTimeoutException exception = null;
+                long elapsedMs = -1;
+                Thread worker = new(() => {
+                    System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                    try {
+                        script.Execute();
+                    }
+                    catch (ScriptTimeoutException e) {
+                        exception = e;
+                    }
+                    elapsedMs = stopwatch.ElapsedMilliseconds;
+                }) {IsBackground = true};
+                worker.Start();
+                worker.Join(3000);
+
+                Assert.That(exception, Is.Not.Null);
+                Assert.That(elapsedMs, Is.LessThan(1000));
+            }
+            finally {
+                release.Set();
+                ThreadPool.SetMinThreads(minWorker, minIo);
+                hogsDone.Wait(5000);
+                hogsDone.Dispose();
+                release.Dispose();
+            }
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7897: wait(n) must run its full requested duration when Timeout is configured but nowhere near firing.")]
+        public void Wait_DoesNotReturnEarlyWhenDeadlineNotYetReached() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {Timeout = TimeSpan.FromSeconds(5)}
+            };
+            IScript script = parser.Parse(ScriptCode.Create(
+                "wait(200)",
+                "return(0)"
+            ));
+
+            System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            object result = script.Execute();
+            stopwatch.Stop();
+
+            Assert.That(result, Is.EqualTo(0));
+            Assert.That(stopwatch.ElapsedMilliseconds, Is.GreaterThanOrEqualTo(190));
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7897: Invoke() on a cached lambda must not throw after its definition-time deadline has elapsed, because it has no deadline of its own to begin with.")]
+        public void Invoke_OnCachedLambdaAfterDefinitionTimeDeadlineElapsedDoesNotThrowObjectDisposed() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {Timeout = TimeSpan.FromMilliseconds(50)}
+            };
+            IScript definitions = parser.Parse(ScriptCode.Create(
+                "$f = $x=>{ return($x) }",
+                "$f"
+            ));
+            LambdaMethod lambda = (LambdaMethod) definitions.Execute(new VariableProvider());
+
+            Thread.Sleep(200);
+
+            object result = null;
+            Assert.DoesNotThrow(() => result = lambda.Invoke(42));
+            Assert.That(result, Is.EqualTo(42));
+        }
+
         [Test, Parallelizable, MaxTime(2000)]
         [Description("DiVoid #7880 T4 — NEGATIVE, the sandbox guard: a script looping through a host extension that calls Invoke(args) on a cached lambda must NOT get an unlimited step budget merely because InvokeAsExecution exists elsewhere on the surface. Must throw ScriptStepLimitExceededException, never complete — this is the test that fails if any scope-opening behaviour is ever attached to plain Invoke.")]
         public void Step_LoopThroughInvokeArgsExtensionDoesNotEscapeStepBudget() {

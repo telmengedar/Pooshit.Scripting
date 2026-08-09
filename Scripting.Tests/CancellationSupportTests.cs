@@ -335,7 +335,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable, MaxTime(3000)]
-        [Description("DiVoid #7892/#7898: Task.Run(action, ct) skips its delegate entirely when ct is already cancelled while the work item still sits queued, so a blind CancelAfter(200) can cancel before a starved thread pool ever hands the worker a thread — nothing acquired, nothing to unwind, and the old assertion failed on a run that never started. Waits for the engine to actually resolve $d (proof the worker entered the using) before cancelling, so the test asserts unwind ordering rather than pool scheduling latency.")]
+        [Description("DiVoid #7892: cancels only after the worker signals it has entered the using, so this pins genuine unwind-on-cancel ordering rather than racing thread-pool scheduling.")]
         public async Task T14_WorkerUnwindsAndDisposesResourcesOnCancel() {
             ScriptParser parser = new();
             RecordingDisposable disposable = new();
@@ -383,6 +383,25 @@ namespace Scripting.Tests {
             await timeoutTask.ContinueWith(t => { });
             Assert.That(timeoutTask.IsFaulted, Is.True);
             Assert.That(timeoutTask.Exception?.InnerException, Is.InstanceOf<ScriptTimeoutException>());
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7897: a genuine caller cancellation must still surface as OperationCanceledException, not ScriptTimeoutException, even with Timeout configured and far from firing.")]
+        public async Task Timeout_CallerCancelBeforeDeadlineStillThrowsOperationCanceled() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {Timeout = TimeSpan.FromSeconds(30)}
+            };
+            IScript script = parser.Parse(ScriptCode.Create(
+                "while(true)",
+                "  $x = 1"
+            ));
+
+            CancellationTokenSource cts = new();
+            Task task = script.ExecuteAsync((IVariableProvider)null, cts.Token);
+            cts.CancelAfter(200);
+
+            await task.ContinueWith(t => { });
+            Assert.That(task.IsCanceled, Is.True);
         }
 
         /// <summary>
