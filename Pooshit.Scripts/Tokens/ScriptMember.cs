@@ -60,7 +60,7 @@ public class ScriptMember : AssignableToken {
             throw new ScriptRuntimeException($"Reflective access to '{host.GetType().Name}' is not permitted from script", this);
 
         string member = membername.ToLower();
-        PropertyInfo property = host.GetType().GetProperties().FirstOrDefault(p => p.Name.ToLower() == member);
+        PropertyInfo property = host.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).FirstOrDefault(p => p.Name.ToLower() == member);
         if(property != null) {
             try {
                 return property.GetValue(host);
@@ -71,7 +71,7 @@ public class ScriptMember : AssignableToken {
         }
 
 
-        FieldInfo fieldinfo = host.GetType().GetFields().FirstOrDefault(f => f.Name.ToLower() == member);
+        FieldInfo fieldinfo = host.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance).FirstOrDefault(f => f.Name.ToLower() == member);
         if (fieldinfo == null)
             throw new ScriptRuntimeException($"A member with the name of {membername} was not found in type {host.GetType().Name}", this);
 
@@ -143,11 +143,11 @@ public class ScriptMember : AssignableToken {
             throw new ScriptRuntimeException($"Reflective access to '{host.GetType().Name}' is not permitted from script", this);
 
         string member = membername.ToLower();
-        PropertyInfo property = host.GetType().GetProperties().FirstOrDefault(p => p.Name.ToLower() == member);
+        PropertyInfo property = host.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).FirstOrDefault(p => p.Name.ToLower() == member);
         if (property != null)
             return SetProperty(host, property, token, context);
 
-        FieldInfo fieldinfo = host.GetType().GetFields().FirstOrDefault(f => f.Name.ToLower() == member);
+        FieldInfo fieldinfo = host.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance).FirstOrDefault(f => f.Name.ToLower() == member);
         if (fieldinfo == null)
             throw new ScriptRuntimeException($"A member with the name of {membername} was not found in type {host.GetType().Name}", this);
 
