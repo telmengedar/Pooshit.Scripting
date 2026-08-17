@@ -3,14 +3,15 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
+using Pooshit.Scripting.Errors;
 
 namespace Pooshit.Scripting;
 
 /// <summary>
 /// approximates the retained footprint of a script variable's value without reflection or unbounded traversal,
 /// except for the cached, per-type <see cref="Capacity"/>/<see cref="DictionaryCapacity"/> lookups used to
-/// charge pre-sized-but-empty collections, and the capacity-operation table M4 (design §8.8.4) matches
-/// pre-allocation charge sites against
+/// charge pre-sized-but-empty collections, and the pre-allocation operation table pre-allocation charge sites
+/// match against
 /// </summary>
 static class VariableSizer {
 
@@ -19,6 +20,8 @@ static class VariableSizer {
     const long ReferenceSize = 8;
     internal const long DictionaryEntryOverhead = 24;
     internal const long CollectionElementOverhead = 8;
+    internal const long StringCharBytes = 2;
+    internal const long SplitSegmentBytes = ObjectHeaderBytes + ReferenceSize;
     const long OpaqueValueBytes = 64;
     const long ValueTypeBytes = 24;
 
@@ -53,13 +56,13 @@ static class VariableSizer {
         if (value is ValueType)
             return ValueTypeBytes;
         if (value is string s)
-            return ObjectHeaderBytes + 2L * s.Length;
+            return ObjectHeaderBytes + StringCharBytes * s.Length;
 
         switch (value) {
             case byte[] array: return ObjectHeaderBytes + array.Length;
             case sbyte[] array: return ObjectHeaderBytes + array.Length;
             case bool[] array: return ObjectHeaderBytes + array.Length;
-            case char[] array: return ObjectHeaderBytes + 2L * array.Length;
+            case char[] array: return ObjectHeaderBytes + StringCharBytes * array.Length;
             case short[] array: return ObjectHeaderBytes + 2L * array.Length;
             case ushort[] array: return ObjectHeaderBytes + 2L * array.Length;
             case int[] array: return ObjectHeaderBytes + 4L * array.Length;
@@ -179,21 +182,49 @@ static class VariableSizer {
     }
 
     /// <summary>
-    /// matches a resolved constructor or method against the capacity-operation table (design §8.8.4): a
-    /// single-<c>int</c> ctor or <c>EnsureCapacity(int)</c> on <see cref="List{T}"/> or <see cref="Dictionary{TKey,TValue}"/>
+    /// matches a resolved constructor or method against the pre-allocation operation table and, on a match,
+    /// projects the bytes it is about to allocate from <paramref name="host"/>, <paramref name="member"/> and
+    /// <paramref name="arguments"/> - covering both the original single-<c>int</c> capacity ops on
+    /// <see cref="List{T}"/>/<see cref="Dictionary{TKey,TValue}"/> and the size/format/bulk-argument
+    /// projections over <see cref="string"/> and <see cref="List{T}"/> bulk mutation
     /// </summary>
-    /// <param name="receiverType">declaring or receiver type the operation is invoked on</param>
+    /// <param name="host">live receiver instance, or <c>null</c> for a constructor call</param>
     /// <param name="member">resolved constructor or method</param>
-    /// <param name="bytesPerUnit">per-unit byte cost to charge if this is a capacity operation</param>
-    /// <returns>true if <paramref name="member"/> is a capacity operation on a table-registered type</returns>
-    internal static bool TryGetCapacityOperation(Type receiverType, MethodBase member, out long bytesPerUnit) {
-        bytesPerUnit = 0;
-        if (receiverType == null || member == null)
+    /// <param name="arguments">call-site argument values, already converted to the member's parameter types</param>
+    /// <param name="projectedBytes">bytes about to be allocated if this is a pre-allocation operation</param>
+    /// <returns>true if <paramref name="member"/> is a pre-allocation operation on a table-registered type</returns>
+    internal static bool TryGetPreAllocationOperation(object host, MethodBase member, object[] arguments, out long projectedBytes) {
+        projectedBytes = 0;
+        if (member == null)
+            return false;
+
+        Type receiverType = host?.GetType() ?? member.DeclaringType;
+        if (receiverType == null)
             return false;
 
         Type key = receiverType.IsGenericType ? receiverType.GetGenericTypeDefinition() : receiverType;
-        if (key != typeof(List<>) && key != typeof(Dictionary<,>))
-            return false;
+        if (key == typeof(List<>) || key == typeof(Dictionary<,>))
+            return TryGetCollectionCapacityProjection(key, member, arguments, host, out projectedBytes)
+                   || (key == typeof(List<>) && TryGetListBulkProjection(member, arguments, out projectedBytes));
+
+        if (receiverType == typeof(string))
+            return TryGetStringProjection(member, arguments, host as string, out projectedBytes);
+
+        return false;
+    }
+
+    /// <summary>
+    /// matches a single-<c>int</c> ctor or <c>EnsureCapacity(int)</c> on <see cref="List{T}"/> or
+    /// <see cref="Dictionary{TKey,TValue}"/>, projecting the delta between the requested and current capacity
+    /// </summary>
+    /// <param name="key">generic type definition of the receiver</param>
+    /// <param name="member">resolved constructor or method</param>
+    /// <param name="arguments">call-site argument values</param>
+    /// <param name="host">live receiver instance, or <c>null</c> for a constructor call</param>
+    /// <param name="projectedBytes">bytes about to be allocated if this is a capacity operation</param>
+    /// <returns>true if <paramref name="member"/> is a capacity operation</returns>
+    static bool TryGetCollectionCapacityProjection(Type key, MethodBase member, object[] arguments, object host, out long projectedBytes) {
+        projectedBytes = 0;
         if (member.Name != ".ctor" && member.Name != "EnsureCapacity")
             return false;
 
@@ -201,19 +232,105 @@ static class VariableSizer {
         if (parameters.Length != 1 || parameters[0].ParameterType != typeof(int))
             return false;
 
-        bytesPerUnit = key == typeof(List<>) ? CollectionElementOverhead : DictionaryEntryOverhead;
+        long bytesperunit = key == typeof(List<>) ? CollectionElementOverhead : DictionaryEntryOverhead;
+        long requested = Math.Max(0, Convert.ToInt64(arguments[0]) - CurrentCapacity(host));
+        projectedBytes = requested * bytesperunit;
         return true;
     }
 
     /// <summary>
-    /// matches a resolved property against the capacity-operation table (design §8.8.4): the settable
-    /// <c>Capacity</c> property on <see cref="List{T}"/> is the table's only property-set row
+    /// matches <see cref="List{T}.AddRange"/>/<see cref="List{T}.InsertRange"/>, projecting the bulk
+    /// argument's <see cref="ICollection.Count"/>; refuses a bulk argument whose count cannot be read before
+    /// enumeration rather than silently skipping the charge
+    /// </summary>
+    /// <param name="member">resolved method</param>
+    /// <param name="arguments">call-site argument values</param>
+    /// <param name="projectedBytes">bytes about to be allocated if this is a bulk mutation</param>
+    /// <returns>true if <paramref name="member"/> is a governed bulk mutation</returns>
+    static bool TryGetListBulkProjection(MethodBase member, object[] arguments, out long projectedBytes) {
+        projectedBytes = 0;
+
+        int argumentindex;
+        switch (member.Name) {
+            case "AddRange": argumentindex = 0; break;
+            case "InsertRange": argumentindex = 1; break;
+            default: return false;
+        }
+
+        if (arguments == null || argumentindex >= arguments.Length)
+            return false;
+
+        if (!(arguments[argumentindex] is ICollection collection))
+            throw new ScriptRuntimeException($"'{member.Name.ToLower()}' requires an argument whose element count is known before enumeration; materialise it first (e.g. '.toarray()')", null);
+
+        projectedBytes = collection.Count * CollectionElementOverhead;
+        return true;
+    }
+
+    /// <summary>
+    /// matches the size/amplification-bearing members of <see cref="string"/>: <c>PadRight</c>/<c>PadLeft</c>,
+    /// <c>.ctor(char,int)</c>, <c>Replace</c>, <c>ReplaceLineEndings</c> and <c>Split</c>
+    /// </summary>
+    /// <param name="member">resolved constructor or method</param>
+    /// <param name="arguments">call-site argument values</param>
+    /// <param name="receiver">receiver instance, or <c>null</c> for the <c>.ctor(char,int)</c> route</param>
+    /// <param name="projectedBytes">bytes about to be allocated if this is a governed string operation</param>
+    /// <returns>true if <paramref name="member"/> is a governed string operation</returns>
+    static bool TryGetStringProjection(MethodBase member, object[] arguments, string receiver, out long projectedBytes) {
+        projectedBytes = 0;
+        ParameterInfo[] parameters = member.GetParameters();
+
+        switch (member.Name) {
+            case "PadRight":
+            case "PadLeft":
+                if (parameters.Length < 1 || parameters[0].ParameterType != typeof(int))
+                    return false;
+                projectedBytes = Convert.ToInt64(arguments[0]) * StringCharBytes;
+                return true;
+
+            case ".ctor":
+                if (parameters.Length != 2 || parameters[0].ParameterType != typeof(char) || parameters[1].ParameterType != typeof(int))
+                    return false;
+                projectedBytes = Convert.ToInt64(arguments[1]) * StringCharBytes;
+                return true;
+
+            case "Replace":
+                if (receiver == null || parameters.Length < 2 || parameters[0].ParameterType != typeof(string) || parameters[1].ParameterType != typeof(string))
+                    return false;
+                string oldvalue = arguments[0] as string;
+                if (string.IsNullOrEmpty(oldvalue))
+                    return false;
+                string newvalue = arguments[1] as string;
+                projectedBytes = receiver.Length / Math.Max(1L, oldvalue.Length) * (newvalue?.Length ?? 0) * StringCharBytes;
+                return true;
+
+            case "ReplaceLineEndings":
+                if (receiver == null || parameters.Length < 1 || parameters[0].ParameterType != typeof(string))
+                    return false;
+                string replacement = arguments[0] as string;
+                projectedBytes = (long) receiver.Length * (replacement?.Length ?? 0) * StringCharBytes;
+                return true;
+
+            case "Split":
+                if (receiver == null)
+                    return false;
+                projectedBytes = receiver.Length * SplitSegmentBytes;
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>
+    /// matches a resolved property against the pre-allocation operation table: the settable <c>Capacity</c>
+    /// property on <see cref="List{T}"/> is the table's only property-set row
     /// </summary>
     /// <param name="receiverType">declaring or receiver type the property is set on</param>
     /// <param name="property">resolved property</param>
     /// <param name="bytesPerUnit">per-unit byte cost to charge if this is a capacity operation</param>
     /// <returns>true if <paramref name="property"/> is a capacity operation on a table-registered type</returns>
-    internal static bool TryGetCapacityOperation(Type receiverType, PropertyInfo property, out long bytesPerUnit) {
+    internal static bool TryGetPreAllocationOperation(Type receiverType, PropertyInfo property, out long bytesPerUnit) {
         bytesPerUnit = 0;
         if (receiverType == null || property == null)
             return false;

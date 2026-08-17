@@ -1481,12 +1481,12 @@ namespace Scripting.Tests {
         public void T42_ChargePreAllocationRefusesListCtorProjectionWithoutConstructing() {
             VariableBudget budget = new(new VariableProvider(), null, 128L * 1024 * 1024);
             ConstructorInfo ctor = typeof(List<object>).GetConstructor(new[] {typeof(int)});
-            Assert.That(VariableSizer.TryGetCapacityOperation(typeof(List<object>), ctor, out long bytesperunit), Is.True);
+            Assert.That(VariableSizer.TryGetPreAllocationOperation(null, ctor, new object[] {2_000_000_000}, out long projected), Is.True);
 
             bool allocated = false;
 
             ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(() => {
-                budget.ChargePreAllocation(2_000_000_000L * bytesperunit);
+                budget.ChargePreAllocation(projected);
                 allocated = true;
             });
 
@@ -1601,6 +1601,73 @@ namespace Scripting.Tests {
 
             ScriptRuntimeException exception = Assert.Throws<ScriptRuntimeException>(() => script.Execute());
             Assert.That(exception.Message, Does.Contain("matching constructor"));
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T50 (design §8.1 row 1, DiVoid #7854 Category A/#7868): \"a\".padright(100000000) assigned on a bare new ScriptParser() throws ScriptVariableLimitExceededException with an allocation delta of a few MB, not the ~200MB spike a post-hoc charge would let through - the pre-allocation projection precedes String.PadRight's own allocation.")]
+        public void T50_PadRightAssignedThrowsBeforeAllocation() {
+            ScriptParser parser = new();
+            IScript script = parser.Parse("$s = \"a\".padright(100000000)");
+
+            long before = GC.GetTotalAllocatedBytes(true);
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(() => script.Execute());
+            long delta = GC.GetTotalAllocatedBytes(true) - before;
+
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+            Assert.That(delta, Is.LessThan(MaxPreAllocationGuardDeltaBytes));
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T51 (design §8.1 rows 1-2): padleft, padright with an explicit padding character, and an unassigned padright expression all throw ScriptVariableLimitExceededException before allocation on a bare parser - pins the charge for every PadRight/PadLeft overload, regardless of assignment.")]
+        public void T51_PadVariantsAndUnassignedExpressionThrowBeforeAllocation() {
+            ScriptParser parser = new();
+
+            Assert.Throws<ScriptVariableLimitExceededException>(() => parser.Parse("$s = \"a\".padleft(100000000)").Execute());
+            Assert.Throws<ScriptVariableLimitExceededException>(() => parser.Parse("$s = \"a\".padright(100000000,'b')").Execute());
+            Assert.Throws<ScriptVariableLimitExceededException>(() => parser.Parse("\"a\".padright(100000000)").Execute());
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T52 (design §8.1 row 3): new string('a',100000000) throws ScriptVariableLimitExceededException before allocation, pinning the arg-index-1 projection through TypeInstanceProvider.Create.")]
+        public void T52_CharCtorAssignedThrowsBeforeAllocation() {
+            ScriptParser parser = new();
+            IScript script = parser.Parse("$s = new string('a',100000000)");
+
+            long before = GC.GetTotalAllocatedBytes(true);
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(() => script.Execute());
+            long delta = GC.GetTotalAllocatedBytes(true) - before;
+
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+            Assert.That(delta, Is.LessThan(MaxPreAllocationGuardDeltaBytes));
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T53 (design §8.1 rows 1-3): small, legitimate pad and new string(char,int) calls under the default byte budget complete without a false abort.")]
+        public void T53_SmallPadAndCharCtorCompleteWithoutFalseAbort() {
+            ScriptParser parser = new();
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$a = \"a\".padright(1000)",
+                "$b = \"ab\".padleft(10,'x')",
+                "$c = new string('a',1000)"
+            ));
+
+            Assert.DoesNotThrow(() => script.Execute());
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T74 (design §8.1 rows 7-8, §10.3): List<>.AddRange with a lazy, non-ICollection argument is refused rather than silently unbounded, naming '.toarray()' as the workaround.")]
+        public void T74_AddRangeWithNonCollectionArgumentIsRefused() {
+            ScriptParser parser = new();
+            parser.Extensions.AddExtensions<EnumerableExtensions>();
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$l = new list()",
+                "$l.add(1)",
+                "$other = $l.where($x=>true)",
+                "$l.addrange($other)"
+            ));
+
+            ScriptRuntimeException exception = Assert.Throws<ScriptRuntimeException>(() => script.Execute());
+            Assert.That(exception.Message, Does.Contain(".toarray()"));
         }
     }
 }

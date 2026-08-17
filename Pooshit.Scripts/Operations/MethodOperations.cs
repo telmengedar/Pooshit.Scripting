@@ -241,8 +241,8 @@ namespace Pooshit.Scripting.Operations {
                 throw new ScriptRuntimeException($"Unable to convert parameters for {constructor}", null, e);
             }
 
-            if (VariableSizer.TryGetCapacityOperation(constructor.DeclaringType, constructor, out long bytesperunit))
-                context?.VariableBudget?.ChargePreAllocation(Math.Max(0, Convert.ToInt64(callparameters[0])) * bytesperunit);
+            if (VariableSizer.TryGetPreAllocationOperation(null, constructor, callparameters, out long projected))
+                context?.VariableBudget?.ChargePreAllocation(projected);
 
             try {
                 return constructor.Invoke(callparameters);
@@ -292,10 +292,8 @@ namespace Pooshit.Scripting.Operations {
                 throw new ScriptRuntimeException($"Unable to convert parameters for {host.GetType().Name}.{method.Name}({string.Join(",", targetparameters.Select(p => p.ParameterType.Name + " " + p.Name))})\n{string.Join("\r\n", parameters.Select(p => p.ToString()))}", methodcall, e);
             }
 
-            if (!extension && host != null && VariableSizer.TryGetCapacityOperation(host.GetType(), method, out long bytesperunit)) {
-                long requestedcapacity = Math.Max(0, Convert.ToInt64(callparameters[0]) - VariableSizer.CurrentCapacity(host));
-                context?.VariableBudget?.ChargePreAllocation(requestedcapacity * bytesperunit);
-            }
+            if (!extension && host != null && VariableSizer.TryGetPreAllocationOperation(host, method, callparameters, out long projected))
+                context?.VariableBudget?.ChargePreAllocation(projected);
 
             try {
                 object result= method.Invoke(extension ? null : host, callparameters);

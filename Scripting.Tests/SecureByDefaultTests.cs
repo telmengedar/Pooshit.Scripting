@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using NUnit.Framework;
 using Pooshit.Scripting;
@@ -16,6 +17,20 @@ namespace Scripting.Tests {
     /// </summary>
     [TestFixture, Parallelizable]
     public class SecureByDefaultTests {
+
+        /// <summary>
+        /// generous ceiling for the single-shot pre-allocation guard's allocation-delta proof tests (T70/T71,
+        /// design §8), mirroring <c>ExecutionGuardTests.MaxPreAllocationGuardDeltaBytes</c>
+        /// </summary>
+        const long MaxPreAllocationGuardDeltaBytes = 50_000_000;
+
+        /// <summary>
+        /// ceiling for T69's allocation delta: unlike a single-shot pre-allocation charge, the geometric
+        /// addrange loop legitimately performs several real, successful doublings before the one that
+        /// breaches the budget is refused, so the delta reflects that real, expected churn rather than being
+        /// near-zero - this only needs to rule out the unbounded extrapolation the fix closes, not approach it
+        /// </summary>
+        const long MaxAddRangeChurnBytes = 300_000_000;
 
         static IScript ParseRecursiveFactorial(ScriptParser parser) {
             return parser.Parse(ScriptCode.Create(
@@ -117,6 +132,101 @@ namespace Scripting.Tests {
 
             IScript script = ParseRecursiveFactorial(defaultParser);
             Assert.Throws<ScriptDepthLimitExceededException>(() => script.Execute());
+        }
+
+        [Test, Parallelizable, MaxTime(5000)]
+        [Description("T69 (DiVoid #7870, design §8.1 rows 7-8): the geometric $l.addrange($l) bypass throws ScriptVariableLimitExceededException instead of completing 4-6x over the byte ceiling; the allocation delta reflects the real, legitimate doublings that succeeded before the refused one, not the unbounded multi-gigabyte extrapolation the fix closes. Control: the linear add-loop equivalent still throws, unaffected by this change.")]
+        public void T69_AddRangeGeometricBypassThrowsBeforeAllocation() {
+            ScriptParser parser = new();
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$l = new list()",
+                "$l.add(1)",
+                "$i = 0",
+                "while($i < 26) {",
+                "  $l.addrange($l)",
+                "  $i = $i + 1",
+                "}"
+            ));
+
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(() => script.Execute());
+            long delta = GC.GetAllocatedBytesForCurrentThread() - before;
+
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+            Assert.That(delta, Is.LessThan(MaxAddRangeChurnBytes));
+
+            ScriptParser controlParser = new() {Limits = new ScriptLimits {MaxVariableBytes = 800_000}};
+            IScript controlScript = controlParser.Parse(ScriptCode.Create(
+                "$l = new list()",
+                "$i = 0",
+                "while($i < 200000) {",
+                "  $l.add(1)",
+                "  $i = $i + 1",
+                "}"
+            ));
+            Assert.Throws<ScriptVariableLimitExceededException>(() => controlScript.Execute());
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("T70 (DiVoid #7868 F2, design §8.1 rows 4-5): String.Replace/ReplaceLineEndings amplifying by an attacker-chosen factor throw before allocation on a bare parser; a small, everyday replace still completes.")]
+        public void T70_ReplaceAmplificationThrowsBeforeAllocation() {
+            ScriptParser parser = new();
+
+            IScript replaceScript = parser.Parse(ScriptCode.Create(
+                "$r = new string('b',1000)",
+                "$s = new string('a',200000)",
+                "$s.replace(\"a\",$r)"
+            ));
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            ScriptVariableLimitExceededException replaceException = Assert.Throws<ScriptVariableLimitExceededException>(() => replaceScript.Execute());
+            long replaceDelta = GC.GetAllocatedBytesForCurrentThread() - before;
+            Assert.That(replaceException.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+            Assert.That(replaceDelta, Is.LessThan(MaxPreAllocationGuardDeltaBytes));
+
+            IScript replaceLineEndingsScript = parser.Parse(ScriptCode.Create(
+                "$r = new string('b',300)",
+                "$s = new string('a',500000)",
+                "$s.replacelineendings($r)"
+            ));
+            ScriptVariableLimitExceededException lineEndingsException = Assert.Throws<ScriptVariableLimitExceededException>(() => replaceLineEndingsScript.Execute());
+            Assert.That(lineEndingsException.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+
+            IScript legitScript = parser.Parse(ScriptCode.Create(
+                "$s = \"hello world\"",
+                "$s.replace(\"o\",\"OO\")"
+            ));
+            Assert.DoesNotThrow(() => legitScript.Execute());
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("T71 (DiVoid #7868 F3, design §8.1 row 6): String.Split - the string-separator, char-separator and count-capped overloads alike - throws before allocation on a receiver long enough to breach the budget, since the projection is receiver-derived and unaffected by the count cap; a small, everyday split still completes.")]
+        public void T71_SplitReceiverDerivedProjectionThrowsBeforeAllocation() {
+            ScriptParser parser = new();
+
+            IScript stringSeparatorScript = parser.Parse(ScriptCode.Create(
+                "$s = new string(',', 20000000)",
+                "$s.split(\",\")"
+            ));
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            ScriptVariableLimitExceededException stringSeparatorException = Assert.Throws<ScriptVariableLimitExceededException>(() => stringSeparatorScript.Execute());
+            long stringSeparatorDelta = GC.GetAllocatedBytesForCurrentThread() - before;
+            Assert.That(stringSeparatorException.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+            Assert.That(stringSeparatorDelta, Is.LessThan(MaxPreAllocationGuardDeltaBytes));
+
+            IScript charSeparatorScript = parser.Parse(ScriptCode.Create(
+                "$s = new string(',', 20000000)",
+                "$s.split(',')"
+            ));
+            Assert.Throws<ScriptVariableLimitExceededException>(() => charSeparatorScript.Execute());
+
+            IScript countCappedScript = parser.Parse(ScriptCode.Create(
+                "$s = new string(',', 20000000)",
+                "$s.split(\",\",5)"
+            ));
+            Assert.Throws<ScriptVariableLimitExceededException>(() => countCappedScript.Execute());
+
+            IScript legitScript = parser.Parse("\"a,b,c\".split(\",\")");
+            Assert.DoesNotThrow(() => legitScript.Execute());
         }
     }
 }
