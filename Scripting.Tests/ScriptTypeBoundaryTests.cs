@@ -23,6 +23,12 @@ namespace Scripting.Tests {
             public string InstanceEcho() => "instance";
         }
 
+        class StaticMemberHost {
+            public static string StaticProperty => "static";
+            public static string StaticField = "static";
+            public string InstanceProperty { get; set; } = "instance";
+        }
+
         static IScriptParser NewParser() => new ScriptParser();
 
         [Test, Parallelizable]
@@ -156,6 +162,34 @@ namespace Scripting.Tests {
         public void InstanceMethodsRemainResolvable() {
             IScript script = NewParser().Parse("$h.instanceecho()");
             Assert.AreEqual("instance", script.Execute(new VariableProvider(new Variable("h", new StaticMethodHost()))));
+        }
+
+        [Test, Parallelizable]
+        [Description("dropping Static from ScriptMember's property binding flags: a static property is not reachable through instance dispatch")]
+        public void StaticPropertyReadIsNotResolvable() {
+            IScript script = NewParser().Parse("$h.staticproperty");
+            Assert.Throws<ScriptRuntimeException>(() => script.Execute(new VariableProvider(new Variable("h", new StaticMemberHost()))));
+        }
+
+        [Test, Parallelizable]
+        [Description("dropping Static from ScriptMember's field binding flags: a static field is not reachable through instance dispatch")]
+        public void StaticFieldReadIsNotResolvable() {
+            IScript script = NewParser().Parse("$h.staticfield");
+            Assert.Throws<ScriptRuntimeException>(() => script.Execute(new VariableProvider(new Variable("h", new StaticMemberHost()))));
+        }
+
+        [Test, Parallelizable]
+        [Description("dropping Static from ScriptMember.AssignToken's field binding flags: a static field write is not reachable through instance dispatch")]
+        public void StaticFieldWriteIsNotResolvable() {
+            IScript script = NewParser().Parse("$h.staticfield = \"hack\"");
+            Assert.Throws<ScriptRuntimeException>(() => script.Execute(new VariableProvider(new Variable("h", new StaticMemberHost()))));
+        }
+
+        [Test, Parallelizable]
+        public void InstanceMemberRemainsResolvable() {
+            StaticMemberHost host = new StaticMemberHost();
+            NewParser().Parse("$h.instanceproperty = \"changed\"").Execute(new VariableProvider(new Variable("h", host)));
+            Assert.AreEqual("changed", host.InstanceProperty);
         }
 
         [Test, Parallelizable]
