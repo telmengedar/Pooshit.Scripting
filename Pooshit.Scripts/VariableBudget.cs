@@ -20,6 +20,7 @@ class VariableBudget {
     long producedSinceLastPass;
     long ticks;
     long nextMeasureAt;
+    long allocatedAtLastPass;
 
     /// <summary>
     /// creates a new <see cref="VariableBudget"/>
@@ -32,7 +33,15 @@ class VariableBudget {
         this.maxEntries = maxEntries;
         this.maxBytes = maxBytes;
         nextMeasureAt = MinMeasureInterval;
+        if (maxBytes.HasValue)
+            allocatedAtLastPass = CurrentAllocatedBytes();
     }
+
+#if NET8_0_OR_GREATER
+    static long CurrentAllocatedBytes() => GC.GetTotalAllocatedBytes(false);
+#else
+    static long CurrentAllocatedBytes() => GC.GetTotalMemory(false);
+#endif
 
     /// <summary>
     /// charges a produced value against the configured byte ceiling
@@ -71,15 +80,18 @@ class VariableBudget {
     }
 
     /// <summary>
-    /// samples variable usage at the configured cadence, throwing on a breach
+    /// samples variable usage at the configured tick cadence or once allocation since the last pass has grown by <c>maxBytes</c>, throwing on a breach
     /// </summary>
     /// <param name="scope">current scope to measure from</param>
     public void Observe(IVariableProvider scope) {
         long tick = Interlocked.Increment(ref ticks);
-        if (tick < Interlocked.Read(ref nextMeasureAt))
+        if (tick >= Interlocked.Read(ref nextMeasureAt)) {
+            Measure(scope);
             return;
+        }
 
-        Measure(scope);
+        if (maxBytes.HasValue && CurrentAllocatedBytes() - Interlocked.Read(ref allocatedAtLastPass) >= maxBytes.Value)
+            Measure(scope);
     }
 
     void Measure(IVariableProvider scope) {
@@ -101,11 +113,15 @@ class VariableBudget {
         }
         catch (InvalidOperationException) {
             Interlocked.Exchange(ref nextMeasureAt, Interlocked.Read(ref ticks) + MinMeasureInterval);
+            if (maxBytes.HasValue)
+                Interlocked.Exchange(ref allocatedAtLastPass, CurrentAllocatedBytes());
             return;
         }
 
         Interlocked.Exchange(ref producedSinceLastPass, 0);
         Interlocked.Exchange(ref nextMeasureAt, Interlocked.Read(ref ticks) + Math.Max(MinMeasureInterval, units));
+        if (maxBytes.HasValue)
+            Interlocked.Exchange(ref allocatedAtLastPass, CurrentAllocatedBytes());
 
         if (maxEntries.HasValue && entries > maxEntries.Value)
             throw new ScriptVariableLimitExceededException(VariableLimitKind.Entries, maxEntries.Value, entries);
