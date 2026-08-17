@@ -14,6 +14,7 @@ namespace Pooshit.Scripting.Parser.Resolvers {
     /// </summary>
     public class MethodResolver : IMethodResolver {
         readonly IExtensionProvider extensions;
+        readonly MethodGuard guard;
         readonly ConcurrentDictionary<MethodCacheKey, IResolvedMethod> methodcache = new ConcurrentDictionary<MethodCacheKey, IResolvedMethod>();
         readonly ConcurrentDictionary<MethodCacheKey, ConstructorInfo> constructorcache = new ConcurrentDictionary<MethodCacheKey, ConstructorInfo>();
 
@@ -21,14 +22,18 @@ namespace Pooshit.Scripting.Parser.Resolvers {
         /// creates a new <see cref="MethodResolver"/>
         /// </summary>
         /// <param name="extensions">access to extension methods</param>
-        public MethodResolver(IExtensionProvider extensions) {
+        /// <param name="methods">governs which reflected members may be dispatched to; a fresh, default-populated <see cref="MethodGuard"/> when omitted</param>
+        public MethodResolver(IExtensionProvider extensions, MethodGuard methods = null) {
             this.extensions = extensions;
+            guard = methods ?? new MethodGuard();
         }
 
         /// <summary>
         /// determines whether to cache resolved methods for later calls
         /// </summary>
         public bool EnableCaching { get; set; } = true;
+
+        static string Truncate(string value) => value.Length <= 32 ? value : value.Substring(0, 32) + "...";
 
         MethodInfo[] GetCandidates(IEnumerable<MethodInfo> methods, string method, object[] parameters, Type[] genericParameters, bool isExtension) {
             if (genericParameters == null)
@@ -49,6 +54,8 @@ namespace Pooshit.Scripting.Parser.Resolvers {
                 throw new ScriptRuntimeException($"Reflective access to '{hosttype.Name}' is not permitted from script", null);
             if (TypeGuard.IsForbiddenReflectiveMethodName(methodname))
                 throw new ScriptRuntimeException($"Method '{methodname}' is not permitted from script", null);
+            if (guard.RequiresFormatCheck(hosttype) && methodname == "tostring" && parameters.Length >= 1 && parameters[0] is string format && !MethodGuard.IsAcceptableFormat(format))
+                throw new ScriptRuntimeException($"Format string '{Truncate(format)}' is not permitted; a standard format specifier may carry at most {MethodGuard.MaxPrecisionDigits} precision digits and a format string may be at most {MethodGuard.MaxFormatLength} characters", null);
 
             MethodCacheKey cachekey=null;
             if (EnableCaching) {
@@ -102,10 +109,14 @@ namespace Pooshit.Scripting.Parser.Resolvers {
             if (evaluation.Count > 0) {
                 Tuple<Type, MethodInfo, int, bool> methodInformation = evaluation.OrderBy(e=>e.Item3).First();
                 MethodInfo method = methodInformation.Item2;
+                bool isExtensionMethod = methodInformation.Item4;
+
+                if (!isExtensionMethod && !guard.IsAllowed(hosttype, method))
+                    throw new ScriptRuntimeException($"Method '{method.Name}' on '{hosttype.Name}' is not permitted from script (not on the method allow-list); a host may allow it with parser.Methods.Allow<{hosttype.Name}>(\"{method.Name.ToLowerInvariant()}\")", null);
 
                 if (EnableCaching)
-                    return methodcache[cachekey] = new ResolvedMethod(method, referenceparameters, methodInformation.Item4);
-                return new ResolvedMethod(method, referenceparameters, methodInformation.Item4);
+                    return methodcache[cachekey] = new ResolvedMethod(method, referenceparameters, isExtensionMethod, guard);
+                return new ResolvedMethod(method, referenceparameters, isExtensionMethod, guard);
             }
 
             throw new ScriptRuntimeException($"Method '{methodname}' matching the parameters '({string.Join(",", parameters)})' not found on type {host.GetType().Name}", null);

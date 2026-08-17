@@ -8,6 +8,7 @@ using Pooshit.Scripting.Data;
 using Pooshit.Scripting.Errors;
 using Pooshit.Scripting.Extensions;
 using Pooshit.Scripting.Extern;
+using Pooshit.Scripting.Parser.Resolvers;
 using Pooshit.Scripting.Tokens;
 
 namespace Pooshit.Scripting.Operations {
@@ -30,6 +31,25 @@ namespace Pooshit.Scripting.Operations {
 
         public static bool IsInteger(Type type) {
             return Array.IndexOf(integerlist, type) > -1;
+        }
+
+        /// <summary>
+        /// H2 (design §7.6.3): refuses an integral argument whose runtime value alone exceeds the configured
+        /// byte budget, the minimum-plausible-cost bound for a host member the engine cannot otherwise size
+        /// </summary>
+        /// <param name="method">resolved method</param>
+        /// <param name="callparameters">call-site argument values, already converted to the method's parameter types</param>
+        /// <param name="context">execution context supplying the variable budget</param>
+        static void ApplyIntegralArgumentCeiling(MethodInfo method, object[] callparameters, ScriptContext context) {
+            if (context?.VariableBudget == null)
+                return;
+
+            ParameterInfo[] parameters = method.GetParameters();
+            for (int i = 0; i < parameters.Length && i < callparameters.Length; ++i) {
+                if (callparameters[i] == null || !IsInteger(parameters[i].ParameterType))
+                    continue;
+                context.VariableBudget.EnsureWithinByteCeiling(Convert.ToInt64(callparameters[i]));
+            }
         }
 
         /// <summary>
@@ -275,8 +295,9 @@ namespace Pooshit.Scripting.Operations {
         /// <param name="context">execution context, injected into any <see cref="ScriptContext"/> parameter</param>
         /// <param name="refparameters">reference/out parameter bindings to write back after the call</param>
         /// <param name="extension">determines whether the method is an extension method</param>
+        /// <param name="guard">governs which reflected members may be dispatched to; supplies host <see cref="MethodGuard.Charge{T}"/> rows and backs the H2 integral-argument ceiling</param>
         /// <returns>result of the method call</returns>
-        public static object CallMethod(IScriptToken methodcall, object host, MethodInfo method, object[] parameters, ScriptContext context, IEnumerable<ReferenceParameter> refparameters=null, bool extension=false) {
+        public static object CallMethod(IScriptToken methodcall, object host, MethodInfo method, object[] parameters, ScriptContext context, IEnumerable<ReferenceParameter> refparameters=null, bool extension=false, MethodGuard guard=null) {
             ParameterInfo[] targetparameters = method.GetParameters();
 
             object[] callparameters;
@@ -292,8 +313,14 @@ namespace Pooshit.Scripting.Operations {
                 throw new ScriptRuntimeException($"Unable to convert parameters for {host.GetType().Name}.{method.Name}({string.Join(",", targetparameters.Select(p => p.ParameterType.Name + " " + p.Name))})\n{string.Join("\r\n", parameters.Select(p => p.ToString()))}", methodcall, e);
             }
 
-            if (!extension && host != null && VariableSizer.TryGetPreAllocationOperation(host, method, callparameters, out long projected))
-                context?.VariableBudget?.ChargePreAllocation(projected);
+            if (!extension && host != null) {
+                bool projectionMatched = VariableSizer.TryGetPreAllocationOperation(host, method, callparameters, out long projected)
+                                          || (guard?.TryGetHostChargeProjection(host.GetType(), method, callparameters, out projected) ?? false);
+                if (projectionMatched)
+                    context?.VariableBudget?.ChargePreAllocation(projected);
+                else
+                    ApplyIntegralArgumentCeiling(method, callparameters, context);
+            }
 
             try {
                 object result= method.Invoke(extension ? null : host, callparameters);

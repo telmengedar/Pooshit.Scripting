@@ -61,6 +61,18 @@ class VariableBudget {
     }
 
     /// <summary>
+    /// throws if <paramref name="value"/> alone breaches the configured byte ceiling, without accumulating it
+    /// against <see cref="producedSinceLastPass"/> - the non-accumulating half of <see cref="ChargePreAllocation"/>,
+    /// reused by the reflected-method guard's H2 rule (design §7.6.3) to bound an integral argument's runtime
+    /// value against the budget without treating the argument itself as an allocation
+    /// </summary>
+    /// <param name="value">value to test against the ceiling</param>
+    public void EnsureWithinByteCeiling(long value) {
+        if (maxBytes.HasValue && value > maxBytes.Value)
+            throw new ScriptVariableLimitExceededException(VariableLimitKind.Bytes, maxBytes.Value, value);
+    }
+
+    /// <summary>
     /// charges the byte cost of a capacity a script-reachable operation is about to allocate, before the
     /// allocation runs, throwing on a breach instead of letting the allocation happen (design §8.8.5)
     /// </summary>
@@ -69,8 +81,7 @@ class VariableBudget {
         if (!maxBytes.HasValue || projectedBytes <= 0)
             return;
 
-        if (projectedBytes > maxBytes.Value)
-            throw new ScriptVariableLimitExceededException(VariableLimitKind.Bytes, maxBytes.Value, projectedBytes);
+        EnsureWithinByteCeiling(projectedBytes);
 
         long projectedTotal = Interlocked.Read(ref producedSinceLastPass) + projectedBytes;
         if (projectedTotal > maxBytes.Value)
