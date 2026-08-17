@@ -101,7 +101,7 @@ public class ScriptMember : AssignableToken {
             }
         }
 
-        if (VariableSizer.TryGetCapacityOperation(host.GetType(), property, out long bytesperunit)) {
+        if (VariableSizer.TryGetPreAllocationOperation(host.GetType(), property, out long bytesperunit)) {
             long requestedcapacity = Math.Max(0, Convert.ToInt64(targetvalue) - VariableSizer.CurrentCapacity(host));
             context.VariableBudget?.ChargePreAllocation(requestedcapacity * bytesperunit);
         }

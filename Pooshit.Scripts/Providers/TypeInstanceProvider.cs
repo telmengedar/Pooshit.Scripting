@@ -34,8 +34,8 @@ namespace Pooshit.Scripting.Providers {
             ConstructorInfo constructor=resolver.ResolveConstructor(type, parametervalues);
             object[] callparameters = MethodOperations.CreateParameters(constructor.GetParameters(), parametervalues).ToArray();
 
-            if (VariableSizer.TryGetCapacityOperation(type, constructor, out long bytesperunit))
-                context.VariableBudget?.ChargePreAllocation(Math.Max(0, Convert.ToInt64(callparameters[0])) * bytesperunit);
+            if (VariableSizer.TryGetPreAllocationOperation(null, constructor, callparameters, out long projected))
+                context.VariableBudget?.ChargePreAllocation(projected);
 
             return constructor.Invoke(callparameters);
         }
