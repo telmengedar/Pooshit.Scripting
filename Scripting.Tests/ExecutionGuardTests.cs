@@ -1396,6 +1396,76 @@ namespace Scripting.Tests {
             Assert.DoesNotThrow(() => script.Execute());
         }
 
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("DiVoid #7877 §10.3: a host method that doubles a script-held list in host C# is charged by neither M1 (void return), M4 (not a capacity operation) nor the tick cadence (~64 checkpoints against a 256 floor) - only the allocation-denominated growth trigger catches it.")]
+        public void Variable_HostGrowthPrimitiveOutrunsTickCadenceButNotGrowthTrigger() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxVariableBytes = 1_000_000}
+            };
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$l = new list()",
+                "$l.add(1)",
+                "for($i=0,$i<20,++$i) {",
+                "  $grower.grow($l)",
+                "}"
+            ));
+
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(
+                () => script.Execute(new VariableProvider(new Variable("grower", new ListGrowerHost()))));
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+            Assert.That(exception.Measured, Is.LessThan(16 * 1_000_000L));
+        }
+
+        [Test, Parallelizable, MaxTime(5000)]
+        [Description("Design §8/§13: the growth trigger only forces a measurement pass and must never itself throw - a loop producing far more transient allocation than MaxVariableBytes while retaining a single small variable must still complete.")]
+        public void Variable_ChurnUnderGrowthTriggerDoesNotFalsePositive() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxVariableBytes = 100_000}
+            };
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$i = 0",
+                "while($i < 50000) {",
+                "  $tmp = \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+                "  $i = $i + 1",
+                "}"
+            ));
+
+            Assert.DoesNotThrow(() => script.Execute());
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("Design §10.4: written behaviourally through the public surface rather than InternalsVisibleTo (§2, #114 2026-08-08 ruling) - a ScriptLimits.None parser running the same host-growth script that throws under a configured budget must complete normally, since no VariableBudget exists to enforce anything.")]
+        public void Variable_UnconfiguredHostCompletesGrowthPrimitiveThatWouldBreachConfiguredBudget() {
+            ScriptParser parser = new();
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$l = new list()",
+                "$l.add(1)",
+                "for($i=0,$i<20,++$i) {",
+                "  $grower.grow($l)",
+                "}"
+            ));
+
+            Assert.DoesNotThrow(() => script.Execute(new VariableProvider(new Variable("grower", new ListGrowerHost()))));
+        }
+
+        [Test, Parallelizable, MaxTime(2000)]
+        [Description("Design §7 row 2/§10.4: MaxVariables alone must still throw on entry count via the unchanged M3 walk, since the growth trigger is gated on MaxVariableBytes being configured.")]
+        public void Variable_EntriesOnlyHostUnaffectedByGrowthTrigger() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {MaxVariables = 5}
+            };
+            List<string> lines = new();
+            for (int i = 0; i < 10; i++)
+                lines.Add($"$v{i} = {i}");
+            lines.Add("for($i=0,$i<1000,++$i) {");
+            lines.Add("  $tmp = 1");
+            lines.Add("}");
+            IScript script = parser.Parse(ScriptCode.Create(lines.ToArray()));
+
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(() => script.Execute());
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Entries));
+        }
+
         [Test]
         [Description("Direct unit test for VariableSizer's capacity charge (DiVoid #7836/#7837): a pre-sized, still-empty List<object> must be sized by its allocated Capacity, not its live Count of zero.")]
         public void VariableSizer_PreSizedEmptyListChargedByCapacityNotCount() {
