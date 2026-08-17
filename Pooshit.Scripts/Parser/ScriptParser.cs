@@ -42,7 +42,8 @@ public class ScriptParser : IScriptParser {
     /// </summary>
     public ScriptParser() {
         InitializeOperators();
-        MethodCallResolver = new MethodResolver(Extensions);
+        Methods = new MethodGuard();
+        MethodCallResolver = new MethodResolver(Extensions, Methods);
         Types = new TypeProvider(MethodCallResolver);
 
         Types.AddType<List<object>>("list");
@@ -114,6 +115,11 @@ public class ScriptParser : IScriptParser {
     /// access to types which can be created using 'new' keyword
     /// </summary>
     public ITypeProvider Types { get; }
+
+    /// <summary>
+    /// governs which reflected members script may dispatch to
+    /// </summary>
+    public MethodGuard Methods { get; }
 
     /// <inheritdoc />
     public IImportProvider ImportProvider { get; set; }

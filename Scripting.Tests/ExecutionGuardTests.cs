@@ -13,6 +13,7 @@ using Pooshit.Scripting.Extensions;
 using Pooshit.Scripting.Extensions.Script;
 using Pooshit.Scripting.Hosts;
 using Pooshit.Scripting.Parser;
+using Pooshit.Scripting.Parser.Resolvers;
 using Pooshit.Scripting.Providers;
 
 namespace Scripting.Tests {
@@ -94,6 +95,58 @@ namespace Scripting.Tests {
             /// <param name="argument">argument passed to the lambda</param>
             /// <returns>result of the callback invocation</returns>
             public static object InvokeAsNewExecution(LambdaMethod callback, object argument) => callback.InvokeAsExecution(argument);
+        }
+
+        /// <summary>
+        /// host type exposing an <see cref="IFormattable"/> property, exercising H1 on a host-injected type
+        /// (design §7.6.2, T76)
+        /// </summary>
+        class FormattableHost {
+            public DateTime When { get; set; } = new(2024, 1, 1);
+        }
+
+        /// <summary>
+        /// host type whose member's own allocation is commanded by an integral argument, exercising H2
+        /// (design §7.6.3, T77)
+        /// </summary>
+        class RepeatingHost {
+            public string Repeat(int n) => new('x', n);
+        }
+
+        /// <summary>
+        /// host type whose member allocates at a per-unit cost H2's one-byte guess cannot see, exercising a
+        /// host <see cref="MethodGuard.Charge{T}"/> row (design §7.6.3/§10.2, T79)
+        /// </summary>
+        class BufferHost {
+            public byte[] MakeBuffers(int count) => new byte[count];
+        }
+
+        /// <summary>
+        /// host type with a zero-argument member no shape rule can bound, exercising a host
+        /// <see cref="MethodGuard.Deny{T}"/> entry (design §7.6.5, T80/T81)
+        /// </summary>
+        class RenderHost {
+            public string Render() => new('x', 1);
+        }
+
+        /// <summary>
+        /// ordinary host domain type with ten zero-arg getters, a setter, a filter callback and an id lookup -
+        /// the usability probe H3 permit-by-shape must pass with zero host configuration (design §7.6.4, T78)
+        /// </summary>
+        class OrdinaryDomainHost {
+            public string GetName() => "x";
+            public int GetAge() => 1;
+            public bool GetActive() => true;
+            public double GetScore() => 1.0;
+            public string GetDescription() => "d";
+            public string GetCategory() => "c";
+            public int GetRank() => 1;
+            public bool GetVerified() => true;
+            public double GetWeight() => 1.0;
+            public string GetTag() => "t";
+            public void SetName(string name) { }
+            public bool Find(OrdinaryDomainHost filter) => filter != null;
+            public OrdinaryDomainHost GetById(int id) => this;
         }
 
         static IScript ParseRecursiveFactorial(ScriptParser parser, string invocation) {
@@ -1738,6 +1791,310 @@ namespace Scripting.Tests {
 
             ScriptRuntimeException exception = Assert.Throws<ScriptRuntimeException>(() => script.Execute());
             Assert.That(exception.Message, Does.Contain(".toarray()"));
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T54 (design §9.1 R1/R2, DiVoid #7868): tostring with an oversized standard-format precision throws ScriptRuntimeException before allocation on every affected numeric primitive, including P (round-8's correction).")]
+        public void T54_ToStringOversizedPrecisionThrowsAcrossPrimitives() {
+            ScriptParser parser = new();
+
+            long before = GC.GetTotalAllocatedBytes(true);
+            ScriptRuntimeException exception = Assert.Throws<ScriptRuntimeException>(() => parser.Parse("$a = (1).tostring(\"D100000000\")").Execute());
+            long delta = GC.GetTotalAllocatedBytes(true) - before;
+            Assert.That(delta, Is.LessThan(MaxPreAllocationGuardDeltaBytes));
+            Assert.That(exception, Is.Not.Null);
+
+            Assert.Throws<ScriptRuntimeException>(() => parser.Parse("$a = (1.0).tostring(\"F100000000\")").Execute());
+            Assert.Throws<ScriptRuntimeException>(() => parser.Parse("$a = (1).tostring(\"N50000000\")").Execute());
+            Assert.Throws<ScriptRuntimeException>(() => parser.Parse("$a = (1).tostring(\"X100000000\")").Execute());
+            Assert.Throws<ScriptRuntimeException>(() => parser.Parse("$a = (1.0).tostring(\"P90000000\")").Execute());
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T55 (design §9.4 form b): the ':' format operator rewrites to the same ScriptMethod node as the method-call form, so 1:D100000000 is governed identically.")]
+        public void T55_FormatOperatorFormIsGoverned() {
+            ScriptParser parser = new();
+            Assert.Throws<ScriptRuntimeException>(() => parser.Parse("$a = 1:D100000000").Execute());
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T56 (design §9.4 form c): a ':' format hole inside string interpolation hits the same rewrite as the method-call form, so a guard covering only the method call would leave this green-and-wrong.")]
+        public void T56_InterpolationFormatHoleIsGoverned() {
+            ScriptParser parser = new();
+            Assert.Throws<ScriptRuntimeException>(() => parser.Parse("$a = $\"{1:D100000000}\"").Execute());
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T57 (design §9.5, A1/A2): the format check runs on the runtime VALUE of the argument, not the source literal - a runtime-computed digit count and a format string carried through a variable are both governed.")]
+        public void T57_FormatCheckAppliesToRuntimeComputedValue() {
+            ScriptParser parser = new();
+            Assert.Throws<ScriptRuntimeException>(() => parser.Parse(ScriptCode.Create(
+                "$n = 50000000 * 2",
+                "$a = (1).tostring(\"D\" + $n)"
+            )).Execute());
+            Assert.Throws<ScriptRuntimeException>(() => parser.Parse(ScriptCode.Create(
+                "$w = \"D100000000\"",
+                "$a = (1).tostring($w)"
+            )).Execute());
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T58 (design §6.1, A2): the format check runs pre-cache - a benign tostring call followed by a hostile one sharing the same (type,name,argtype) cache key still throws on the second call, proving the check is not short-circuited by the resolution cache.")]
+        public void T58_FormatCheckAppliesAfterCacheWarm() {
+            ScriptParser parser = new();
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$a = (1).tostring(\"F2\")",
+                "$b = (1).tostring(\"D100000000\")"
+            ));
+            Assert.Throws<ScriptRuntimeException>(() => script.Execute());
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T59 (design §9.1 R0/R3): the everyday ToString/format vocabulary - no arguments, a small standard specifier, interpolation, the format operator - is untouched by the format policy.")]
+        public void T59_EverydayFormatVocabularyCompletesWithoutFalseAbort() {
+            ScriptParser parser = new();
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$a = (1.5).tostring()",
+                "$b = (1.5).tostring(\"F2\")",
+                "$c = $\"{1234.5:N0}\"",
+                "$d = (255).tostring(\"X8\")",
+                "$e = 1:F2",
+                "$f = (1).tostring(\"G\")",
+                "$g = (1.0).tostring(\"R\")"
+            ));
+            Assert.DoesNotThrow(() => script.Execute());
+        }
+
+        [Test]
+        [Description("T60 (design §10.3): MethodGuard.IsAllowed refuses a method absent from a tier-1 type's generated inventory - a direct unit pin, since the checked-in inventory is derived from the type's full current runtime surface (T78's zero-configuration guarantee), so no legitimate script call against a fully-current table can exercise this path end-to-end.")]
+        public void T60_GovernedTypeMethodAbsentFromInventoryIsRefused() {
+            MethodGuard guard = new();
+            MethodInfo foreignMethod = typeof(List<object>).GetMethod(nameof(List<object>.Sort), Type.EmptyTypes);
+            Assert.That(guard.IsAllowed(typeof(string), foreignMethod), Is.False);
+        }
+
+        [Test]
+        [Description("T61 (design §10.2): parser.Methods.Allow<T> widens the tier-1 inventory for the named method, flipping IsAllowed's verdict for exactly that (type,name) pair.")]
+        public void T61_AllowWidensTier1Inventory() {
+            MethodGuard guard = new();
+            MethodInfo foreignMethod = typeof(List<object>).GetMethod(nameof(List<object>.Sort), Type.EmptyTypes);
+            Assert.That(guard.IsAllowed(typeof(string), foreignMethod), Is.False);
+
+            guard.Allow<string>("sort");
+            Assert.That(guard.IsAllowed(typeof(string), foreignMethod), Is.True);
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T62 (design §10.2): parser.Methods.Ungovern<T> restores a type's full public surface, including bypassing the format policy - the trusted-host escape hatch.")]
+        public void T62_UngovernRestoresFullSurfaceIncludingFormatPolicy() {
+            ScriptParser parser = new();
+            parser.Methods.Ungovern<double>();
+            IScript script = parser.Parse("$a = (1.0).tostring(\"F20\")");
+            Assert.DoesNotThrow(() => script.Execute());
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T63 (design §10.2, A13): Ungovern on one parser's MethodGuard does not leak to a second parser's format policy - per-parser isolation.")]
+        public void T63_UngovernDoesNotLeakBetweenParsers() {
+            ScriptParser ungoverned = new();
+            ungoverned.Methods.Ungovern<double>();
+            ScriptParser governed = new();
+
+            Assert.DoesNotThrow(() => ungoverned.Parse("$a = (1.0).tostring(\"F20\")").Execute());
+            Assert.Throws<ScriptRuntimeException>(() => governed.Parse("$a = (1.0).tostring(\"D100000000\")").Execute());
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T64 (design §6.2): registered extension methods bypass the tier-1 allow-list by construction - AddExtensions is itself the opt-in, so the common EnumerableExtensions surface keeps working unlisted.")]
+        public void T64_ExtensionMethodsBypassAllowList() {
+            ScriptParser parser = new();
+            parser.Extensions.AddExtensions<EnumerableExtensions>();
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$l = new list()",
+                "$l.add(1)",
+                "$l.add(2)",
+                "$l.where($x=>$x>0).count()"
+            ));
+            Assert.DoesNotThrow(() => script.Execute());
+        }
+
+        [Test]
+        [Description("T66 (design §9.1-§9.2): direct unit pins for MethodGuard.IsAcceptableFormat across the exhaustive shape/length boundary set, without the engine in the loop.")]
+        public void T66_IsAcceptableFormatBoundaryPins() {
+            Assert.That(MethodGuard.IsAcceptableFormat(""), Is.True);
+            Assert.That(MethodGuard.IsAcceptableFormat("G"), Is.True);
+            Assert.That(MethodGuard.IsAcceptableFormat("F2"), Is.True);
+            Assert.That(MethodGuard.IsAcceptableFormat("D99"), Is.True);
+            Assert.That(MethodGuard.IsAcceptableFormat("D100"), Is.False);
+            Assert.That(MethodGuard.IsAcceptableFormat("P90000000"), Is.False);
+            Assert.That(MethodGuard.IsAcceptableFormat("X8"), Is.True);
+            Assert.That(MethodGuard.IsAcceptableFormat(new string('0', MethodGuard.MaxFormatLength)), Is.True);
+            Assert.That(MethodGuard.IsAcceptableFormat(new string('0', MethodGuard.MaxFormatLength + 1)), Is.False);
+            Assert.That(MethodGuard.IsAcceptableFormat(null), Is.True);
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T67 (design §10.3): the ToString format-denial message truncates the echoed format string to 32 characters, keeping the exception message bounded regardless of the format argument's own length.")]
+        public void T67_FormatDenialMessageIsBounded() {
+            ScriptParser parser = new();
+            IScript script = parser.Parse("$a = (1).tostring(new string('D',100000))");
+            ScriptRuntimeException exception = Assert.Throws<ScriptRuntimeException>(() => script.Execute());
+            Assert.That(exception.Message.Length, Is.LessThan(512));
+        }
+
+        [Test]
+        [Description("T68 (design §7.3): re-runs the tier-1 closure/inventory derivation against the running runtime and compares it to the checked-in MethodGuard table - fails loudly the day a .NET upgrade changes the reflected surface the table was generated from.")]
+        public void T68_AllowListMatchesGeneratedInventory() {
+            Dictionary<Type, HashSet<string>> regenerated = MethodGuardInventoryGenerator.ComputeInventory();
+            IReadOnlyDictionary<Type, HashSet<string>> checkedIn = MethodGuard.GeneratedInventory;
+
+            Assert.That(regenerated.Keys, Is.EquivalentTo(checkedIn.Keys));
+            foreach (Type type in regenerated.Keys)
+                Assert.That(regenerated[type], Is.EquivalentTo(checkedIn[type]), $"drift on {type}");
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T72 (design §9.4, A19): the 2-arg ToString(format, IFormatProvider) overload reachable with a literal null provider is governed by the same format check - arity-independent.")]
+        public void T72_TwoArgToStringOverloadWithNullProviderIsGoverned() {
+            ScriptParser parser = new();
+            Assert.Throws<ScriptRuntimeException>(() => parser.Parse("$a = (1).tostring(\"D100000000\", null)").Execute());
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T73 (design §9.1 R1, double coverage): a huge custom format string never reaches the format policy because building it is refused first, by the string pre-allocation charge (design §8.1 row 3).")]
+        public void T73_CustomFormatAmplifierIsDeniedByPreAllocationCharge() {
+            ScriptParser parser = new();
+            Assert.Throws<ScriptVariableLimitExceededException>(() => parser.Parse("$a = (1).tostring(new string('0',80000000))").Execute());
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T75 (design §7.6.2, A22): Char and Boolean expose no public ToString(string,...) overload on this TFM, so A22's predicted over-inclusion - IsFormatFamily may still be true via an explicit ISpanFormattable/IFormattable implementation Public|Instance binding never surfaces - costs nothing: an oversized format value on either type is always refused, whether by the format policy itself or by resolution/conversion failing on the mismatched overload, never by a successful oversized ToString.")]
+        public void T75_OverIncludedFormattableTypesNeverProduceOversizedToString() {
+            Assert.That(typeof(char).GetMethod("ToString", new[] {typeof(string)}), Is.Null);
+            Assert.That(typeof(bool).GetMethod("ToString", new[] {typeof(string)}), Is.Null);
+
+            ScriptParser parser = new();
+            Assert.Throws<ScriptRuntimeException>(() => parser.Parse("$a = ('x').tostring(\"D100000000\")").Execute());
+            Assert.Throws<ScriptRuntimeException>(() => parser.Parse("$a = (true).tostring(\"D100000000\")").Execute());
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T76 (design §7.6.2): H1 governs a host-injected IFormattable property (DateTime) - a hand-written 11-primitive list would have missed this entirely.")]
+        public void T76_HostInjectedFormattableIsGovernedByFormatPolicy() {
+            ScriptParser parser = new();
+            parser.Types.AddType<FormattableHost>("formattablehost");
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$h = new formattablehost()",
+                "$a = $h.when.tostring(\"D100000000\")"
+            ));
+            Assert.Throws<ScriptRuntimeException>(() => script.Execute());
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T77 (design §7.6.3): H2 refuses an integral argument whose value alone exceeds the budget on a host-injected member, before the member's own body runs; a small, legitimate value completes.")]
+        public void T77_H2RefusesOversizedIntegralArgumentOnHostMember() {
+            ScriptParser parser = new();
+            parser.Types.AddType<RepeatingHost>("repeatinghost");
+
+            IScript hostile = parser.Parse(ScriptCode.Create(
+                "$h = new repeatinghost()",
+                "$a = $h.repeat(2000000000)"
+            ));
+            Assert.Throws<ScriptVariableLimitExceededException>(() => hostile.Execute());
+
+            IScript benign = parser.Parse(ScriptCode.Create(
+                "$h = new repeatinghost()",
+                "$a = $h.repeat(1000)"
+            ));
+            Assert.DoesNotThrow(() => benign.Execute());
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T78 (design §7.6.4, the usability gate): an ordinary host domain type with ten zero-arg getters, SetName(string), Find(filter) and GetById(int) all complete with zero parser.Methods.Allow/Charge/Deny configuration - H3 permit-by-shape. If this fails the model is unusable and the design must be bounced.")]
+        public void T78_OrdinaryDomainTypeWorksWithZeroHostConfiguration() {
+            ScriptParser parser = new();
+            parser.Types.AddType<OrdinaryDomainHost>("host");
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$h = new host()",
+                "$a = $h.getname()",
+                "$b = $h.getage()",
+                "$c = $h.getactive()",
+                "$d = $h.getscore()",
+                "$e = $h.getdescription()",
+                "$f = $h.getcategory()",
+                "$g = $h.getrank()",
+                "$i = $h.getverified()",
+                "$j = $h.getweight()",
+                "$k = $h.gettag()",
+                "$h.setname(\"y\")",
+                "$m = $h.find($h)",
+                "$n = $h.getbyid(5)"
+            ));
+            Assert.DoesNotThrow(() => script.Execute());
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T79 (design §10.2, residual 11): a host Charge<T> row overrides H2's one-byte-per-unit guess with the host's own known per-unit cost, refusing before the call at a value H2 alone would have admitted.")]
+        public void T79_HostChargeRowOverridesH2Guess() {
+            ScriptParser parser = new();
+            parser.Types.AddType<BufferHost>("bufferhost");
+            parser.Methods.Charge<BufferHost>("makebuffers", 0, 100);
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$h = new bufferhost()",
+                "$a = $h.makebuffers(100000000)"
+            ));
+            ScriptVariableLimitExceededException exception = Assert.Throws<ScriptVariableLimitExceededException>(() => script.Execute());
+            Assert.That(exception.Kind, Is.EqualTo(VariableLimitKind.Bytes));
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T80 (design §7.6.5): a host Deny<T> entry refuses a zero-argument host member no shape rule can see.")]
+        public void T80_DenyRefusesZeroArgumentHostAllocator() {
+            ScriptParser parser = new();
+            parser.Types.AddType<RenderHost>("renderhost");
+            parser.Methods.Deny<RenderHost>("render");
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$h = new renderhost()",
+                "$a = $h.render()"
+            ));
+            Assert.Throws<ScriptRuntimeException>(() => script.Execute());
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T81 (design §10.2, A13): host Charge/Deny rules registered on one parser's MethodGuard do not leak to a second parser sharing the same host type - per-parser isolation for the new tier-2 APIs too.")]
+        public void T81_ChargeAndDenyDoNotLeakBetweenParsers() {
+            ScriptParser configured = new();
+            configured.Types.AddType<RenderHost>("renderhost");
+            configured.Methods.Deny<RenderHost>("render");
+
+            ScriptParser bare = new();
+            bare.Types.AddType<RenderHost>("renderhost");
+
+            Assert.Throws<ScriptRuntimeException>(() => configured.Parse("$a = new renderhost().render()").Execute());
+            Assert.DoesNotThrow(() => bare.Parse("$a = new renderhost().render()").Execute());
+        }
+
+        [Test]
+        [Description("T82 (operator review, array-receiver classification bug): char[]/string[] - handed to script by String.ToCharArray/Split, both tier-1 members - must themselves be tier-1, not fall through to tier-2's default-allow. Direct unit pin: a method foreign to both types is refused. Fails if the fix is reverted (arrays stripped to element type, or never added to the generated table), since IsAllowed would then silently default-permit every array member via IsPermittedByShape.")]
+        public void T82_ArrayReceiversAreTier1NotDefaultAllowedByTier2() {
+            MethodGuard guard = new();
+            Assert.That(guard.IsTier1(typeof(char[])), Is.True);
+            Assert.That(guard.IsTier1(typeof(string[])), Is.True);
+
+            MethodInfo foreignMethod = typeof(List<object>).GetMethod(nameof(List<object>.Sort), Type.EmptyTypes);
+            Assert.That(guard.IsAllowed(typeof(char[]), foreignMethod), Is.False);
+            Assert.That(guard.IsAllowed(typeof(string[]), foreignMethod), Is.False);
+        }
+
+        [Test, MaxTime(2000)]
+        [Description("T83 (operator review, array-receiver classification bug): the arrays String.ToCharArray/Split hand to script complete their real, curated surface end-to-end on a bare parser - governing array receivers by identity does not break the everyday char[]/string[] vocabulary.")]
+        public void T83_ArrayReceiverRealSurfaceCompletesOnBareParser() {
+            ScriptParser parser = new();
+            IScript script = parser.Parse(ScriptCode.Create(
+                "$chars = \"abc\".tochararray()",
+                "$parts = \"a,b\".split(\",\")"
+            ));
+            Assert.DoesNotThrow(() => script.Execute());
         }
     }
 }
