@@ -240,7 +240,7 @@ public class ScriptParser : IScriptParser {
             throw new ScriptParserException(index, index, linenumber, "Expected parameters for control statement");
 
         ++index;
-        return ParseParameters(parent, ref data, ref index, ref linenumber);
+        return ParseTokenList(parent, ref data, ref index, ref linenumber, true, ')');
     }
 
     IScriptToken AnalyseToken(string token, ref string data, int start, ref int index, ref int linenumber, bool first) {
@@ -986,44 +986,20 @@ public class ScriptParser : IScriptParser {
                 continue;
             }
 
+            if (character == ')')
+                throw new ScriptParserException(start, index, linenumber, $"Mismatched closing token ')', expected '{terminator}'.");
+
             int before = index;
             IScriptToken parameter = scanforoperations
                 ? Parse(parent, ref data, ref index, ref newlines, ref linenumber)
                 : ParseSingle(parent, ref data, ref index, ref linenumber);
             if (index == before)
-                throw new ScriptParserException(start, index, linenumber, $"Unexpected token in parameter list, expected '{terminator}'.");
+                throw new ScriptParserException(start, index, linenumber, $"Unexpected token '{character}' in parameter list, expected '{terminator}'.");
 
             parameters.Add(parameter);
         }
 
         throw new ScriptParserException(start, index, linenumber, $"Expected '{terminator}' to end the parameter list.");
-    }
-
-    IScriptToken[] ParseParameters(IScriptToken parent, ref string data, ref int index, ref int linenumber) {
-        int newlines = 0;
-        int start = index;
-        List<IScriptToken> parameters = [];
-        for(; index < data.Length;) {
-            char character = data[index];
-            switch(character) {
-                /*case '[':
-                    ++index;
-                    parameters.Add(new ScriptArray(ParseArray(null, data, ref index, variables)));
-                    break;*/
-                case ')':
-                case ']':
-                    ++index;
-                    return parameters.ToArray();
-                case ',':
-                    ++index;
-                break;
-                default:
-                    parameters.Add(Parse(parent, ref data, ref index, ref newlines, ref linenumber));
-                break;
-            }
-        }
-
-        throw new ScriptParserException(start, index, linenumber, "Parameter list not terminated");
     }
 
 
@@ -1427,7 +1403,7 @@ public class ScriptParser : IScriptParser {
                         tokenlist.Add(new ScriptArray(ParseArray(parent, ref data, ref index, ref linenumber)));
                     else {
                         int line = linenumber;
-                        tokenlist[tokenlist.Count - 1] = new ScriptIndexer(tokenlist.Last(), ParseParameters(parent, ref data, ref index, ref linenumber)) {
+                        tokenlist[tokenlist.Count - 1] = new ScriptIndexer(tokenlist.Last(), ParseTokenList(parent, ref data, ref index, ref linenumber, true, ']')) {
                             LineNumber = line,
                             TextIndex = starttoken
                         };
@@ -1599,7 +1575,7 @@ public class ScriptParser : IScriptParser {
         int start = index;
         DictionaryToken dictionary = new();
         bool terminated = false;
-        while(true) {
+        for(; index < data.Length;) {
             IScriptToken key = ParseDictionaryKey(parent, ref data, ref index, ref newlines, ref linenumber);
             if(key == null) {
                 terminated = index < data.Length;

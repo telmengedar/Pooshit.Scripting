@@ -20,7 +20,7 @@ namespace Scripting.Tests {
 
             Assert.That(completed, Is.True);
             Assert.That(error, Is.InstanceOf<ScriptParserException>());
-            Assert.That(error.Message, Does.Contain("Unexpected token in parameter list, expected ')'."));
+            Assert.That(error.Message, Does.Contain("Unexpected token ']' in parameter list, expected ')'."));
         }
     }
 }
