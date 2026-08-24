@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -36,6 +37,9 @@ public class ScriptParser : IScriptParser {
 
     [ThreadStatic]
     static int parsedepth;
+
+    [ThreadStatic]
+    static long parsedeadline;
 
     /// <summary>
     /// creates a new <see cref="ScriptParser"/>
@@ -982,9 +986,14 @@ public class ScriptParser : IScriptParser {
                 continue;
             }
 
-            if (scanforoperations)
-                parameters.Add(Parse(parent, ref data, ref index, ref newlines, ref linenumber));
-            else parameters.Add(ParseSingle(parent, ref data, ref index, ref linenumber));
+            int before = index;
+            IScriptToken parameter = scanforoperations
+                ? Parse(parent, ref data, ref index, ref newlines, ref linenumber)
+                : ParseSingle(parent, ref data, ref index, ref linenumber);
+            if (index == before)
+                throw new ScriptParserException(start, index, linenumber, $"Unexpected token in parameter list, expected '{terminator}'.");
+
+            parameters.Add(parameter);
         }
 
         throw new ScriptParserException(start, index, linenumber, $"Expected '{terminator}' to end the parameter list.");
@@ -1259,6 +1268,13 @@ public class ScriptParser : IScriptParser {
         if (parsedepthlimit.HasValue && ++parsedepth > parsedepthlimit.Value) {
             --parsedepth;
             throw new ScriptParserException(index, index, linenumber, $"Parser exceeded the configured nesting depth limit of {parsedepthlimit.Value}");
+        }
+
+        TimeSpan? parsetimeout = Limits.ParseTimeout;
+        if (parsetimeout.HasValue && Stopwatch.GetTimestamp() >= parsedeadline) {
+            if (parsedepthlimit.HasValue)
+                --parsedepth;
+            throw new ScriptParserException(index, index, linenumber, $"Parser exceeded the configured parse timeout of {parsetimeout.Value}");
         }
 
         try {
@@ -1580,20 +1596,15 @@ public class ScriptParser : IScriptParser {
 
     IScriptToken ParseDictionary(IScriptToken parent, ref string data, ref int index, ref int linenumber) {
         int newlines = 0;
+        int start = index;
         DictionaryToken dictionary = new();
-        while(Peek(data, index) != '}') {
-            IScriptToken key = Parse(parent, ref data, ref index, ref newlines, ref linenumber, false, true);
-            while(key is null or Comment) {
-                if(Peek(data, index) == '}') {
-                    key = null;
-                    break;
-                }
-
-                key = Parse(parent, ref data, ref index, ref newlines, ref linenumber, false, true);
-            }
-
-            if(key == null)
+        bool terminated = false;
+        while(true) {
+            IScriptToken key = ParseDictionaryKey(parent, ref data, ref index, ref newlines, ref linenumber);
+            if(key == null) {
+                terminated = index < data.Length;
                 break;
+            }
 
             IScriptToken value = null;
             if(Peek(data, index) == ':') {
@@ -1605,9 +1616,30 @@ public class ScriptParser : IScriptParser {
             if(Peek(data, index) == ',')
                 ++index;
         }
+
+        if(!terminated)
+            throw new ScriptParserException(start, index, linenumber, "Unterminated dictionary");
+
         // eat '{'
         ++index;
         return dictionary;
+    }
+
+    IScriptToken ParseDictionaryKey(IScriptToken parent, ref string data, ref int index, ref int newlines, ref int linenumber) {
+        while(index < data.Length) {
+            if(Peek(data, index) == '}')
+                return null;
+
+            int before = index;
+            IScriptToken key = Parse(parent, ref data, ref index, ref newlines, ref linenumber, false, true);
+            if(key is not (null or Comment))
+                return key;
+
+            if(index == before)
+                throw new ScriptParserException(before, index, linenumber, "Malformed dictionary");
+        }
+
+        return null;
     }
 
     StatementBlock ParseStatementBlock(IScriptToken parent, ref string data, ref int index, ref int linenumber, bool methodblock = false) {
@@ -1781,6 +1813,8 @@ public class ScriptParser : IScriptParser {
     public IScript Parse(string data) {
         int index = 0;
         int linenumber = 1;
+        TimeSpan? parsetimeout = Limits.ParseTimeout;
+        parsedeadline = parsetimeout.HasValue ? ComputeParseDeadline(parsetimeout.Value) : long.MaxValue;
         StatementBlock block = ParseStatementBlock(null, ref data, ref index, ref linenumber, true);
         block.TextIndex = -1;
         block.LineNumber = -1;
@@ -1791,6 +1825,14 @@ public class ScriptParser : IScriptParser {
     /// <inheritdoc />
     public Task<IScript> ParseAsync(string data) {
         return Task.Run(() => Parse(data));
+    }
+
+    static long ComputeParseDeadline(TimeSpan timeout) {
+        long now = Stopwatch.GetTimestamp();
+        double deltaticks = timeout.TotalSeconds * Stopwatch.Frequency;
+        if (deltaticks >= long.MaxValue - now)
+            return long.MaxValue;
+        return now + (long)deltaticks;
     }
 
     /// <inheritdoc />
