@@ -46,11 +46,16 @@ public class ScriptLimits {
     public static readonly TimeSpan DefaultRegexTimeout = TimeSpan.FromSeconds(1);
 
     /// <summary>
-    /// shared instance bounding call depth, parse-recursion depth and variable footprint, leaving every other
-    /// knob unset; the default assigned to <see cref="Parser.ScriptParser.Limits"/>. Assign <see cref="None"/>
-    /// instead to opt out of every bound
+    /// <see cref="ParseTimeout"/> value used by <see cref="Default"/>
     /// </summary>
-    public static readonly ScriptLimits Default = new() {MaxDepth = DefaultMaxDepth, MaxParseDepth = DefaultMaxParseDepth, MaxVariableBytes = DefaultMaxVariableBytes, RegexTimeout = DefaultRegexTimeout};
+    public static readonly TimeSpan DefaultParseTimeout = TimeSpan.FromSeconds(5);
+
+    /// <summary>
+    /// shared instance bounding call depth, parse-recursion depth, parse wall-clock time and variable
+    /// footprint, leaving every other knob unset; the default assigned to <see cref="Parser.ScriptParser.Limits"/>.
+    /// Assign <see cref="None"/> instead to opt out of every bound
+    /// </summary>
+    public static readonly ScriptLimits Default = new() {MaxDepth = DefaultMaxDepth, MaxParseDepth = DefaultMaxParseDepth, MaxVariableBytes = DefaultMaxVariableBytes, RegexTimeout = DefaultRegexTimeout, ParseTimeout = DefaultParseTimeout};
 
     /// <summary>
     /// wall-clock deadline for a single script execution, or <c>null</c> to allow unbounded execution time
@@ -84,6 +89,17 @@ public class ScriptLimits {
     /// <see cref="MaxDepth"/>, which bounds runtime call depth
     /// </summary>
     public int? MaxParseDepth { get; init; }
+
+    /// <summary>
+    /// wall-clock deadline for a single <see cref="Parser.ScriptParser.Parse(string)"/> call, or <c>null</c>
+    /// for unbounded parse time (today's behavior for a host that opts out via <see cref="None"/>); guards
+    /// against a non-terminating parse (DiVoid #9341) that <see cref="MaxParseDepth"/> cannot catch, because
+    /// that knob bounds recursion depth while a non-terminating parse can instead be an unbounded loop that
+    /// keeps calling back into the parser at a constant depth. Checked in <see cref="Parser.ScriptParser.Parse(IScriptToken,ref string,ref int,ref int,ref int,bool,bool)"/>
+    /// on every recursive descent, i.e. every construct the parser re-enters through - so it backstops the
+    /// whole class of parse-time hangs rather than one specific construct
+    /// </summary>
+    public TimeSpan? ParseTimeout { get; init; }
 
     /// <summary>
     /// maximum number of live variable entries a script may hold before it is aborted, or <c>null</c> for no entry-count ceiling

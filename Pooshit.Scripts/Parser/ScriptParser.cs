@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -36,6 +37,18 @@ public class ScriptParser : IScriptParser {
 
     [ThreadStatic]
     static int parsedepth;
+
+    /// <summary>
+    /// <see cref="Stopwatch.GetTimestamp"/> deadline established by <see cref="Parse(string)"/> when
+    /// <see cref="ScriptLimits.ParseTimeout"/> is configured; checked on every recursive descent alongside
+    /// <see cref="parsedepth"/>. Same timestamp mechanism as <see cref="DeadlineGuard"/> uses for execution
+    /// timeouts (netstandard2.0-compatible, unlike <c>Environment.TickCount64</c>). Left at its default (0,
+    /// already in the past) when no timeout is configured for the current thread's most recent top-level
+    /// parse - harmless, since every check site first tests <see cref="ScriptLimits.ParseTimeout"/>.HasValue
+    /// before consulting this field
+    /// </summary>
+    [ThreadStatic]
+    static long parsedeadline;
 
     /// <summary>
     /// creates a new <see cref="ScriptParser"/>
@@ -1261,6 +1274,13 @@ public class ScriptParser : IScriptParser {
             throw new ScriptParserException(index, index, linenumber, $"Parser exceeded the configured nesting depth limit of {parsedepthlimit.Value}");
         }
 
+        TimeSpan? parsetimeout = Limits.ParseTimeout;
+        if (parsetimeout.HasValue && Stopwatch.GetTimestamp() >= parsedeadline) {
+            if (parsedepthlimit.HasValue)
+                --parsedepth;
+            throw new ScriptParserException(index, index, linenumber, $"Parser exceeded the configured parse timeout of {parsetimeout.Value}");
+        }
+
         try {
             return ParseCore(parent, ref data, ref index, ref newlines, ref linenumber, startofstatement, suppressformat);
         }
@@ -1580,10 +1600,17 @@ public class ScriptParser : IScriptParser {
 
     IScriptToken ParseDictionary(IScriptToken parent, ref string data, ref int index, ref int linenumber) {
         int newlines = 0;
+        int start = index;
         DictionaryToken dictionary = new();
-        while(Peek(data, index) != '}') {
+        bool terminated = false;
+        while(index < data.Length) {
+            if(Peek(data, index) == '}') {
+                terminated = true;
+                break;
+            }
+
             IScriptToken key = Parse(parent, ref data, ref index, ref newlines, ref linenumber, false, true);
-            while(key is null or Comment) {
+            while(index < data.Length && key is null or Comment) {
                 if(Peek(data, index) == '}') {
                     key = null;
                     break;
@@ -1592,8 +1619,13 @@ public class ScriptParser : IScriptParser {
                 key = Parse(parent, ref data, ref index, ref newlines, ref linenumber, false, true);
             }
 
-            if(key == null)
+            if(index >= data.Length)
                 break;
+
+            if(key == null) {
+                terminated = true;
+                break;
+            }
 
             IScriptToken value = null;
             if(Peek(data, index) == ':') {
@@ -1605,6 +1637,10 @@ public class ScriptParser : IScriptParser {
             if(Peek(data, index) == ',')
                 ++index;
         }
+
+        if(!terminated)
+            throw new ScriptParserException(start, index, linenumber, "Unterminated dictionary");
+
         // eat '{'
         ++index;
         return dictionary;
@@ -1781,6 +1817,8 @@ public class ScriptParser : IScriptParser {
     public IScript Parse(string data) {
         int index = 0;
         int linenumber = 1;
+        TimeSpan? parsetimeout = Limits.ParseTimeout;
+        parsedeadline = parsetimeout.HasValue ? Stopwatch.GetTimestamp() + (long)(parsetimeout.Value.TotalSeconds * Stopwatch.Frequency) : long.MaxValue;
         StatementBlock block = ParseStatementBlock(null, ref data, ref index, ref linenumber, true);
         block.TextIndex = -1;
         block.LineNumber = -1;
