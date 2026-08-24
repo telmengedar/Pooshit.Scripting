@@ -10,11 +10,12 @@ namespace Scripting.Tests {
 
     /// <summary>
     /// fake parser that throws on the prefix length <see cref="ThrowAt"/> and hangs on the prefix length
-    /// <see cref="HangAt"/>, otherwise returns immediately
+    /// <see cref="HangAt"/> or on the exact input <see cref="HangOnData"/>, otherwise returns immediately
     /// </summary>
     class ScriptedParser : IScriptParser {
         public int ThrowAt = -1;
         public int HangAt = -1;
+        public string HangOnData;
 
         public IExtensionProvider Extensions => throw new NotImplementedException();
         public ITypeProvider Types => throw new NotImplementedException();
@@ -23,7 +24,7 @@ namespace Scripting.Tests {
         public IScript Parse(string data) {
             if (data.Length == ThrowAt)
                 throw new InvalidOperationException();
-            if (data.Length == HangAt)
+            if (data.Length == HangAt || data == HangOnData)
                 Thread.Sleep(Timeout.Infinite);
             return null;
         }

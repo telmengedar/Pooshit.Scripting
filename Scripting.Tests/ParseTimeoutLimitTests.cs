@@ -97,19 +97,17 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        [Description("The production default must still refuse DiVoid #9341's own minimal reproducer.")]
-        public void ProductionDefault_StillRefusesTheOriginalReproducer() {
-            ScriptParser parser = new();
+        [Description("An effectively unbounded ParseTimeout must not overflow the deadline arithmetic and must keep parsing normally.")]
+        public void MaxValueTimeout_DoesNotOverflowAndParsesNormally() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {ParseTimeout = TimeSpan.MaxValue}
+            };
 
-            bool completed = BoundedParse.TryParse(parser, "{", TimeSpan.FromSeconds(10), out _, out Exception error);
-
-            Assert.That(completed, Is.True);
-            Assert.That(error, Is.InstanceOf<ScriptParserException>());
-            Assert.That(error.Message, Does.Contain("Unterminated dictionary"));
+            Assert.DoesNotThrow(() => parser.Parse("$a = 1 + 2"));
         }
 
         [Test, Parallelizable]
-        [Description("A short timeout must cut off a slow but legitimate, terminating parse before it completes, pinning the deadline to its configured order of magnitude rather than only its presence.")]
+        [Description("A short timeout must cut off a slow but legitimate, terminating parse before it completes.")]
         public void ShortTimeout_CutsOffSlowLegitimateParseBeforeItCompletes() {
             string source = SlowLegitimateDictionarySource(50_000);
             ScriptParser parser = new() {

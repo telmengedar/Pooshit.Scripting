@@ -40,5 +40,16 @@ namespace Scripting.Tests {
             Assert.That(completed, Is.False);
             Assert.That(stuckAt, Is.EqualTo(3));
         }
+
+        [Test, Parallelizable]
+        [Description("The last single-character deletion must be part of the swept variant set, not dropped by an off-by-one.")]
+        public void TrySweepDeletions_ReachesTheLastDeletion() {
+            ScriptedParser parser = new() {HangOnData = "abcd"};
+
+            bool completed = BoundedSweep.TrySweepDeletions(parser, "abcde", Bound, out int stuckAt);
+
+            Assert.That(completed, Is.False);
+            Assert.That(stuckAt, Is.EqualTo(4));
+        }
     }
 }
