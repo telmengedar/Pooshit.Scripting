@@ -92,12 +92,7 @@ public class ScriptLimits {
 
     /// <summary>
     /// wall-clock deadline for a single <see cref="Parser.ScriptParser.Parse(string)"/> call, or <c>null</c>
-    /// for unbounded parse time (today's behavior for a host that opts out via <see cref="None"/>); guards
-    /// against a non-terminating parse (DiVoid #9341) that <see cref="MaxParseDepth"/> cannot catch, because
-    /// that knob bounds recursion depth while a non-terminating parse can instead be an unbounded loop that
-    /// keeps calling back into the parser at a constant depth. Checked in <see cref="Parser.ScriptParser.Parse(IScriptToken,ref string,ref int,ref int,ref int,bool,bool)"/>
-    /// on every recursive descent, i.e. every construct the parser re-enters through - so it backstops the
-    /// whole class of parse-time hangs rather than one specific construct
+    /// for unbounded parse time
     /// </summary>
     public TimeSpan? ParseTimeout { get; init; }
 

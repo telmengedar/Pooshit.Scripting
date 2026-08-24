@@ -5,8 +5,8 @@ using Pooshit.Scripting.Parser;
 namespace Scripting.Tests {
 
     /// <summary>
-    /// runs a parse over every prefix of a source on one dedicated background thread, bounded by a single
-    /// deadline for the whole sweep
+    /// runs a parse over a sequence of source variants on one dedicated background thread, bounded by a
+    /// single deadline for the whole sweep
     /// </summary>
     static class BoundedSweep {
 
@@ -21,12 +21,29 @@ namespace Scripting.Tests {
         /// <param name="stuckAt">prefix length the worker was parsing when the bound elapsed, or -1 when the sweep finished within the bound</param>
         /// <returns>true when the sweep finished within <paramref name="bound"/>; false when the bound elapsed first</returns>
         public static bool TrySweep(IScriptParser parser, string source, TimeSpan bound, out int stuckAt) {
+            return TrySweepVariants(parser, source.Length + 1, n => source[..n], bound, out stuckAt);
+        }
+
+        /// <summary>
+        /// parses every single-character deletion of <paramref name="source"/>, on a dedicated background
+        /// thread, waiting at most <paramref name="bound"/> for the whole sweep to finish
+        /// </summary>
+        /// <param name="parser">parser to use</param>
+        /// <param name="source">script source whose single-character deletions are swept</param>
+        /// <param name="bound">maximum time to wait for the whole sweep</param>
+        /// <param name="stuckAt">index of the deleted character the worker was parsing when the bound elapsed, or -1 when the sweep finished within the bound</param>
+        /// <returns>true when the sweep finished within <paramref name="bound"/>; false when the bound elapsed first</returns>
+        public static bool TrySweepDeletions(IScriptParser parser, string source, TimeSpan bound, out int stuckAt) {
+            return TrySweepVariants(parser, source.Length, i => source.Remove(i, 1), bound, out stuckAt);
+        }
+
+        static bool TrySweepVariants(IScriptParser parser, int variantCount, Func<int, string> variant, TimeSpan bound, out int stuckAt) {
             int current = 0;
             Thread worker = new(() => {
-                for (int n = 0; n <= source.Length; ++n) {
+                for (int n = 0; n < variantCount; ++n) {
                     Volatile.Write(ref current, n);
                     try {
-                        parser.Parse(source[..n]);
+                        parser.Parse(variant(n));
                     }
                     catch {
                     }

@@ -38,15 +38,6 @@ public class ScriptParser : IScriptParser {
     [ThreadStatic]
     static int parsedepth;
 
-    /// <summary>
-    /// <see cref="Stopwatch.GetTimestamp"/> deadline armed by <see cref="Parse(string)"/> on every call, and
-    /// checked on every recursive descent alongside <see cref="parsedepth"/>; set to <see cref="long.MaxValue"/>
-    /// when <see cref="ScriptLimits.ParseTimeout"/> is unset, so an unbounded parse never trips the check.
-    /// Same timestamp mechanism as <see cref="DeadlineGuard"/> uses for execution timeouts
-    /// (netstandard2.0-compatible, unlike <c>Environment.TickCount64</c>). Every path that reaches the
-    /// recursive descent enters through <see cref="Parse(string)"/>, so this is always armed for the parse
-    /// being checked
-    /// </summary>
     [ThreadStatic]
     static long parsedeadline;
 
@@ -995,9 +986,14 @@ public class ScriptParser : IScriptParser {
                 continue;
             }
 
-            if (scanforoperations)
-                parameters.Add(Parse(parent, ref data, ref index, ref newlines, ref linenumber));
-            else parameters.Add(ParseSingle(parent, ref data, ref index, ref linenumber));
+            int before = index;
+            IScriptToken parameter = scanforoperations
+                ? Parse(parent, ref data, ref index, ref newlines, ref linenumber)
+                : ParseSingle(parent, ref data, ref index, ref linenumber);
+            if (index == before)
+                throw new ScriptParserException(start, index, linenumber, $"Unexpected token in parameter list, expected '{terminator}'.");
+
+            parameters.Add(parameter);
         }
 
         throw new ScriptParserException(start, index, linenumber, $"Expected '{terminator}' to end the parameter list.");
@@ -1603,27 +1599,10 @@ public class ScriptParser : IScriptParser {
         int start = index;
         DictionaryToken dictionary = new();
         bool terminated = false;
-        while(index < data.Length) {
-            if(Peek(data, index) == '}') {
-                terminated = true;
-                break;
-            }
-
-            IScriptToken key = Parse(parent, ref data, ref index, ref newlines, ref linenumber, false, true);
-            while(index < data.Length && key is null or Comment) {
-                if(Peek(data, index) == '}') {
-                    key = null;
-                    break;
-                }
-
-                key = Parse(parent, ref data, ref index, ref newlines, ref linenumber, false, true);
-            }
-
-            if(index >= data.Length)
-                break;
-
+        while(true) {
+            IScriptToken key = ParseDictionaryKey(parent, ref data, ref index, ref newlines, ref linenumber);
             if(key == null) {
-                terminated = true;
+                terminated = index < data.Length;
                 break;
             }
 
@@ -1644,6 +1623,23 @@ public class ScriptParser : IScriptParser {
         // eat '{'
         ++index;
         return dictionary;
+    }
+
+    IScriptToken ParseDictionaryKey(IScriptToken parent, ref string data, ref int index, ref int newlines, ref int linenumber) {
+        while(index < data.Length) {
+            if(Peek(data, index) == '}')
+                return null;
+
+            int before = index;
+            IScriptToken key = Parse(parent, ref data, ref index, ref newlines, ref linenumber, false, true);
+            if(key is not (null or Comment))
+                return key;
+
+            if(index == before)
+                throw new ScriptParserException(before, index, linenumber, "Malformed dictionary");
+        }
+
+        return null;
     }
 
     StatementBlock ParseStatementBlock(IScriptToken parent, ref string data, ref int index, ref int linenumber, bool methodblock = false) {
@@ -1818,7 +1814,7 @@ public class ScriptParser : IScriptParser {
         int index = 0;
         int linenumber = 1;
         TimeSpan? parsetimeout = Limits.ParseTimeout;
-        parsedeadline = parsetimeout.HasValue ? Stopwatch.GetTimestamp() + (long)(parsetimeout.Value.TotalSeconds * Stopwatch.Frequency) : long.MaxValue;
+        parsedeadline = parsetimeout.HasValue ? ComputeParseDeadline(parsetimeout.Value) : long.MaxValue;
         StatementBlock block = ParseStatementBlock(null, ref data, ref index, ref linenumber, true);
         block.TextIndex = -1;
         block.LineNumber = -1;
@@ -1829,6 +1825,14 @@ public class ScriptParser : IScriptParser {
     /// <inheritdoc />
     public Task<IScript> ParseAsync(string data) {
         return Task.Run(() => Parse(data));
+    }
+
+    static long ComputeParseDeadline(TimeSpan timeout) {
+        long now = Stopwatch.GetTimestamp();
+        double deltaticks = timeout.TotalSeconds * Stopwatch.Frequency;
+        if (deltaticks >= long.MaxValue - now)
+            return long.MaxValue;
+        return now + (long)deltaticks;
     }
 
     /// <inheritdoc />

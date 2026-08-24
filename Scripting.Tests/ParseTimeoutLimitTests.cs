@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using NUnit.Framework;
 using Pooshit.Scripting;
 using Pooshit.Scripting.Errors;
@@ -7,18 +8,22 @@ using Pooshit.Scripting.Parser;
 namespace Scripting.Tests {
 
     /// <summary>
-    /// exercises <see cref="ScriptLimits.ParseTimeout"/> (DiVoid #9341 defence-in-depth): a parse-time
-    /// wall-clock ceiling checked on every recursive descent through <c>ScriptParser.Parse</c>, alongside
-    /// the existing <see cref="ScriptLimits.MaxParseDepth"/> (DiVoid #7869). <see cref="MaxParseDepth"/>
-    /// bounds recursion depth; it structurally cannot catch a construct that loops back into the parser at
-    /// a constant depth (exactly what DiVoid #9341's unterminated dictionary did before it was given its own
-    /// EOF guard - see <see cref="UnterminatedDictionaryTests"/>). <see cref="ScriptLimits.ParseTimeout"/> is
-    /// the family-wide backstop: it does not care which construct is looping, only that the parser has been
-    /// re-entered past the configured deadline.
+    /// exercises <see cref="ScriptLimits.ParseTimeout"/>, the parse-time wall-clock backstop
     /// </summary>
     [TestFixture, Parallelizable]
     public class ParseTimeoutLimitTests {
         static readonly TimeSpan Bound = TimeSpan.FromSeconds(3);
+
+        static string SlowLegitimateDictionarySource(int entries) {
+            StringBuilder source = new();
+            source.Append('{');
+            for (int i = 0; i < entries; ++i) {
+                if (i > 0) source.Append(',');
+                source.Append('"').Append('k').Append(i).Append("\":").Append(i);
+            }
+            source.Append('}');
+            return source.ToString();
+        }
 
         [Test, Parallelizable]
         public void Default_ParseTimeoutIsFiveSeconds() {
@@ -27,7 +32,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        [Description("A zero timeout has already elapsed by the time the first recursive Parse call is reached, so even trivial, well-formed input must be refused with a catchable ScriptParserException - proves the deadline is actually consulted, without needing a real non-terminating construct to trigger it.")]
+        [Description("A zero timeout must refuse even trivial input with a catchable ScriptParserException.")]
         public void ZeroTimeout_RefusesEvenTrivialInputWithScriptParserException() {
             ScriptParser parser = new() {
                 Limits = new ScriptLimits {ParseTimeout = TimeSpan.Zero}
@@ -41,7 +46,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        [Description("The message reports the configured timeout value, matching the wording style of the MaxParseDepth message ('...exceeded the configured nesting depth limit of...').")]
+        [Description("The exception message must report the configured timeout value.")]
         public void ZeroTimeout_MessageReportsConfiguredValue() {
             ScriptParser parser = new() {
                 Limits = new ScriptLimits {ParseTimeout = TimeSpan.Zero}
@@ -52,7 +57,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        [Description("An ordinary script well within a generous timeout must keep parsing and executing normally - the guard must not disturb legitimate input.")]
+        [Description("An ordinary script well within a generous timeout must keep parsing and executing normally.")]
         public void GenerousTimeout_ParsesAndExecutesNormally() {
             ScriptParser parser = new() {
                 Limits = new ScriptLimits {ParseTimeout = TimeSpan.FromSeconds(30)}
@@ -64,7 +69,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        [Description("ScriptLimits.None must opt out of the parse-timeout ceiling entirely, exactly like every other knob.")]
+        [Description("ScriptLimits.None must opt out of the parse-timeout ceiling entirely.")]
         public void NoneLimits_OptsOutOfParseTimeout() {
             ScriptParser parser = new() {
                 Limits = ScriptLimits.None
@@ -77,7 +82,7 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        [Description("A realistic script must still parse and execute under the actual production default (ScriptLimits.Default) - the deadline exists to stop a non-terminating parse, not ordinary scripts.")]
+        [Description("A realistic script must still parse and execute under the production default.")]
         public void ProductionDefault_ParsesRealisticScriptNormally() {
             ScriptParser parser = new();
 
@@ -92,14 +97,45 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable]
-        [Description("DiVoid #9341's own minimal reproducer, run under the production default with no per-test override, must be refused as a clean parse timeout even if some future regression reopened the EOF hole the dictionary-specific fix closes - this is the family-wide backstop working as intended.")]
-        public void ProductionDefault_StillBoundsTheOriginalReproducer() {
+        [Description("The production default must still refuse DiVoid #9341's own minimal reproducer.")]
+        public void ProductionDefault_StillRefusesTheOriginalReproducer() {
             ScriptParser parser = new();
 
             bool completed = BoundedParse.TryParse(parser, "{", TimeSpan.FromSeconds(10), out _, out Exception error);
 
             Assert.That(completed, Is.True);
             Assert.That(error, Is.InstanceOf<ScriptParserException>());
+            Assert.That(error.Message, Does.Contain("Unterminated dictionary"));
+        }
+
+        [Test, Parallelizable]
+        [Description("A short timeout must cut off a slow but legitimate, terminating parse before it completes, pinning the deadline to its configured order of magnitude rather than only its presence.")]
+        public void ShortTimeout_CutsOffSlowLegitimateParseBeforeItCompletes() {
+            string source = SlowLegitimateDictionarySource(50_000);
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {ParseTimeout = TimeSpan.FromMilliseconds(5)}
+            };
+
+            bool completed = BoundedParse.TryParse(parser, source, TimeSpan.FromSeconds(5), out _, out Exception error);
+
+            Assert.That(completed, Is.True);
+            Assert.That(error, Is.InstanceOf<ScriptParserException>());
+            Assert.That(error.Message, Does.Contain("parse timeout"));
+        }
+
+        [Test, Parallelizable]
+        [Description("A configured timeout must not leak a permanently incremented parse-depth counter into later parses on the same thread.")]
+        public void TimeoutOnThreadWithDepthLimit_DoesNotLeakDepthAcrossLaterParses() {
+            ScriptParser parser = new() {
+                Limits = new ScriptLimits {ParseTimeout = TimeSpan.Zero, MaxParseDepth = 100}
+            };
+
+            ScriptParserException last = null;
+            for (int i = 0; i < 150; ++i)
+                last = Assert.Throws<ScriptParserException>(() => parser.Parse("$x = 1"));
+
+            Assert.That(last.Message, Does.Contain("parse timeout"));
+            Assert.That(last.Message, Does.Not.Contain("nesting depth"));
         }
     }
 }
