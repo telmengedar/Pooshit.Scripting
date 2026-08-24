@@ -39,13 +39,13 @@ public class ScriptParser : IScriptParser {
     static int parsedepth;
 
     /// <summary>
-    /// <see cref="Stopwatch.GetTimestamp"/> deadline established by <see cref="Parse(string)"/> when
-    /// <see cref="ScriptLimits.ParseTimeout"/> is configured; checked on every recursive descent alongside
-    /// <see cref="parsedepth"/>. Same timestamp mechanism as <see cref="DeadlineGuard"/> uses for execution
-    /// timeouts (netstandard2.0-compatible, unlike <c>Environment.TickCount64</c>). Left at its default (0,
-    /// already in the past) when no timeout is configured for the current thread's most recent top-level
-    /// parse - harmless, since every check site first tests <see cref="ScriptLimits.ParseTimeout"/>.HasValue
-    /// before consulting this field
+    /// <see cref="Stopwatch.GetTimestamp"/> deadline armed by <see cref="Parse(string)"/> on every call, and
+    /// checked on every recursive descent alongside <see cref="parsedepth"/>; set to <see cref="long.MaxValue"/>
+    /// when <see cref="ScriptLimits.ParseTimeout"/> is unset, so an unbounded parse never trips the check.
+    /// Same timestamp mechanism as <see cref="DeadlineGuard"/> uses for execution timeouts
+    /// (netstandard2.0-compatible, unlike <c>Environment.TickCount64</c>). Every path that reaches the
+    /// recursive descent enters through <see cref="Parse(string)"/>, so this is always armed for the parse
+    /// being checked
     /// </summary>
     [ThreadStatic]
     static long parsedeadline;
