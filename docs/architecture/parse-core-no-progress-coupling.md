@@ -13,7 +13,7 @@ Unlike `ParseTokenList` and `ParseDictionaryKey`, `ParseParameters` does **not**
 
 ## What breaks it
 
-Adding a new `case 'X': done = true;` to `ParseCore`'s switch (`:1452` onward) for a character `ParseParameters` does not itself special-case reopens the same unkillable hang `ParseTokenList` and `ParseDictionary` had before this fix — reachable only through indexer arguments (`$a[...]`) or control-statement arguments (`if(...)`), which the dictionary and token-list tests do not exercise. Nothing in the suite would go red.
+Adding a new `case 'X': done = true;` to `ParseCore`'s switch (`:1452` onward) for a character `ParseParameters` does not itself special-case, or removing `ParseCore`'s `index == starttoken && !done` backstop (`ScriptParser.cs:1523-1524`), reopens the same unkillable hang `ParseTokenList` and `ParseDictionary` had before this fix — reachable only through indexer arguments (`$a[...]`) or control-statement arguments (`if(...)`), which the dictionary and token-list tests do not exercise. Nothing in the suite would go red.
 
 ## Why there is no guard here today
 
