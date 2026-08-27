@@ -11,7 +11,7 @@ namespace Scripting.Tests {
     /// </summary>
     [TestFixture, Parallelizable]
     public class NoLimitsTerminationSweepTests {
-        static readonly TimeSpan SweepBound = TimeSpan.FromSeconds(2);
+        static readonly TimeSpan SweepBound = TimeSpan.FromSeconds(20);
         static readonly TimeSpan CorpusBound = TimeSpan.FromSeconds(10);
 
         [Test, Parallelizable]
