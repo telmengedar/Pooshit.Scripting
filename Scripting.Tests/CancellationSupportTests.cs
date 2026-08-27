@@ -299,7 +299,6 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable, MaxTime(30000)]
-        [Description("Liveness backstop only, not a performance budget: bounds the whole 1,000,000-iteration loop against a genuine non-terminating regression, not against this test's own runtime under parallel-suite scheduling contention.")]
         public void T13a_RegressionNoLimitsCompletesNormally() {
             ScriptParser parser = new();
             IScript script = parser.Parse(ScriptCode.Create(

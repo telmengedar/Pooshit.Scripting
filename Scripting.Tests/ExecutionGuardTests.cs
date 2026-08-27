@@ -599,7 +599,6 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable, MaxTime(15000)]
-        [Description("Liveness backstop only, not a performance budget: bounds this test against a genuine non-terminating regression, not against this test's own runtime under parallel-suite scheduling contention.")]
         public void Depth_SequentialLambdaCallbacksDoNotAccumulateDepth() {
             ScriptParser parser = new() {
                 Limits = new ScriptLimits {MaxDepth = 4}
@@ -1186,7 +1185,6 @@ namespace Scripting.Tests {
         }
 
         [Test, Parallelizable, MaxTime(15000)]
-        [Description("Liveness backstop only, not a performance budget: bounds this test against a genuine non-terminating regression, not against this test's own runtime under parallel-suite scheduling contention.")]
         public void Depth_SyncTokenPathThrowsDepthException() {
             ScriptParser parser = new() {
                 Limits = new ScriptLimits {MaxDepth = SafeMaxDepth}

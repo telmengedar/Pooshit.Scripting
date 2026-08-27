@@ -8,8 +8,8 @@ namespace Scripting.Tests {
     static class TerminationSweepCorpus {
 
         /// <summary>
-        /// every character <c>ParseCore</c> dispatches on structurally, one letter, one digit, whitespace,
-        /// and characters outside the grammar
+        /// every character the parser dispatches on structurally, one letter, one digit, whitespace,
+        /// an escape-handling case label, and characters outside the grammar
         /// </summary>
         static readonly char[] Alphabet = [
             '$', '(', ')', '[', ']', '{', '}', ',', ';', ':', '.', '=', '!', '~', '<', '>', '/', '+', '*', '-', '%', '&', '|', '^', '?', '"', '\'',
