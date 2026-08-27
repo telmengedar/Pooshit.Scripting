@@ -987,7 +987,7 @@ public class ScriptParser : IScriptParser {
             }
 
             if (character == ')')
-                throw new ScriptParserException(start, index, linenumber, $"Mismatched closing token ')', expected '{terminator}'.");
+                throw new ScriptParserException(start, index, linenumber, $"Mismatched closing token ')' in parameter list, expected '{terminator}'.");
 
             int before = index;
             IScriptToken parameter = scanforoperations

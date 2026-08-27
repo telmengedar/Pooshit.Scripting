@@ -21,7 +21,7 @@ namespace Scripting.Tests {
 
             Assert.That(completed, Is.True);
             Assert.That(error, Is.InstanceOf<ScriptParserException>());
-            Assert.That(error.Message, Does.Contain("Mismatched closing token ')', expected ']'."));
+            Assert.That(error.Message, Does.Contain("Mismatched closing token ')' in parameter list, expected ']'."));
         }
 
         [Test, Parallelizable]
