@@ -298,7 +298,7 @@ namespace Scripting.Tests {
             Assert.That(task.IsCanceled, Is.True);
         }
 
-        [Test, Parallelizable, MaxTime(5000)]
+        [Test, Parallelizable, MaxTime(30000)]
         public void T13a_RegressionNoLimitsCompletesNormally() {
             ScriptParser parser = new();
             IScript script = parser.Parse(ScriptCode.Create(

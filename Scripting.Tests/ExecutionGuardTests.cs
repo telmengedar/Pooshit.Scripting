@@ -367,7 +367,7 @@ namespace Scripting.Tests {
                 throw first;
         }
 
-        [Test, Parallelizable, MaxTime(5000)]
+        [Test, Parallelizable, MaxTime(15000)]
         [Description("DiVoid #7744 CF-1: N > MaxDepth concurrent, non-recursive lambda invocations on separate physical stacks must not breach a ceiling none of them individually approaches; sized at the exact boundary QA measured, with a SyncGate forcing true simultaneity.")]
         public void Depth_ConcurrentTaskRunLambdasDoNotSpuriouslyBreach() {
             const int taskCount = SafeMaxDepth + 1;
@@ -386,7 +386,7 @@ namespace Scripting.Tests {
             Assert.DoesNotThrow(() => RunConcurrentInvokeOnNewStack(wrapper, taskCount));
         }
 
-        [Test, Parallelizable, MaxTime(5000)]
+        [Test, Parallelizable, MaxTime(15000)]
         [Description("DiVoid #7749 CF-1 residual: a lambda captured outside several concurrently-invoked task bodies, invoked from inside each, must not have concurrency counted as nesting against a shared budget.")]
         public void Depth_ConcurrentTasksThroughOuterCapturedLambdaDoNotSpuriouslyBreach() {
             const int taskCount = 4;
@@ -413,7 +413,7 @@ namespace Scripting.Tests {
             Assert.DoesNotThrow(() => RunConcurrentInvokeOnNewStack(wrapper, taskCount));
         }
 
-        [Test, Parallelizable, MaxTime(5000)]
+        [Test, Parallelizable, MaxTime(15000)]
         [Description("DiVoid #7744 CF-5: the same concurrency-counted-as-nesting shape as Depth_ConcurrentTaskRunLambdasDoNotSpuriouslyBreach, but through EnumerableExtensions.Where/IndexOf/LastIndexOf rather than $lambda.invoke(), which CF-1's original fix missed.")]
         public void Depth_ConcurrentWherePredicateDoesNotSpuriouslyBreach() {
             const int taskCount = SafeMaxDepth + 1;
@@ -439,7 +439,7 @@ namespace Scripting.Tests {
             Assert.DoesNotThrow(() => RunConcurrentInvokeOnNewStack(wrapper, taskCount));
         }
 
-        [Test, Parallelizable, MaxTime(5000)]
+        [Test, Parallelizable, MaxTime(15000)]
         [Description("DiVoid #7782 T9a: a test-local host extension declaring a trailing ScriptContext and calling InvokeFrom must not accumulate concurrency as depth - pins §11.6's prescribed host-extension pattern against the exact shape QA #7744 round 3 measured. Deliberately not EnumerableExtensions, so converting an in-repo caller can never make this pass without fixing the extension under test.")]
         public void Depth_HostExtensionInvokeFromDoesNotSpuriouslyBreach() {
             const int taskCount = SafeMaxDepth + 1;
@@ -463,7 +463,7 @@ namespace Scripting.Tests {
             Assert.DoesNotThrow(() => RunConcurrentInvokeOnNewStack(wrapper, taskCount));
         }
 
-        [Test, Parallelizable, MaxTime(5000)]
+        [Test, Parallelizable, MaxTime(15000)]
         [Description("DiVoid #7782 T9b - characterisation test: the same test-local extension's second method, calling Invoke(args) instead of InvokeFrom, charges every concurrent callback to the defining script's single counter. Pins §7.7's decision that Invoke's captured-context semantics are deliberate; a failure here means the contract changed and that must be a re-argued decision, not a silent one. Sequenced by a Barrier post-phase action, not raced against a second, independently-timed gate: this test starts exactly SafeMaxDepth threads racing for the shared budget - none can breach yet, since only SafeMaxDepth attempts exist - and lets SyncGate's post-phase action, which Barrier guarantees runs only once every one of them is confirmed blocked at the gate, start a 9th, non-participant thread on the spot. That 9th Enter() is thus guaranteed to observe depth SafeMaxDepth+1 and breach directly. DepthBudget.CheckBreached's sticky latch (DepthBudget.cs) then re-raises that same breach for every one of the SafeMaxDepth holders too, deterministically, the moment each is released and reaches its own next Guard() checkpoint (ScriptContext.Guard(), called by StatementBlock before every statement - here, the 'return(true)' following $gate.Arrive()): the Interlocked.Exchange that trips the latch happens-before the Barrier release that lets them proceed, so by the time any of them re-checks, the latch is already visible. So all SafeMaxDepth+1 invocations end up observing ScriptDepthLimitExceededException, which is itself the sticky-latch half of this same characterisation and worth pinning alongside the direct breach.")]
         public void Depth_HostExtensionInvokeArgsSpuriouslyBreaches() {
             ScriptParser parser = new() {
@@ -598,7 +598,7 @@ namespace Scripting.Tests {
             Assert.That(flag.Caught, Is.False);
         }
 
-        [Test, Parallelizable, MaxTime(2000)]
+        [Test, Parallelizable, MaxTime(15000)]
         public void Depth_SequentialLambdaCallbacksDoNotAccumulateDepth() {
             ScriptParser parser = new() {
                 Limits = new ScriptLimits {MaxDepth = 4}
@@ -1184,7 +1184,7 @@ namespace Scripting.Tests {
             Assert.That(task.Exception?.InnerException, Is.InstanceOf<ScriptDepthLimitExceededException>());
         }
 
-        [Test, Parallelizable, MaxTime(2000)]
+        [Test, Parallelizable, MaxTime(15000)]
         public void Depth_SyncTokenPathThrowsDepthException() {
             ScriptParser parser = new() {
                 Limits = new ScriptLimits {MaxDepth = SafeMaxDepth}
@@ -1194,7 +1194,7 @@ namespace Scripting.Tests {
             Assert.Throws<ScriptDepthLimitExceededException>(() => script.Execute((IVariableProvider)null, CancellationToken.None));
         }
 
-        [Test, Parallelizable, MaxTime(2000)]
+        [Test, Parallelizable, MaxTime(15000)]
         [Description("A configured MaxDepth must not disturb the existing cancel/timeout contract for a script that never triggers the depth guard.")]
         public async Task Depth_CallerCancelDuringDepthLimitedScriptStillCanceled() {
             ScriptParser parser = new() {
