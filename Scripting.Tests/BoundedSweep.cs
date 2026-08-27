@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Pooshit.Scripting.Parser;
 
@@ -35,6 +36,19 @@ namespace Scripting.Tests {
         /// <returns>true when the sweep finished within <paramref name="bound"/>; false when the bound elapsed first</returns>
         public static bool TrySweepDeletions(IScriptParser parser, string source, TimeSpan bound, out int stuckAt) {
             return TrySweepVariants(parser, source.Length, i => source.Remove(i, 1), bound, out stuckAt);
+        }
+
+        /// <summary>
+        /// parses every input in <paramref name="inputs"/>, on a dedicated background thread, waiting at
+        /// most <paramref name="bound"/> for the whole sweep to finish
+        /// </summary>
+        /// <param name="parser">parser to use</param>
+        /// <param name="inputs">script source variants to sweep</param>
+        /// <param name="bound">maximum time to wait for the whole sweep</param>
+        /// <param name="stuckAt">index into <paramref name="inputs"/> the worker was parsing when the bound elapsed, or -1 when the sweep finished within the bound</param>
+        /// <returns>true when the sweep finished within <paramref name="bound"/>; false when the bound elapsed first</returns>
+        public static bool TrySweepInputs(IScriptParser parser, IReadOnlyList<string> inputs, TimeSpan bound, out int stuckAt) {
+            return TrySweepVariants(parser, inputs.Count, n => inputs[n], bound, out stuckAt);
         }
 
         static bool TrySweepVariants(IScriptParser parser, int variantCount, Func<int, string> variant, TimeSpan bound, out int stuckAt) {
